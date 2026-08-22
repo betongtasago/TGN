@@ -1,0 +1,11 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+# Runtime data: persisted app state (users/samples/stations) and the
+# auto-generated session-signing secret — must never be committed.
+data/

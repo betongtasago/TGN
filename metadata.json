@@ -1,0 +1,6 @@
+{
+  "name": "Quản Lý Tiến Độ Nén Mẫu Bê Tông - Tasago",
+  "description": "Hệ thống quản lý, theo dõi lịch nén mẫu bê tông thương phẩm & trialmix, tự động nhắc lịch qua Zalo/Email và báo cáo theo trạm cho Công Ty Cổ Phần Đầu Tư Tasago.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

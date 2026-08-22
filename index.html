@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Quản Lý Tiến Độ Nén Mẫu Bê Tông - Tasago</title>
+    <meta name="description" content="Hệ thống quản lý, theo dõi lịch nén mẫu bê tông thương phẩm & trialmix - Công Ty Cổ Phần Đầu Tư Tasago" />
+    
+    <!-- Mobile App & PWA Meta Tags -->
+    <meta name="theme-color" content="#064e3b" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Bê Tông Tasago" />
+    <meta name="application-name" content="Bê Tông Tasago" />
+    <meta name="msapplication-TileColor" content="#064e3b" />
+    
+    <!-- Manifest & App Icons -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    
+    <!-- Open Graph & Social -->
+    <meta property="og:title" content="Quản Lý Tiến Độ Nén Mẫu Bê Tông - Tasago" />
+    <meta property="og:description" content="Hệ thống quản lý, theo dõi lịch nén mẫu bê tông thương phẩm & trialmix - Công Ty Cổ Phần Đầu Tư Tasago" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body class="bg-slate-900 text-slate-900 select-none antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register Service Worker for offline capability & mobile install
+      if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((reg) => {
+            console.log('Tasago PWA Service Worker Registered:', reg.scope);
+          }).catch((err) => {
+            console.log('SW registration skipped:', err);
+          });
+        });
+      }
+    </script>
+  </body>
+</html>
