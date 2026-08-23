@@ -213,7 +213,7 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 shadow-sm animate-pulse'
                   : 'bg-emerald-700/80 hover:bg-emerald-700 text-emerald-100'
               }`}
-              title="Trung tâm thông báo Email / Zalo"
+              title="Trung tâm thông báo Email"
             >
               <Bell className="w-4 h-4" />
               {urgentCount > 0 && (

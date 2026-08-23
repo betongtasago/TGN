@@ -147,7 +147,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                 className="bg-white hover:bg-slate-50 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs shadow-sm border border-slate-200 flex items-center space-x-1"
               >
                 <Send className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="hidden sm:inline">Gửi Zalo</span>
+                <span className="hidden sm:inline">Gửi Email</span>
               </button>
             </div>
           </div>

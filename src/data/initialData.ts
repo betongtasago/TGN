@@ -15,7 +15,6 @@ export const INITIAL_USERS: User[] = [
     stationIds: ['all'],
     phone: '0942320923',
     email: 'thanhtgndt@gmail.com',
-    zaloId: '0942320923',
     active: true,
     createdAt: '2026-01-01',
   },
@@ -365,7 +364,7 @@ export const INITIAL_SAMPLES: ConcreteSample[] = [
       notes: 'Cường độ R7 đạt 83.1% mác thiết kế R28 (quy định > 70%), đủ điều kiện tháo dỡ ván khuôn móng.',
       certificateNumber: 'BBTN-TSG/2026/092',
     },
-    notes: 'Đã thông báo cho chỉ huy trưởng công trình qua Zalo tiếp tục thi công phần thân.',
+    notes: 'Đã thông báo cho chỉ huy trưởng công trình để tiếp tục thi công phần thân.',
     createdBy: 'ktv_xuyena',
     createdByName: 'Trần Minh Quang',
     createdAt: getRelativeDateStr(-10),
@@ -407,13 +406,6 @@ export const INITIAL_SAMPLES: ConcreteSample[] = [
 ];
 
 export const INITIAL_NOTIFICATION_CONFIG: NotificationConfig = {
-  autoZaloEnabled: true,
-  zaloWebhookUrl: '',
-  zaloBotToken: '',
-  zaloGroupId: 'Nhóm Kỹ Thuật Bê Tông Tasago',
-  zaloPersonalPhone: '0942320923',
-  zaloPersonalPhones: ['0942320923', '0901234567'],
-  zaloRecipientType: 'both',
   autoEmailEnabled: true,
   emailRecipients: ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'],
   emailSender: 'Bê Tông Tasago <tasagotnt@gmail.com>',
@@ -426,5 +418,4 @@ export const INITIAL_NOTIFICATION_CONFIG: NotificationConfig = {
   smtpSecure: false,
   smtpUser: 'tasagotnt@gmail.com',
   smtpPass: '',
-  emailServiceUrl: '',
 };

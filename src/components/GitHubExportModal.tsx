@@ -152,7 +152,7 @@ git push -u origin main`;
               </span>
             </div>
             <p className="text-slate-600">
-              Xuất toàn bộ cơ sở dữ liệu (danh sách công trình, kết quả nén mẫu, cài đặt Zalo Bot, danh sách thành viên) thành 1 file JSON độc lập để mang sang máy khác hoặc lưu trữ an toàn.
+              Xuất toàn bộ cơ sở dữ liệu (danh sách công trình, kết quả nén mẫu, cấu hình Email, danh sách thành viên) thành 1 file JSON độc lập để mang sang máy khác hoặc lưu trữ an toàn.
             </p>
 
             {importStatus && (

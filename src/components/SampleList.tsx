@@ -78,15 +78,22 @@ export const SampleList: React.FC<SampleListProps> = ({
   const handleNotify = onOpenNotification || onSendSingleNotification || (() => {});
   const handleExport = onExportExcel || (() => {});
 
-  // Permission check helper: Admin can modify everything; Members can only modify their own samples or samples of their assigned station
+  // Admin can edit all samples. Member edit/delete remains limited to samples they created.
   const canModifySample = (sample: ConcreteSample) => {
-    if (!currentUser) return true;
-    if (currentUser.role === 'admin') return true;
-    // Check if member created this sample or matches username / creator name
-    if (sample.createdBy && sample.createdBy === currentUser.username) return true;
-    if (sample.samplerName && sample.samplerName.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase()) return true;
-    // If not created by member, member cannot edit other members' samples
-    return false;
+    if (!currentUser || currentUser.role === 'admin') return true;
+    if (!sample.stationId) return false;
+    return sample.createdBy === currentUser.username
+      || sample.samplerName?.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase();
+  };
+
+  // Compression-result entry is authorized by the member's assigned station.
+  const canEnterTestResult = (sample: ConcreteSample) => {
+    if (!currentUser || currentUser.role === 'admin') return true;
+    const assignedStations = new Set<string>([
+      ...(currentUser.stationIds || []).map(String),
+      ...(currentUser.stationId ? [String(currentUser.stationId)] : []),
+    ]);
+    return assignedStations.has('all') || assignedStations.has(String(sample.stationId));
   };
 
   const handleGuardedEdit = (sample: ConcreteSample) => {
@@ -106,8 +113,8 @@ export const SampleList: React.FC<SampleListProps> = ({
   };
 
   const handleGuardedTest = (sample: ConcreteSample) => {
-    if (!canModifySample(sample) && currentUser?.role !== 'admin') {
-      alert(`⚠️ Bạn không có quyền nhập kết quả cho mẫu của thành viên khác (${sample.createdByName || sample.samplerName || 'Thành viên khác'}).`);
+    if (!canEnterTestResult(sample)) {
+      alert(`⚠️ Bạn không có quyền nhập kết quả cho mẫu ngoài trạm được phân công (${sample.createdByName || sample.samplerName || 'thành viên khác'}).`);
       return;
     }
     handleTest(sample);
@@ -453,7 +460,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                     <span>Gọi</span>
                   </a>
 
-                  {!isTested && (
+                  {!isTested && canEnterTestResult(sample) && (
                     <button
                       onClick={() => handleGuardedTest(sample)}
                       className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs"
@@ -466,7 +473,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                   <button
                     onClick={() => handleNotify(sample)}
                     className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg cursor-pointer transition-colors"
-                    title="Gửi Zalo / Email"
+                    title="Gửi Email"
                   >
                     <Send className="w-4 h-4 text-blue-600" />
                   </button>
@@ -615,12 +622,14 @@ export const SampleList: React.FC<SampleListProps> = ({
                             }`}>
                               {isDueToday ? '🔴 Đến Hạn' : isOverdue ? '⚠️ Quá Hạn' : '⏳ Chưa Đến Hạn'}
                             </span>
-                            <button
-                              onClick={() => handleTest(sample)}
-                              className="block text-emerald-700 hover:text-emerald-900 font-bold text-[11px] hover:underline cursor-pointer"
-                            >
-                              + Nhập KQ
-                            </button>
+                            {canEnterTestResult(sample) && (
+                              <button
+                                onClick={() => handleGuardedTest(sample)}
+                                className="block text-emerald-700 hover:text-emerald-900 font-bold text-[11px] hover:underline cursor-pointer"
+                              >
+                                + Nhập KQ
+                              </button>
+                            )}
                           </div>
                         )}
                       </td>
@@ -642,7 +651,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                         <button
                           onClick={() => handleNotify(sample)}
                           className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
-                          title="Gửi Zalo / Email"
+                          title="Gửi Email"
                         >
                           <Send className="w-4 h-4 text-blue-600" />
                         </button>

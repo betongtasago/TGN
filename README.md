@@ -29,7 +29,7 @@ Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiế
 
 3. **Cảnh Báo & Nhắc Nhở Tự Động:**
    - Đánh dấu trạng thái tự động theo thời gian thực: *Đến hạn hôm nay*, *Quá hạn chưa nén*, *Chưa đến hạn*, *Đã nén đạt / không đạt*.
-   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Bot Zalo (Webhook API)** và **Email** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
+   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Email SMTP** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
 
 4. **Xuất Báo Cáo Excel Chuyên Nghiệp (.xlsx):**
    - Xuất bảng theo dõi tiến độ nén mẫu theo từng công trình của từng trạm với đầy đủ thông tin doanh nghiệp Tasago, tên khách hàng, tên dự án công trình và danh sách chi tiết các hạng mục, mác, khối lượng, số tổ mẫu, cường độ nén (MPa), % đạt và khung chữ ký xác nhận 3 bên.
@@ -115,14 +115,12 @@ git push -u origin main
 Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
 
 
-### Cấu hình gửi Email và Zalo tự động
+### Cấu hình gửi Email tự động
 
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua SMTP; với Gmail phải dùng **App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Nhập SMTP host/port/user/password và danh sách người nhận trong Trung tâm thông báo, bấm **Kiểm tra kết nối**, sau đó bấm **Lưu cấu hình**.
+Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua SMTP; với Gmail phải dùng **App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Nhập SMTP host/port/user/password và danh sách người nhận trong Trung tâm thông báo, bấm **Kiểm tra SMTP**, sau đó bấm **Lưu cấu hình**. Bản backend mới ưu tiên IPv4 và có timeout rõ ràng để tránh lỗi `ENETUNREACH` khi Render chọn IPv6 không khả dụng.
 
-Zalo được gửi thật qua **Zalo Bot API**. Nhập Bot Token, đặt Webhook URL là `https://<backend-render-cua-ban>.onrender.com/api/zalo/webhook`, tạo Webhook Secret riêng và lưu cấu hình. Nhắn một tin riêng cho Bot hoặc một tin trong nhóm đã thêm Bot; webhook sẽ tự lưu Personal/Group Chat ID vào `app_state`. Số điện thoại và tên nhóm chỉ là nhãn hiển thị, không thay thế Chat ID.
+Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render. Nút **Chạy thử cron** trong trung tâm admin gọi cron thủ công qua backend Render.
 
-Backend Render cung cấp API và webhook. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email/Zalo. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render.
+Khai báo trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` và `VITE_API_URL` (URL backend Render, không phải URL Supabase). Trong **Render → Environment** khai báo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`, cùng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `CRON_SECRET` nếu muốn cấu hình SMTP bằng biến môi trường. Không đưa service-role key, SMTP password hay Cron Secret vào GitHub/frontend.
 
-Khai báo trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` và `VITE_API_URL` (URL backend Render, không phải URL Supabase). Trong **Render → Environment** khai báo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`; SMTP/Zalo có thể lưu trong cấu hình admin trên Supabase hoặc khai báo bằng biến môi trường server. Không đưa service-role key, Bot Token, SMTP password hay Cron Secret vào GitHub/frontend.
-
-Nếu thiếu SMTP/Bot Token/Chat ID, hệ thống trả lỗi cấu hình rõ ràng và không còn báo thành công giả.
+Nếu thiếu SMTP user/password hoặc người nhận, hệ thống trả lỗi cấu hình rõ ràng và không báo thành công giả. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.

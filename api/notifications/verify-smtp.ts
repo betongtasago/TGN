@@ -1,4 +1,7 @@
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
+
+dns.setDefaultResultOrder('ipv4first');
 
 export const config = {
   api: {
@@ -54,6 +57,9 @@ export default async function handler(req: any, res: any) {
       secure: isSecure,
       requireTLS: !isSecure,
       auth: { user, pass },
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
       tls: {
         rejectUnauthorized: false,
         minVersion: 'TLSv1.2'
@@ -81,7 +87,7 @@ export default async function handler(req: any, res: any) {
     }
     return res.status(500).json({
       success: false,
-      message: `Không thể kết nối máy chủ SMTP: ${error.message}${note}`,
+      message: `Không thể kết nối máy chủ SMTP: ${error.message}${note}${error.code === 'ENETUNREACH' ? ' — bản mới đã ưu tiên IPv4, hãy redeploy Vercel.' : ''}`,
       error: error.message
     });
   }

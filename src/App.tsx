@@ -600,6 +600,10 @@ export default function App() {
 
   // Handler: Quick Mark Sample Tested (1-click from Calendar)
   const handleQuickMarkTested = async (sample: ConcreteSample) => {
+    if (!canEnterTestResult(sample)) {
+      alert(`Bạn không có quyền nhập kết quả cho mẫu của thành viên khác (${sample.createdByName || sample.samplerName || 'thành viên khác'}).`);
+      return;
+    }
     const designMpa = sample.concreteGrade.startsWith('M')
       ? Math.round(Number(sample.concreteGrade.replace('M', '')) / 10)
       : Number(sample.concreteGrade.replace('B', '')) || 25;
@@ -671,6 +675,13 @@ export default function App() {
 
   // Handler: Save Test Result
   const handleSaveTestResult = async (sampleId: string, resultData: TestResultData) => {
+    const target = samples.find(sample => sample.id === sampleId);
+    if (!target || !canEnterTestResult(target)) {
+      alert('Bạn không có quyền lưu kết quả cho mẫu của thành viên khác.');
+      setIsTestResultModalOpen(false);
+      setTestingSample(null);
+      return;
+    }
     let updatedTargetSample: ConcreteSample | null = null;
     const updated = samples.map(s => {
       if (s.id === sampleId) {
@@ -824,8 +835,21 @@ export default function App() {
     setIsFormModalOpen(true);
   };
 
+  const canEnterTestResult = (sample: ConcreteSample) => {
+    if (!currentUser || currentUser.role === 'admin') return true;
+    const assignedStations = new Set<string>([
+      ...(currentUser.stationIds || []).map(String),
+      ...(currentUser.stationId ? [String(currentUser.stationId)] : []),
+    ]);
+    return assignedStations.has('all') || assignedStations.has(String(sample.stationId));
+  };
+
   // Quick Action: Open Test Result Modal
   const handleOpenTestModal = (sample: ConcreteSample) => {
+    if (!canEnterTestResult(sample)) {
+      alert(`Bạn không có quyền nhập kết quả cho mẫu của thành viên khác (${sample.createdByName || sample.samplerName || 'thành viên khác'}).`);
+      return;
+    }
     setTestingSample(sample);
     setIsTestResultModalOpen(true);
   };
@@ -1272,7 +1296,7 @@ export default function App() {
         }}
       />
 
-      {/* 4. Zalo Bot & Email Notification Center Modal */}
+      {/* 4. Email Notification Center Modal */}
       <NotificationModal
         isOpen={isNotificationModalOpen}
         onClose={() => {

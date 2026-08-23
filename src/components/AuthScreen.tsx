@@ -93,7 +93,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
           </p>
           <div className="inline-flex items-center space-x-1.5 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 text-xs px-3 py-1 rounded-full mt-2">
             <FlaskConical className="w-3.5 h-3.5" />
-            <span>Tự Động Nhắc Nhở Zalo / Email Hàng Ngày</span>
+            <span>Tự Động Nhắc Nhở Email Hàng Ngày</span>
           </div>
         </div>
 

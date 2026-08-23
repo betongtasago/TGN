@@ -220,13 +220,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
     }).length;
   }, [activeSamples, year, month]);
 
-  // Permission check helper
+  // Schedule deletion/editing remains limited to the creator; result entry is station-based.
   const canModifySample = (sample: ConcreteSample) => {
-    if (!currentUser) return true;
-    if (currentUser.role === 'admin') return true;
-    if (sample.createdBy && sample.createdBy === currentUser.username) return true;
-    if (sample.samplerName && sample.samplerName.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase()) return true;
-    return false;
+    if (!currentUser || currentUser.role === 'admin') return true;
+    return sample.createdBy === currentUser.username
+      || sample.samplerName?.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase();
+  };
+
+  const canEnterTestResult = (sample: ConcreteSample) => {
+    if (!currentUser || currentUser.role === 'admin') return true;
+    const assignedStations = new Set<string>([
+      ...(currentUser.stationIds || []).map(String),
+      ...(currentUser.stationId ? [String(currentUser.stationId)] : []),
+    ]);
+    return assignedStations.has('all') || assignedStations.has(String(sample.stationId));
   };
 
   const handleDeleteSchedule = (sample: ConcreteSample) => {
@@ -599,7 +606,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       </button>
 
                       <div className="flex items-center gap-1">
-                        {!isTested ? (
+                        {canEnterTestResult(sample) && (!isTested ? (
                           <button
                             onClick={() => {
                               if (onQuickMarkTested) {
@@ -623,7 +630,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             <Edit3 className="w-3 h-3" />
                             <span>Sửa MPa</span>
                           </button>
-                        )}
+                        ))}
 
                         <button
                           onClick={() => onSelectSampleDetail(sample)}
@@ -1072,7 +1079,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div className="pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-end gap-1.5">
                         
                         {/* Mark as Tested (1-click) */}
-                        {!isTested ? (
+                        {canEnterTestResult(sample) && (!isTested ? (
                           <button
                             onClick={() => {
                               if (onQuickMarkTested) {
@@ -1096,10 +1103,10 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Sửa Kết Quả</span>
                           </button>
-                        )}
+                        ))}
 
                         {/* Enter detailed Test Result (MPa) */}
-                        {!isTested && (
+                        {!isTested && canEnterTestResult(sample) && (
                           <button
                             onClick={() => onSelectSampleForTest(sample)}
                             className="bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1 cursor-pointer"
@@ -1119,12 +1126,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           <Printer className="w-3.5 h-3.5 text-slate-600" />
                         </button>
 
-                        {/* Send Zalo / Email */}
+                        {/* Send Email */}
                         {onOpenNotification && (
                           <button
                             onClick={() => onOpenNotification(sample)}
                             className="bg-white hover:bg-blue-50 text-blue-700 font-semibold text-xs p-1.5 rounded-xl border border-slate-200 cursor-pointer"
-                            title="Bắn tin Zalo / Email cho mẫu này"
+                            title="Gửi email cho mẫu này"
                           >
                             <Send className="w-3.5 h-3.5" />
                           </button>

@@ -995,7 +995,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     </div>
 
                     <div className="sm:col-span-3">
-                      <label className="block font-bold text-slate-700 mb-1">Email Nhận Báo Cáo / Zalo ID</label>
+                      <label className="block font-bold text-slate-700 mb-1">Email Nhận Báo Cáo</label>
                       <input
                         type="text"
                         value={newEmail}

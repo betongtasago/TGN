@@ -3,10 +3,15 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import dns from 'node:dns';
 import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_USERS, INITIAL_STATIONS, INITIAL_SAMPLES, INITIAL_NOTIFICATION_CONFIG } from './src/data/initialData';
 import { loadSupabaseState, persistSupabaseState, supabaseConfigured } from './supabaseStore';
+
+// Render environments can prefer Gmail's IPv6 address even when outbound IPv6
+// is unavailable. Prefer IPv4 for reliable SMTP connections.
+dns.setDefaultResultOrder('ipv4first');
 
 // ============================================================
 // AUTH: password hashing + signed session tokens
@@ -89,23 +94,35 @@ function loadOrCreateAuthSecret(): string {
 
 const AUTH_SECRET = loadOrCreateAuthSecret();
 
+const REMOVED_NOTIFICATION_KEYS = [
+  'autoZaloEnabled', 'zaloWebhookUrl', 'zaloWebhookSecret', 'zaloBotToken',
+  'zaloGroupId', 'zaloGroupChatId', 'zaloPersonalPhone', 'zaloPersonalChatId',
+  'zaloPersonalPhones', 'zaloRecipientType',
+];
+
+function stripRemovedNotificationFields(value: any) {
+  const cleaned = { ...(value || {}) };
+  REMOVED_NOTIFICATION_KEYS.forEach(key => delete cleaned[key]);
+  return cleaned;
+}
+
 function sanitizeConfig(config: any) {
   if (!config || typeof config !== 'object') return config;
+  const emailConfig = stripRemovedNotificationFields(config);
   return {
-    ...config,
+    ...emailConfig,
     smtpPass: config.smtpPass ? '[PROTECTED]' : '',
-    zaloBotToken: config.zaloBotToken ? '[PROTECTED]' : '',
-    zaloWebhookSecret: config.zaloWebhookSecret ? '[PROTECTED]' : '',
   };
 }
 
 function mergeConfigPreservingSecrets(current: any, incoming: any) {
-  const merged = { ...(current || {}), ...(incoming || {}) };
-  for (const key of ['smtpPass', 'zaloBotToken', 'zaloWebhookSecret']) {
-    if (!incoming || incoming[key] === undefined || incoming[key] === '' || incoming[key] === '[PROTECTED]') {
-      if (current?.[key]) merged[key] = current[key];
-      else delete merged[key];
-    }
+  const merged = {
+    ...stripRemovedNotificationFields(current),
+    ...stripRemovedNotificationFields(incoming),
+  };
+  if (!incoming || incoming.smtpPass === undefined || incoming.smtpPass === '' || incoming.smtpPass === '[PROTECTED]') {
+    if (current?.smtpPass) merged.smtpPass = current.smtpPass;
+    else delete merged.smtpPass;
   }
   return merged;
 }
@@ -157,7 +174,6 @@ interface ServerState {
   users: any[];
   config: {
     autoEmailEnabled?: boolean;
-    autoZaloEnabled?: boolean;
     emailRecipients?: string[];
     emailSender?: string;
     autoSendHour?: number;
@@ -167,16 +183,6 @@ interface ServerState {
     smtpUser?: string;
     smtpPass?: string;
     smtpSecure?: boolean;
-    emailServiceUrl?: string;
-    zaloWebhookUrl?: string;
-    zaloWebhookSecret?: string;
-    zaloBotToken?: string;
-    zaloGroupId?: string;
-    zaloGroupChatId?: string;
-    zaloPersonalPhone?: string;
-    zaloPersonalChatId?: string;
-    zaloPersonalPhones?: string[];
-    zaloRecipientType?: 'personal' | 'group' | 'both';
   };
   lastCronDate: string;
   lastCronLog: string;
@@ -371,6 +377,9 @@ function createSmtpTransporter(smtpConfig?: any) {
       user,
       pass
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
     tls: {
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
@@ -578,72 +587,6 @@ async function sendConfiguredEmail(samples: any[], config: any, targetDate = get
   };
 }
 
-function splitZaloText(text: string, maxLength = 2000): string[] {
-  const chunks: string[] = [];
-  let remaining = text;
-  while (remaining.length > maxLength) {
-    let cutAt = remaining.lastIndexOf('\n', maxLength);
-    if (cutAt < Math.floor(maxLength * 0.6)) cutAt = maxLength;
-    chunks.push(remaining.slice(0, cutAt).trim());
-    remaining = remaining.slice(cutAt).trim();
-  }
-  if (remaining) chunks.push(remaining);
-  return chunks;
-}
-
-async function sendZaloBotMessage(botToken: string, chatId: string, text: string) {
-  const endpoint = `https://bot-api.zaloplatforms.com/bot${encodeURIComponent(botToken)}/sendMessage`;
-  let lastPayload: any = null;
-  for (const chunk of splitZaloText(text)) {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text: chunk }),
-    });
-    const payload = await response.json().catch(() => null);
-    if (!response.ok || payload?.ok !== true) {
-      const detail = payload?.description || `HTTP ${response.status}`;
-      throw new Error(`Zalo Bot API từ chối gửi tới ${chatId}: ${detail}`);
-    }
-    lastPayload = payload;
-  }
-  return lastPayload;
-}
-
-async function sendConfiguredZalo(samples: any[], config: any, targetDate = getVietnamDateIso(), customMessage?: string) {
-  const botToken = config?.zaloBotToken || process.env.ZALO_BOT_TOKEN || '';
-  if (!botToken) {
-    return { success: false, message: 'Chưa cấu hình Zalo Bot Token. Hãy lấy Bot Token trong Zalo Bot Platform.' };
-  }
-
-  const recipientType = config?.zaloRecipientType || 'both';
-  const targets: Array<{ type: 'personal' | 'group'; label: string; chatId: string }> = [];
-  if (recipientType === 'personal' || recipientType === 'both') {
-    const chatId = String(config?.zaloPersonalChatId || '').trim();
-    if (!chatId) return { success: false, message: 'Chưa có Personal Chat ID. Hãy nhắn một tin cho Bot để webhook tự ghi nhận Chat ID.' };
-    targets.push({ type: 'personal', label: 'Zalo cá nhân', chatId });
-  }
-  if (recipientType === 'group' || recipientType === 'both') {
-    const chatId = String(config?.zaloGroupChatId || '').trim();
-    if (!chatId) return { success: false, message: 'Chưa có Group Chat ID. Hãy thêm Bot vào nhóm và nhập Group Chat ID.' };
-    targets.push({ type: 'group', label: 'nhóm Zalo', chatId });
-  }
-
-  const { text, urgentCount } = buildDailyEmailHtml(samples, serverState.stations, targetDate);
-  const message = customMessage || text;
-  const delivered: string[] = [];
-  for (const target of targets) {
-    await sendZaloBotMessage(botToken, target.chatId, message);
-    delivered.push(target.label);
-  }
-  return {
-    success: true,
-    message: `Đã gửi tin nhắn qua Zalo Bot API tới ${delivered.join(' và ')}.`,
-    recipients: targets.map(target => target.chatId),
-    urgentCount,
-  };
-}
-
 async function startServer() {
   try {
     if (supabaseConfigured) {
@@ -722,6 +665,48 @@ async function startServer() {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền quản trị thao tác này.' });
     }
     next();
+  }
+
+  function memberStationIds(user: any): Set<string> {
+    const ids = new Set<string>();
+    if (Array.isArray(user?.stationIds)) user.stationIds.forEach((id: unknown) => ids.add(String(id)));
+    if (user?.stationId) ids.add(String(user.stationId));
+    return ids;
+  }
+
+  function memberCanAccessStation(user: any, stationId: unknown): boolean {
+    if (!user || user.role === 'admin') return true;
+    const ids = memberStationIds(user);
+    return Boolean(stationId) && (ids.has('all') || ids.has(String(stationId)));
+  }
+
+  function memberOwnsSample(user: any, sample: any): boolean {
+    if (!user || user.role === 'admin') return true;
+    const sameCreator = sample?.createdBy && sample.createdBy === user.username;
+    const sameSampler = sample?.samplerName && user.fullName
+      && sample.samplerName.trim().toLowerCase() === user.fullName.trim().toLowerCase();
+    return Boolean(sameCreator || sameSampler);
+  }
+
+  function memberCanModifySample(user: any, sample: any): boolean {
+    if (!user || user.role === 'admin') return true;
+    return memberCanAccessStation(user, sample?.stationId) && memberOwnsSample(user, sample);
+  }
+
+  function memberOnlyChangesTestResult(existing: any, incoming: any): boolean {
+    const hasTestResult = Object.prototype.hasOwnProperty.call(incoming || {}, 'testResult');
+    return Object.keys(incoming || {}).every(key => {
+      if (key === 'testResult') return true;
+      if (key === 'status' || key === 'updatedAt') return hasTestResult;
+      return JSON.stringify(incoming[key]) === JSON.stringify(existing?.[key]);
+    });
+  }
+
+  function memberCanUpdateSample(user: any, existing: any, incoming: any): boolean {
+    if (!user || user.role === 'admin') return true;
+    if (existing?.stationId && incoming?.stationId && String(existing.stationId) !== String(incoming.stationId)) return false;
+    if (memberCanModifySample(user, { ...(existing || {}), ...(incoming || {}) })) return true;
+    return Boolean(existing) && memberCanAccessStation(user, existing.stationId) && memberOnlyChangesTestResult(existing, incoming);
   }
 
   // Login: the only write endpoint that stays public (it's how you get a token).
@@ -820,36 +805,6 @@ async function startServer() {
       }
     }
   }
-
-  // Zalo Bot webhook: Zalo calls this endpoint when a user or group sends a message.
-  // It is intentionally public, but every request must carry the configured secret.
-  app.post('/api/zalo/webhook', async (req, res) => {
-    const expectedSecret = serverState.config.zaloWebhookSecret || process.env.ZALO_WEBHOOK_SECRET || '';
-    const receivedSecret = req.header('X-Bot-Api-Secret-Token') || '';
-    if (!expectedSecret || receivedSecret !== expectedSecret) {
-      return res.status(403).json({ ok: false, message: 'Webhook secret không hợp lệ.' });
-    }
-
-    try {
-      const message = req.body?.result?.message;
-      const chatId = String(message?.chat?.id || '').trim();
-      const chatType = String(message?.chat?.chat_type || '').toUpperCase();
-      if (chatId) {
-        if (chatType === 'GROUP') serverState.config.zaloGroupChatId = chatId;
-        else serverState.config.zaloPersonalChatId = chatId;
-        await savePersistedState(serverState);
-        broadcastSseEvent({
-          type: 'CONFIG_UPDATED',
-          config: sanitizeConfig(serverState.config),
-          timestamp: Date.now(),
-        });
-      }
-      return res.json({ ok: true, captured: Boolean(chatId), chatType: chatType || 'PRIVATE' });
-    } catch (error: any) {
-      console.error('[ZALO WEBHOOK ERROR]', error);
-      return res.status(500).json({ ok: false, message: 'Không thể xử lý webhook Zalo.' });
-    }
-  });
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
@@ -1002,8 +957,26 @@ async function startServer() {
   app.post('/api/samples/save', requireAuth, async (req, res) => {
     try {
       const { sample, samples, actionBy } = req.body;
+      const authUser = (req as any).authUser;
       let currentSamples = [...(serverState.samples || [])];
       let savedSampleResult: any = null;
+
+      if (authUser?.role !== 'admin') {
+        if (sample && typeof sample === 'object' && sample.id) {
+          const existing = currentSamples.find((item: any) => item.id === sample.id);
+          if (!memberCanUpdateSample(authUser, existing, sample)) {
+            return res.status(403).json({ success: false, message: 'Member chỉ được nhập kết quả cho mẫu do mình phụ trách tại trạm được phân công.' });
+          }
+        } else if (Array.isArray(samples)) {
+          const invalid = samples.find((item: any) => {
+            const existing = currentSamples.find((current: any) => current.id === item?.id);
+            return !item || !memberCanUpdateSample(authUser, existing, item);
+          });
+          if (invalid) {
+            return res.status(403).json({ success: false, message: 'Member không được cập nhật mẫu hoặc kết quả của thành viên khác.' });
+          }
+        }
+      }
 
       if (sample && typeof sample === 'object' && sample.id) {
         const idx = currentSamples.findIndex((s: any) => s.id === sample.id);
@@ -1057,6 +1030,12 @@ async function startServer() {
     try {
       const { id } = req.body;
       if (!id) return res.status(400).json({ success: false, message: 'Missing sample ID' });
+      const authUser = (req as any).authUser;
+      const targetSample = (serverState.samples || []).find((item: any) => item.id === id);
+      if (!targetSample) return res.status(404).json({ success: false, message: 'Không tìm thấy mẫu bê tông.' });
+      if (!memberCanModifySample(authUser, targetSample)) {
+        return res.status(403).json({ success: false, message: 'Member không được xóa mẫu của thành viên khác hoặc mẫu ngoài trạm được phân công.' });
+      }
       serverState.samples = (serverState.samples || []).filter((s: any) => s.id !== id);
       await savePersistedState(serverState);
 
@@ -1081,7 +1060,17 @@ async function startServer() {
   app.post('/api/samples', requireAuth, async (req, res) => {
     try {
       const { samples } = req.body;
+      const authUser = (req as any).authUser;
       if (Array.isArray(samples)) {
+        if (authUser?.role !== 'admin') {
+          const invalid = samples.find((item: any) => {
+            const existing = (serverState.samples || []).find((current: any) => current.id === item?.id);
+            return !item || !memberCanUpdateSample(authUser, existing, item);
+          });
+          if (invalid) {
+            return res.status(403).json({ success: false, message: 'Member không được đồng bộ mẫu hoặc kết quả của thành viên khác.' });
+          }
+        }
         serverState.samples = samples;
         await savePersistedState(serverState);
         broadcastSseEvent({
@@ -1149,11 +1138,11 @@ async function startServer() {
   app.post('/api/notification-logs', requireAuth, async (req, res) => {
     try {
       const { log } = req.body || {};
-      if (!log || typeof log !== 'object' || !log.id) {
-        return res.status(400).json({ success: false, message: 'Invalid notification log payload' });
+      if (!log || typeof log !== 'object' || !log.id || log.channel !== 'email') {
+        return res.status(400).json({ success: false, message: 'Chỉ hỗ trợ notification log của Email.' });
       }
       const logs = Array.isArray(serverState.notificationLogs) ? serverState.notificationLogs : [];
-      serverState.notificationLogs = [log, ...logs.filter((item: any) => item.id !== log.id)].slice(0, 100);
+      serverState.notificationLogs = [log, ...logs.filter((item: any) => item.id !== log.id && item.channel === 'email')].slice(0, 100);
       await savePersistedState(serverState);
       return res.json({ success: true, notificationLogs: serverState.notificationLogs });
     } catch (e: any) {
@@ -1191,6 +1180,15 @@ async function startServer() {
       const isAdmin = (req as any).authUser?.role === 'admin';
       if (!isAdmin && (config !== undefined || users !== undefined || stations !== undefined || action === 'restore_full_backup')) {
         return res.status(403).json({ success: false, message: 'Chỉ admin mới được thay đổi cấu hình, người dùng, trạm hoặc khôi phục backup.' });
+      }
+      if (!isAdmin && Array.isArray(samples)) {
+        const invalid = samples.find((item: any) => {
+          const existing = (serverState.samples || []).find((current: any) => current.id === item?.id);
+          return !item || !memberCanUpdateSample((req as any).authUser, existing, item);
+        });
+        if (invalid) {
+          return res.status(403).json({ success: false, message: 'Member không được đồng bộ mẫu hoặc kết quả của thành viên khác.' });
+        }
       }
 
       if (action === 'restore_full_backup') {
@@ -1351,8 +1349,7 @@ async function startServer() {
         subject,
         html,
         plainText,
-        smtpConfig,
-        emailServiceUrl
+        smtpConfig
       } = req.body;
 
       if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
@@ -1377,38 +1374,7 @@ async function startServer() {
       const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${todayStr}`;
       const senderName = smtpConfig?.smtpFrom || serverState.config.emailSender || process.env.SMTP_FROM || 'Bê Tông Tasago <tasagotnt@gmail.com>';
 
-      // Method 1: Google Apps Script Web App Endpoint / Custom Webhook Mailer
-      const targetServiceUrl = emailServiceUrl || smtpConfig?.emailServiceUrl || serverState.config.emailServiceUrl || process.env.EMAIL_SERVICE_URL;
-      if (targetServiceUrl && targetServiceUrl.startsWith('http')) {
-        try {
-          const webhookRes = await fetch(targetServiceUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'SEND_DAILY_SAMPLE_EMAIL',
-              company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
-              recipients: validRecipients,
-              subject: emailSubject,
-              html: html,
-              text: plainText,
-              timestamp: new Date().toISOString()
-            })
-          });
-
-          if (webhookRes.ok) {
-            return res.status(200).json({
-              success: true,
-              channel: 'google_apps_script_mailer',
-              message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ qua Webhook Mail Service (${validRecipients.join(', ')}).`,
-              recipients: validRecipients
-            });
-          }
-        } catch (webhookErr: any) {
-          console.warn('Webhook mailer error, falling back to SMTP:', webhookErr.message);
-        }
-      }
-
-      // Method 2: Nodemailer SMTP Server (Gmail STARTTLS Port 587 / SSL Port 465)
+      // Nodemailer SMTP Server (Gmail STARTTLS Port 587 / SSL Port 465)
       const { transporter, host, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
 
       if (host && user && pass) {
@@ -1429,39 +1395,6 @@ async function startServer() {
         });
       }
 
-      // Method 3: Resend API if API Key is configured in environment
-      if (process.env.RESEND_API_KEY) {
-        try {
-          const resendRes = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
-            },
-            body: JSON.stringify({
-              from: senderName.includes('<') ? senderName : `Tasago Portal <${senderName}>`,
-              to: validRecipients,
-              subject: emailSubject,
-              html: html,
-              text: plainText
-            })
-          });
-
-          const resendData = await resendRes.json();
-          if (resendRes.ok) {
-            return res.status(200).json({
-              success: true,
-              channel: 'resend_api',
-              message: `Đã gửi email thành công tới ${validRecipients.length} người nhận qua Resend API!`,
-              id: resendData.id,
-              recipients: validRecipients
-            });
-          }
-        } catch (resendErr: any) {
-          console.warn('Resend API attempt note:', resendErr.message);
-        }
-      }
-
       return res.status(503).json({
         success: false,
         message: 'Chưa cấu hình SMTP hợp lệ. Hãy nhập SMTP User và Mật khẩu ứng dụng rồi bấm Kiểm tra kết nối trước khi gửi.'
@@ -1471,56 +1404,12 @@ async function startServer() {
       console.error('Lỗi khi gửi email:', error);
       return res.status(500).json({
         success: false,
-        message: `Lỗi khi phát email: ${error.message}`
+        message: `Lỗi khi phát email SMTP: ${error.message}${error.code === 'ENETUNREACH' ? ' — Render không thể kết nối IPv6; bản mới đã ưu tiên IPv4, hãy redeploy backend.' : ''}`
       });
     }
   });
 
-  // 4. Send a real test message through the official Zalo Bot API.
-  app.post('/api/notifications/test-zalo', requireAuth, requireAdmin, async (req, res) => {
-    try {
-      const requestConfig = {
-        ...serverState.config,
-        ...req.body,
-        zaloBotToken: req.body?.botToken || serverState.config.zaloBotToken,
-        zaloPersonalChatId: req.body?.personalChatId || serverState.config.zaloPersonalChatId,
-        zaloGroupChatId: req.body?.groupChatId || serverState.config.zaloGroupChatId,
-        zaloRecipientType: req.body?.recipientType || serverState.config.zaloRecipientType || 'both',
-      };
-      const result = await sendConfiguredZalo(
-        getCurrentSamples().slice(0, 1),
-        requestConfig,
-        getVietnamDateIso(),
-        `🔔 [TASAGO BOT ZALO TEST]\n⏰ ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}\n✅ Kết nối Zalo Bot API thành công.`
-      );
-      return res.status(result.success ? 200 : 400).json(result);
-    } catch (error: any) {
-      console.error('Lỗi khi test Zalo Bot API:', error);
-      return res.status(502).json({ success: false, message: error.message || 'Không thể gửi thử qua Zalo Bot API.' });
-    }
-  });
-
-  // 5. Send a real Zalo notification through the official Bot API.
-  app.post('/api/notifications/send-zalo', requireAuth, requireAdmin, async (req, res) => {
-    try {
-      const targetSamples = Array.isArray(req.body?.samples) && req.body.samples.length > 0 ? req.body.samples : getCurrentSamples();
-      const requestConfig = {
-        ...serverState.config,
-        ...req.body,
-        zaloBotToken: req.body?.botToken || serverState.config.zaloBotToken,
-        zaloPersonalChatId: req.body?.personalChatId || serverState.config.zaloPersonalChatId,
-        zaloGroupChatId: req.body?.groupChatId || serverState.config.zaloGroupChatId,
-        zaloRecipientType: req.body?.recipientType || serverState.config.zaloRecipientType || 'both',
-      };
-      const result = await sendConfiguredZalo(targetSamples, requestConfig, getVietnamDateIso(), req.body?.customMessage);
-      return res.status(result.success ? 200 : 400).json({ ...result, sampleCount: targetSamples.length });
-    } catch (error: any) {
-      console.error('Lỗi khi gửi Zalo Bot API:', error);
-      return res.status(502).json({ success: false, message: error.message || 'Không thể gửi qua Zalo Bot API.' });
-    }
-  });
-
-  // 6. Trigger 07:00 AM Cron Manually on Server (Email + Zalo Bot)
+  // Trigger 07:00 AM email cron manually on the server
   app.post('/api/cron/trigger', requireAuth, requireAdmin, async (req, res) => {
     try {
       const todayIso = getVietnamDateIso();
@@ -1549,16 +1438,7 @@ async function startServer() {
         }
       }
 
-      if (serverState.config.autoZaloEnabled) {
-        try {
-          const zaloResult = await sendConfiguredZalo(targetSamples, serverState.config, todayIso);
-          logParts.push(zaloResult.success ? zaloResult.message : `Zalo lỗi: ${zaloResult.message}`);
-        } catch (zaloError: any) {
-          logParts.push(`Zalo lỗi: ${zaloError.message}`);
-        }
-      }
-
-      const resultSummary = logParts.length > 0 ? logParts.join(' | ') : 'Chưa bật kênh gửi Email/Zalo';
+      const resultSummary = logParts.length > 0 ? logParts.join(' | ') : 'Email tự động đang tắt';
       serverState.lastCronDate = todayIso;
       serverState.lastCronLog = `[Thủ công 07:00 AM] Phát thông báo lúc ${new Date().toLocaleTimeString('vi-VN')} cho ${targetSamples.length} mẫu nén. Kết quả: ${resultSummary}`;
       await savePersistedState(serverState);
@@ -1613,15 +1493,6 @@ async function startServer() {
             }
           }
 
-          if (serverState.config.autoZaloEnabled) {
-            try {
-              const zaloResult = await sendConfiguredZalo(urgentSamples, serverState.config, vnDate);
-              cronLogItems.push(zaloResult.success ? zaloResult.message : `Zalo lỗi: ${zaloResult.message}`);
-            } catch (zaloError: any) {
-              cronLogItems.push(`Zalo lỗi: ${zaloError.message}`);
-              console.error('[CRON ZALO ERROR]', zaloError.message);
-            }
-          }
         }
 
         serverState.lastCronDate = vnDate;

@@ -1,4 +1,7 @@
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
+
+dns.setDefaultResultOrder('ipv4first');
 
 export const config = {
   api: {
@@ -31,8 +34,7 @@ export default async function handler(req: any, res: any) {
       subject,
       html,
       plainText,
-      smtpConfig,
-      emailServiceUrl
+      smtpConfig
     } = req.body || {};
 
     const rawList = Array.isArray(recipients) ? recipients : (process.env.EMAIL_RECIPIENTS || '').split(',');
@@ -62,71 +64,7 @@ export default async function handler(req: any, res: any) {
 
     const from = process.env.SMTP_FROM || supplied.smtpFrom || (user ? `Bê Tông Tasago <${user}>` : 'Bê Tông Tasago <tasagotnt@gmail.com>');
 
-    // 1. Google Apps Script / Webhook Mailer if provided
-    const targetServiceUrl = emailServiceUrl || supplied.emailServiceUrl || process.env.EMAIL_SERVICE_URL;
-    if (targetServiceUrl && targetServiceUrl.startsWith('http')) {
-      try {
-        const webhookRes = await fetch(targetServiceUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'SEND_DAILY_SAMPLE_EMAIL',
-            company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
-            recipients: validRecipients,
-            subject: emailSubject,
-            html,
-            text: plainText,
-            timestamp: new Date().toISOString()
-          })
-        });
-
-        if (webhookRes.ok) {
-          return res.status(200).json({
-            success: true,
-            channel: 'webhook_mailer',
-            message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ qua Webhook Mailer!`,
-            recipients: validRecipients
-          });
-        }
-      } catch (webhookErr: any) {
-        console.warn('Webhook mailer error, fallback to SMTP:', webhookErr);
-      }
-    }
-
-    // 2. Resend API if configured
-    if (process.env.RESEND_API_KEY) {
-      try {
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.RESEND_API_KEY}`
-          },
-          body: JSON.stringify({
-            from: from.includes('<') ? from : `Tasago Portal <${from}>`,
-            to: validRecipients,
-            subject: emailSubject,
-            html: html || `<p>${(plainText || '').replace(/\n/g, '<br>')}</p>`,
-            text: plainText || ''
-          })
-        });
-
-        const resendData = await resendRes.json().catch(() => ({}));
-        if (resendRes.ok) {
-          return res.status(200).json({
-            success: true,
-            channel: 'resend_api',
-            message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ qua Resend API!`,
-            id: resendData.id,
-            recipients: validRecipients
-          });
-        }
-      } catch (resendErr: any) {
-        console.warn('Resend error, fallback to SMTP:', resendErr);
-      }
-    }
-
-    // 3. SMTP Nodemailer (Gmail STARTTLS 587 or SSL 465)
+    // SMTP Nodemailer (Gmail STARTTLS 587 or SSL 465)
     if (host && user && pass) {
       const transporter = nodemailer.createTransport({
         host,
@@ -134,6 +72,9 @@ export default async function handler(req: any, res: any) {
         secure: isSecure,
         requireTLS: !isSecure,
         auth: { user, pass },
+        connectionTimeout: 15000,
+        greetingTimeout: 15000,
+        socketTimeout: 30000,
         tls: {
           rejectUnauthorized: false,
           minVersion: 'TLSv1.2'
@@ -159,14 +100,14 @@ export default async function handler(req: any, res: any) {
 
     return res.status(503).json({
       success: false,
-      message: 'Chưa cấu hình mật khẩu SMTP (SMTP_PASS) hoặc RESEND_API_KEY trên Vercel Environment Variables.'
+      message: 'Chưa cấu hình mật khẩu SMTP (SMTP_PASS) trên Vercel Environment Variables.'
     });
 
   } catch (error: any) {
     console.error('Lỗi khi gửi email:', error);
     return res.status(500).json({
       success: false,
-      message: `Lỗi máy chủ gửi email: ${error.message || 'Lỗi không xác định'}`
+      message: `Lỗi máy chủ gửi email SMTP: ${error.message || 'Lỗi không xác định'}${error.code === 'ENETUNREACH' ? ' — bản mới đã ưu tiên IPv4, hãy redeploy Vercel.' : ''}`
     });
   }
 }

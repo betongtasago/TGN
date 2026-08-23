@@ -10,7 +10,6 @@ export interface User {
   stationId?: string;   // single primary station if member
   phone: string;
   email: string;
-  zaloId?: string;
   active: boolean;
   isActive?: boolean;
   createdAt: string;
@@ -113,7 +112,7 @@ export interface ConcreteSample {
 export interface NotificationLog {
   id: string;
   timestamp: string;
-  channel: 'zalo_bot' | 'email' | 'zalo_oa' | 'sms';
+  channel: 'email';
   recipient: string;
   sampleIds: string[];
   sampleInfoSummary: string;
@@ -123,16 +122,6 @@ export interface NotificationLog {
 }
 
 export interface NotificationConfig {
-  autoZaloEnabled: boolean;
-  zaloWebhookUrl: string;
-  zaloWebhookSecret?: string;
-  zaloBotToken: string;
-  zaloGroupId: string;
-  zaloGroupChatId?: string;
-  zaloPersonalPhone?: string;
-  zaloPersonalChatId?: string;     // Số điện thoại Zalo cá nhân nhận tin chính (ví dụ: 0942320923)
-  zaloPersonalPhones?: string[];   // Danh sách các SĐT Zalo cá nhân nhận tin
-  zaloRecipientType?: 'personal' | 'group' | 'both'; // Gửi cho cá nhân, nhóm hay cả hai
   autoEmailEnabled: boolean;
   emailRecipients: string[];
   emailSender: string;
@@ -145,7 +134,6 @@ export interface NotificationConfig {
   smtpUser?: string;
   smtpPass?: string;
   smtpSecure?: boolean;
-  emailServiceUrl?: string;   // Google Apps Script / Endpoint gửi email miễn phí
 }
 
 export interface SampleFilterOptions {
