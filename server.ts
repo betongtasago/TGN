@@ -658,6 +658,52 @@ async function startServer() {
     return res.json({ success: true, user: sanitizeUser((req as any).authUser) });
   });
 
+  // Self-service password change. The current password is always required;
+  // the new password is stored only as a scrypt hash and never returned.
+  app.post('/api/auth/change-password', requireAuth, async (req, res) => {
+    try {
+      const currentPassword = typeof req.body?.currentPassword === 'string' ? req.body.currentPassword : '';
+      const newPassword = typeof req.body?.newPassword === 'string' ? req.body.newPassword : '';
+      const authUser = (req as any).authUser;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.' });
+      }
+      if (newPassword.length < 8) {
+        return res.status(400).json({ success: false, message: 'Mật khẩu mới phải có ít nhất 8 ký tự.' });
+      }
+      if (currentPassword === newPassword) {
+        return res.status(400).json({ success: false, message: 'Mật khẩu mới phải khác mật khẩu hiện tại.' });
+      }
+
+      const user = ((serverState as any).users || []).find((item: any) => item.id === authUser.id);
+      if (!user || user.active === false) {
+        return res.status(401).json({ success: false, message: 'Tài khoản không tồn tại hoặc đã bị vô hiệu hóa.' });
+      }
+      if (!verifyPassword(currentPassword, user.password)) {
+        return res.status(401).json({ success: false, message: 'Mật khẩu hiện tại không chính xác.' });
+      }
+
+      user.password = hashPassword(newPassword);
+      await savePersistedState(serverState);
+      broadcastSseEvent({
+        type: 'USERS_UPDATED',
+        users: sanitizeUsers((serverState as any).users || []),
+        timestamp: Date.now(),
+      });
+
+      return res.json({
+        success: true,
+        message: 'Đổi mật khẩu thành công.',
+        token: issueToken(user),
+        user: sanitizeUser(user),
+      });
+    } catch (e: any) {
+      console.error('[AUTH CHANGE PASSWORD ERROR]', e);
+      return res.status(500).json({ success: false, message: 'Không thể lưu mật khẩu mới. Vui lòng thử lại.' });
+    }
+  });
+
   // Set of active SSE (Server-Sent Events) clients for real-time instantaneous sync across all tabs & devices
   const sseClients = new Set<express.Response>();
 

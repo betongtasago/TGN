@@ -66,6 +66,7 @@ import { CalendarView } from './components/CalendarView';
 import { ReportsView } from './components/ReportsView';
 import { UserManagementModal } from './components/UserManagementModal';
 import { GitHubExportModal } from './components/GitHubExportModal';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 
 export default function App() {
   // Authentication state
@@ -108,6 +109,7 @@ export default function App() {
   const [notificationPreselectedSample, setNotificationPreselectedSample] = useState<ConcreteSample | null>(null);
 
   const [isUserManagementModalOpen, setIsUserManagementModalOpen] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
   const [userManagementTab, setUserManagementTab] = useState<'users' | 'stations'>('stations');
   const [isGitHubExportModalOpen, setIsGitHubExportModalOpen] = useState(false);
   const [showAutoAlertBanner, setShowAutoAlertBanner] = useState(true);
@@ -861,6 +863,7 @@ export default function App() {
         activeTab={activeTab}
         onChangeTab={setActiveTab}
         onLogout={handleLogout}
+        onOpenChangePassword={() => setIsChangePasswordModalOpen(true)}
         onOpenAddModal={handleOpenAddForm}
         onOpenNotificationModal={() => handleOpenNotificationModal()}
         onOpenUserManagement={(tab) => {
@@ -1301,7 +1304,17 @@ export default function App() {
         initialTab={userManagementTab}
       />
 
-      {/* 6. GitHub Export & JSON Backup Modal */}
+      {/* 6. Change Password Modal */}
+      <ChangePasswordModal
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+        onPasswordChanged={(updatedUser) => {
+          setCurrentUser(updatedUser);
+          saveCurrentUserToStorage(updatedUser);
+        }}
+      />
+
+      {/* 7. GitHub Export & JSON Backup Modal */}
       <GitHubExportModal
         isOpen={isGitHubExportModalOpen}
         onClose={() => setIsGitHubExportModalOpen(false)}

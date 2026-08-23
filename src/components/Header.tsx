@@ -24,7 +24,8 @@ import {
   LayoutGrid,
   HelpCircle,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  KeyRound
 } from 'lucide-react';
 import { User, Station } from '../types';
 import { ViewMode } from '../utils/storage';
@@ -37,6 +38,7 @@ interface HeaderProps {
   activeTab: 'samples' | 'calendar' | 'analytics' | 'reports';
   onChangeTab: (tab: 'samples' | 'calendar' | 'analytics' | 'reports') => void;
   onLogout: () => void;
+  onOpenChangePassword: () => void;
   onOpenAddModal: () => void;
   onOpenNotificationModal: () => void;
   onOpenUserManagement: (tab?: 'users' | 'stations') => void;
@@ -58,6 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   onChangeTab,
   onLogout,
+  onOpenChangePassword,
   onOpenAddModal,
   onOpenNotificationModal,
   onOpenUserManagement,
@@ -285,6 +288,14 @@ export const Header: React.FC<HeaderProps> = ({
                     </p>
                   </div>
 
+                  <button
+                    onClick={onOpenChangePassword}
+                    className="w-full text-left px-4 py-2 font-bold text-emerald-800 hover:bg-emerald-50 flex items-center gap-2 cursor-pointer"
+                  >
+                    <KeyRound className="w-4 h-4 text-emerald-600" />
+                    <span>Đổi mật khẩu</span>
+                  </button>
+
                   {currentUser.role === 'admin' && (
                     <>
                       <button
@@ -481,6 +492,19 @@ export const Header: React.FC<HeaderProps> = ({
               <Phone className="w-3.5 h-3.5" />
               <span>0942.320.923</span>
             </a>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-800/80">
+            <button
+              onClick={() => {
+                onOpenChangePassword();
+                setMobileMenuOpen(false);
+              }}
+              className="bg-teal-700/80 hover:bg-teal-600 text-white p-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-teal-200" />
+              <span>Đổi mật khẩu</span>
+            </button>
           </div>
 
           {currentUser?.role === 'admin' && (
