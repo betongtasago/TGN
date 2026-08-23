@@ -49,7 +49,7 @@ Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiế
 - **Frontend:** React 19, TypeScript, Vite
 - **Styling:** Tailwind CSS v4, Lucide Icons, Motion
 - **Biểu đồ & Xử lý dữ liệu:** Recharts, XLSX (SheetJS)
-- **Lưu trữ:** LocalStorage với khả năng sao lưu/phục hồi qua JSON Backup
+- **Lưu trữ:** Supabase PostgreSQL (bản ghi `app_state` với JSONB) làm nguồn dữ liệu trung tâm; LocalStorage chỉ giữ cache offline và tùy chọn giao diện
 
 ---
 
@@ -76,6 +76,14 @@ npm run build
 ```
 
 ---
+
+## Cấu hình Supabase (bắt buộc cho production)
+
+Tạo một project trên [Supabase](https://supabase.com/dashboard), mở **SQL Editor** và chạy toàn bộ file [`supabase/migrations/202608230001_create_app_state.sql`](./supabase/migrations/202608230001_create_app_state.sql). Migration tạo bảng `public.app_state`, bật RLS, chỉ cấp quyền cho `service_role` và đăng ký bảng với Realtime.
+
+Lấy **Project URL** cùng **service-role/secret key** trong phần API của project rồi khai báo `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` trên Render cùng với `AUTH_SECRET`. Không đưa service-role key vào biến `VITE_*`, mã frontend, trình duyệt hoặc GitHub. Khi `NODE_ENV=production`, backend sẽ từ chối khởi động nếu thiếu hai biến Supabase thay vì âm thầm ghi vào filesystem tạm.
+
+Ở lần khởi động đầu tiên, backend tạo bản ghi mặc định từ dữ liệu mẫu hoặc nhập `data/server-state.json` hiện có nếu bản ghi Supabase chưa tồn tại. Sau đó mọi thao tác CRUD, cấu hình và nhật ký thông báo đều được ghi qua Supabase; LocalStorage chỉ là cache offline.
 
 ## 📦 Hướng Dẫn Đẩy Lên GitHub
 

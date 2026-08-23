@@ -1,14 +1,12 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { fileURLToPath } from 'url';
 import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_USERS, INITIAL_STATIONS, INITIAL_SAMPLES, INITIAL_NOTIFICATION_CONFIG } from './src/data/initialData';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import { loadSupabaseState, persistSupabaseState, supabaseConfigured } from './supabaseStore';
 
 // ============================================================
 // AUTH: password hashing + signed session tokens
@@ -90,6 +88,26 @@ function loadOrCreateAuthSecret(): string {
 }
 
 const AUTH_SECRET = loadOrCreateAuthSecret();
+
+function sanitizeConfig(config: any) {
+  if (!config || typeof config !== 'object') return config;
+  return {
+    ...config,
+    smtpPass: config.smtpPass ? '[PROTECTED]' : '',
+    zaloBotToken: config.zaloBotToken ? '[PROTECTED]' : '',
+  };
+}
+
+function mergeConfigPreservingSecrets(current: any, incoming: any) {
+  const merged = { ...(current || {}), ...(incoming || {}) };
+  for (const key of ['smtpPass', 'zaloBotToken']) {
+    if (!incoming || incoming[key] === undefined || incoming[key] === '' || incoming[key] === '[PROTECTED]') {
+      if (current?.[key]) merged[key] = current[key];
+      else delete merged[key];
+    }
+  }
+  return merged;
+}
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days — field technicians may go long stretches offline
 
 function base64url(input: Buffer | string): string {
@@ -158,6 +176,7 @@ interface ServerState {
   };
   lastCronDate: string;
   lastCronLog: string;
+  notificationLogs: any[];
 }
 
 // ============================================================
@@ -185,14 +204,17 @@ function loadPersistedState(): ServerState {
     if (fs.existsSync(stateFilePath)) {
       const raw = fs.readFileSync(stateFilePath, 'utf8');
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed.users) || parsed.users.length === 0) {
+      if (!Array.isArray(parsed.users)) {
         parsed.users = INITIAL_USERS;
       }
-      if (!Array.isArray(parsed.stations) || parsed.stations.length === 0) {
+      if (!Array.isArray(parsed.stations)) {
         parsed.stations = INITIAL_STATIONS;
       }
-      if (!Array.isArray(parsed.samples) || parsed.samples.length === 0) {
+      if (!Array.isArray(parsed.samples)) {
         parsed.samples = INITIAL_SAMPLES;
+      }
+      if (!Array.isArray(parsed.notificationLogs)) {
+        parsed.notificationLogs = [];
       }
       if (!parsed.config || typeof parsed.config !== 'object') {
         parsed.config = INITIAL_NOTIFICATION_CONFIG;
@@ -210,7 +232,8 @@ function loadPersistedState(): ServerState {
     users: INITIAL_USERS,
     config: INITIAL_NOTIFICATION_CONFIG,
     lastCronDate: '',
-    lastCronLog: 'Hệ thống vừa khởi động, sẵn sàng cho lịch phát 07:00 Sáng.'
+    lastCronLog: 'Hệ thống vừa khởi động, sẵn sàng cho lịch phát 07:00 Sáng.',
+    notificationLogs: []
   };
 
   try {
@@ -229,58 +252,45 @@ function loadPersistedState(): ServerState {
 // ============================================================
 // SAFE PERSISTENCE
 // ============================================================
-//
-// Ghi file theo kiểu atomic:
-// 1. Ghi vào file .tmp
-// 2. fsync
-// 3. rename sang file chính
-//
-// Nếu server chết giữa lúc ghi, khả năng làm hỏng JSON
-// sẽ thấp hơn rất nhiều.
+// Supabase is the production source of truth. A local atomic JSON snapshot is
+// retained only for development fallback and disaster recovery during startup.
+// Writes are serialized so concurrent requests cannot overwrite each other.
 // ============================================================
 
 let saveQueue: Promise<void> = Promise.resolve();
 
 function queuePersistedState(state: ServerState): Promise<void> {
   saveQueue = saveQueue
+    .catch(() => undefined)
     .then(async () => {
-      try {
-        if (!fs.existsSync(DATA_DIR)) {
-          fs.mkdirSync(DATA_DIR, { recursive: true });
-        }
-
-        const json = JSON.stringify(state, null, 2);
-
-        const fd = fs.openSync(tempStateFilePath, 'w');
-
-        try {
-          fs.writeSync(fd, json, 0, 'utf8');
-          fs.fsyncSync(fd);
-        } finally {
-          fs.closeSync(fd);
-        }
-
-        fs.renameSync(tempStateFilePath, stateFilePath);
-      } catch (error) {
-        console.error(
-          '[STATE SAVE ERROR]',
-          error
-        );
+      if (supabaseConfigured) {
+        await persistSupabaseState(state);
+        return;
       }
-    })
-    .catch(error => {
-      console.error(
-        '[STATE QUEUE ERROR]',
-        error
-      );
+
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Thiếu SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY trong môi trường production.');
+      }
+
+      if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+      const json = JSON.stringify(state, null, 2);
+      const fd = fs.openSync(tempStateFilePath, 'w');
+      try {
+        fs.writeSync(fd, json, 0, 'utf8');
+        fs.fsyncSync(fd);
+      } finally {
+        fs.closeSync(fd);
+      }
+      fs.renameSync(tempStateFilePath, stateFilePath);
     });
 
   return saveQueue;
 }
 
 // Giữ lại tên cũ để toàn bộ code hiện tại không phải sửa.
-function savePersistedState(state: ServerState) {
-  void queuePersistedState(state);
+function savePersistedState(state: ServerState): Promise<void> {
+  const snapshot = JSON.parse(JSON.stringify(state)) as ServerState;
+  return queuePersistedState(snapshot);
 }
 
 let serverState: ServerState = loadPersistedState();
@@ -297,9 +307,9 @@ let serverState: ServerState = loadPersistedState();
       changed = true;
     }
   }
-  if (changed) {
+  if (changed && !supabaseConfigured && process.env.NODE_ENV !== 'production') {
     console.log('[AUTH] Migrated legacy plaintext password(s) to hashed format.');
-    savePersistedState(serverState);
+    void savePersistedState(serverState).catch(error => console.error('[AUTH MIGRATION SAVE ERROR]', error));
   }
 })();
 
@@ -313,12 +323,37 @@ function formatDateVN(dateStr?: string): string {
   return dateStr;
 }
 
+function getVietnamDateIso(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function refreshServerSampleStatus(sample: any): any {
+  if (!sample || ['tested_passed', 'tested_failed', 'cancelled'].includes(sample.status)) return sample;
+  const scheduled = typeof sample.scheduledTestDate === 'string' ? sample.scheduledTestDate : '';
+  if (!scheduled) return sample;
+  const today = getVietnamDateIso();
+  const status = scheduled === today ? 'due_today' : scheduled < today ? 'overdue' : 'pending';
+  return sample.status === status ? sample : { ...sample, status };
+}
+
+function getCurrentSamples(): any[] {
+  return (serverState.samples || []).map(refreshServerSampleStatus);
+}
+
 // Helper: Create Nodemailer Transporter with STARTTLS
 function createSmtpTransporter(smtpConfig?: any) {
   const host = smtpConfig?.smtpHost || serverState.config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
   const port = Number(smtpConfig?.smtpPort || serverState.config.smtpPort || process.env.SMTP_PORT || 587);
   const user = (smtpConfig?.smtpUser || serverState.config.smtpUser || process.env.SMTP_USER || 'tasagotnt@gmail.com').trim();
-  const rawPass = (smtpConfig?.smtpPass || serverState.config.smtpPass || process.env.SMTP_PASS || '');
+  const requestPass = smtpConfig?.smtpPass && smtpConfig.smtpPass !== '[PROTECTED]' ? smtpConfig.smtpPass : '';
+  const rawPass = requestPass || serverState.config.smtpPass || process.env.SMTP_PASS || '';
   // Clean password: strip all spaces that are commonly added when copying Gmail App Passwords (e.g. "abcd efgh ijkl mnop")
   const pass = rawPass.replace(/\s+/g, '');
   const isSecure = smtpConfig?.smtpSecure !== undefined ? Boolean(smtpConfig.smtpSecure) : (port === 465);
@@ -507,6 +542,26 @@ function buildDailyEmailHtml(samples: any[], stations: any[], targetDateStr: str
 }
 
 async function startServer() {
+  try {
+    if (supabaseConfigured) {
+      serverState = await loadSupabaseState(serverState);
+      let changed = false;
+      for (const user of serverState.users || []) {
+        if (user && typeof user.password === 'string' && user.password && !isHashedPassword(user.password)) {
+          user.password = hashPassword(user.password);
+          changed = true;
+        }
+      }
+      if (changed) await persistSupabaseState(serverState);
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new Error('Production yêu cầu SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY. Dữ liệu sẽ không được lưu vào filesystem ephemeral.');
+    }
+  } catch (error: any) {
+    console.error('[STARTUP DATA STORE ERROR]', error?.message || error);
+    process.exitCode = 1;
+    return;
+  }
+
   const app = express();
   const PORT = 3000;
 
@@ -559,6 +614,13 @@ async function startServer() {
     next();
   }
 
+  function requireAdmin(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if ((req as any).authUser?.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền quản trị thao tác này.' });
+    }
+    next();
+  }
+
   // Login: the only write endpoint that stays public (it's how you get a token).
   app.post('/api/auth/login', (req, res) => {
     try {
@@ -579,7 +641,7 @@ async function startServer() {
       // Upgrade legacy plaintext password to hashed form on successful login.
       if (!isHashedPassword(user.password)) {
         user.password = hashPassword(password);
-        savePersistedState(serverState);
+        void savePersistedState(serverState).catch(error => console.error('[AUTH PASSWORD SAVE ERROR]', error));
       }
 
       const token = issueToken(user);
@@ -674,7 +736,7 @@ async function startServer() {
   // existing password" — this matters because responses no longer include
   // the real password (see sanitizeUser), so the admin UI can't round-trip
   // it back to us anymore, and shouldn't need to.
-  app.post('/api/users', requireAuth, (req, res) => {
+  app.post('/api/users', requireAuth, requireAdmin, async (req, res) => {
     try {
       const { users, user } = req.body;
       let currentUsers = (serverState as any).users || [];
@@ -706,7 +768,7 @@ async function startServer() {
         (serverState as any).users = users.map((u: any) => prepareIncomingUser(u, existingById.get(u.id)));
       }
 
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
       broadcastSseEvent({
         type: 'USERS_UPDATED',
         users: sanitizeUsers((serverState as any).users),
@@ -719,7 +781,7 @@ async function startServer() {
   });
 
   // Delete user endpoint
-  app.post('/api/users/delete', requireAuth, (req, res) => {
+  app.post('/api/users/delete', requireAuth, requireAdmin, async (req, res) => {
     try {
       const { id } = req.body;
       if (!id) return res.status(400).json({ success: false, message: 'Missing user ID' });
@@ -740,7 +802,7 @@ async function startServer() {
 
       currentUsers = currentUsers.filter((u: any) => u.id !== id);
       (serverState as any).users = currentUsers;
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
       broadcastSseEvent({
         type: 'USERS_UPDATED',
         users: sanitizeUsers(currentUsers),
@@ -754,11 +816,11 @@ async function startServer() {
 
   // Get all samples
   app.get('/api/samples', requireAuth, (req, res) => {
-    return res.json({ success: true, samples: serverState.samples || [] });
+    return res.json({ success: true, samples: getCurrentSamples() });
   });
 
   // Save/Update a single sample or list of samples (Upsert without losing other users' data)
-  app.post('/api/samples/save', requireAuth, (req, res) => {
+  app.post('/api/samples/save', requireAuth, async (req, res) => {
     try {
       const { sample, samples, actionBy } = req.body;
       let currentSamples = [...(serverState.samples || [])];
@@ -788,7 +850,7 @@ async function startServer() {
         return res.status(400).json({ success: false, message: 'Invalid sample payload' });
       }
 
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
 
       // Instant Real-time Push to all connected Admin and Member screens
       broadcastSseEvent({
@@ -812,12 +874,12 @@ async function startServer() {
   });
 
   // Delete sample endpoint
-  app.post('/api/samples/delete', requireAuth, (req, res) => {
+  app.post('/api/samples/delete', requireAuth, async (req, res) => {
     try {
       const { id } = req.body;
       if (!id) return res.status(400).json({ success: false, message: 'Missing sample ID' });
       serverState.samples = (serverState.samples || []).filter((s: any) => s.id !== id);
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
 
       broadcastSseEvent({
         type: 'SAMPLE_DELETED',
@@ -837,12 +899,12 @@ async function startServer() {
   });
 
   // Save/Update samples (Legacy bulk replace support)
-  app.post('/api/samples', requireAuth, (req, res) => {
+  app.post('/api/samples', requireAuth, async (req, res) => {
     try {
       const { samples } = req.body;
       if (Array.isArray(samples)) {
         serverState.samples = samples;
-        savePersistedState(serverState);
+        await savePersistedState(serverState);
         broadcastSseEvent({
           type: 'SAMPLES_SYNCED',
           samples: serverState.samples,
@@ -862,7 +924,7 @@ async function startServer() {
   });
 
   // Save/Update stations
-  app.post('/api/stations', requireAuth, (req, res) => {
+  app.post('/api/stations', requireAuth, requireAdmin, async (req, res) => {
     try {
       const { stations, station } = req.body;
       if (station && station.id) {
@@ -877,7 +939,7 @@ async function startServer() {
       } else if (Array.isArray(stations)) {
         serverState.stations = stations;
       }
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
       broadcastSseEvent({
         type: 'STATIONS_UPDATED',
         stations: serverState.stations,
@@ -896,11 +958,28 @@ async function startServer() {
       users: sanitizeUsers((serverState as any).users || []),
       samples: serverState.samples || [],
       stations: serverState.stations || [],
-      config: serverState.config,
+      config: sanitizeConfig(serverState.config),
+      notificationLogs: serverState.notificationLogs || [],
       lastCronDate: serverState.lastCronDate,
       lastCronLog: serverState.lastCronLog,
       timestamp: Date.now()
     });
+  });
+
+  // Persist notification history centrally instead of keeping it only in a browser.
+  app.post('/api/notification-logs', requireAuth, async (req, res) => {
+    try {
+      const { log } = req.body || {};
+      if (!log || typeof log !== 'object' || !log.id) {
+        return res.status(400).json({ success: false, message: 'Invalid notification log payload' });
+      }
+      const logs = Array.isArray(serverState.notificationLogs) ? serverState.notificationLogs : [];
+      serverState.notificationLogs = [log, ...logs.filter((item: any) => item.id !== log.id)].slice(0, 100);
+      await savePersistedState(serverState);
+      return res.json({ success: true, notificationLogs: serverState.notificationLogs });
+    } catch (e: any) {
+      return res.status(500).json({ success: false, message: e.message });
+    }
   });
 
   // Reconcile an incoming user object (from a client sync/restore payload)
@@ -927,9 +1006,13 @@ async function startServer() {
   }
 
   // 1. Sync State from Frontend to Server (Smart merge or restore)
-  app.post('/api/server-sync', requireAuth, (req, res) => {
+  app.post('/api/server-sync', requireAuth, async (req, res) => {
     try {
-      const { samples, stations, config, users, action } = req.body;
+      const { samples, stations, config, users, notificationLogs, action } = req.body;
+      const isAdmin = (req as any).authUser?.role === 'admin';
+      if (!isAdmin && (config !== undefined || users !== undefined || stations !== undefined || action === 'restore_full_backup')) {
+        return res.status(403).json({ success: false, message: 'Chỉ admin mới được thay đổi cấu hình, người dùng, trạm hoặc khôi phục backup.' });
+      }
 
       if (action === 'restore_full_backup') {
         // Complete full overwrite on intentional backup restore
@@ -940,7 +1023,10 @@ async function startServer() {
           (serverState as any).users = users.map((u: any) => reconcileIncomingUser(u, existingById.get(u.id)));
         }
         if (config && typeof config === 'object') {
-          serverState.config = { ...serverState.config, ...config };
+          serverState.config = mergeConfigPreservingSecrets(serverState.config, config);
+        }
+        if (Array.isArray(notificationLogs)) {
+          serverState.notificationLogs = notificationLogs.slice(0, 100);
         }
       } else {
         // Smart merge: merge incoming items by ID without destroying existing items
@@ -991,28 +1077,38 @@ async function startServer() {
         }
 
         if (config && typeof config === 'object') {
-          serverState.config = { ...serverState.config, ...config };
+          serverState.config = mergeConfigPreservingSecrets(serverState.config, config);
+        }
+        if (Array.isArray(notificationLogs) && notificationLogs.length > 0) {
+          const logMap = new Map<string, any>();
+          (serverState.notificationLogs || []).forEach((log: any) => logMap.set(log.id, log));
+          notificationLogs.forEach((log: any) => {
+            if (log && log.id) logMap.set(log.id, log);
+          });
+          serverState.notificationLogs = Array.from(logMap.values()).slice(-100).reverse();
         }
       }
 
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
 
       broadcastSseEvent({
         type: 'FULL_SYNC',
         samples: serverState.samples,
         stations: serverState.stations,
         users: sanitizeUsers((serverState as any).users),
-        config: serverState.config,
+        config: sanitizeConfig(serverState.config),
+        notificationLogs: serverState.notificationLogs || [],
         timestamp: Date.now()
       });
 
       return res.status(200).json({
         success: true,
         message: `Đồng bộ máy chủ thành công! (${serverState.samples.length} mẫu bê tông, ${serverState.stations.length} trạm trộn, ${((serverState as any).users || []).length} tài khoản).`,
-        config: serverState.config,
+        config: sanitizeConfig(serverState.config),
         users: sanitizeUsers((serverState as any).users || []),
         samples: serverState.samples,
         stations: serverState.stations,
+        notificationLogs: serverState.notificationLogs || [],
         timestamp: Date.now()
       });
     } catch (e: any) {
@@ -1222,7 +1318,7 @@ async function startServer() {
       }
 
       const vnNow = new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-      const vnDate = formatDateVN(new Date().toISOString().split('T')[0]);
+      const vnDate = formatDateVN(getVietnamDateIso());
       const testMsg = `🔔 [TASAGO BOT ZALO TEST]\n⏰ Thời gian: ${vnNow} ngày ${vnDate}\n👤 Người nhận Zalo cá nhân: ${targetPhone}\n👥 Nhóm nhận: ${targetGroup}\n✅ Kết nối Webhook Bot Zalo thành công! Hệ thống kiểm định nén mẫu bê tông sẵn sàng phát thông báo tự động 07:00 Sáng.`;
 
       const headers: Record<string, string> = {
@@ -1286,9 +1382,9 @@ async function startServer() {
       const targetGroup = groupId || serverState.config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago';
       const token = botToken || serverState.config.zaloBotToken || process.env.ZALO_BOT_TOKEN;
 
-      const targetSamples = Array.isArray(samples) && samples.length > 0 ? samples : serverState.samples;
+      const targetSamples = Array.isArray(samples) && samples.length > 0 ? samples : getCurrentSamples();
       const targetStations = Array.isArray(stations) && stations.length > 0 ? stations : serverState.stations;
-      const todayIso = new Date().toISOString().split('T')[0];
+      const todayIso = getVietnamDateIso();
 
       const { text, urgentCount } = buildDailyEmailHtml(targetSamples, targetStations, todayIso);
       const messageContent = customMessage || text;
@@ -1369,12 +1465,12 @@ async function startServer() {
   // 6. Trigger 07:00 AM Cron Manually on Server (Email + Zalo Bot)
   app.post('/api/cron/trigger', requireAuth, async (req, res) => {
     try {
-      const todayIso = new Date().toISOString().split('T')[0];
-      const urgentSamples = serverState.samples.filter(
+      const todayIso = getVietnamDateIso();
+      const urgentSamples = getCurrentSamples().filter(
         s => s.status === 'due_today' || s.status === 'overdue'
       );
 
-      const targetSamples = urgentSamples.length > 0 ? urgentSamples : serverState.samples.slice(0, 5);
+      const targetSamples = urgentSamples.length > 0 ? urgentSamples : getCurrentSamples().slice(0, 5);
       const emailRecipients = serverState.config.emailRecipients || ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'];
 
       if (targetSamples.length === 0) {
@@ -1434,7 +1530,7 @@ async function startServer() {
       const resultSummary = logParts.length > 0 ? logParts.join(' | ') : 'Đã chuẩn bị bản tin hoàn tất';
       serverState.lastCronDate = todayIso;
       serverState.lastCronLog = `[Thủ công 07:00 AM] Phát thông báo lúc ${new Date().toLocaleTimeString('vi-VN')} cho ${targetSamples.length} mẫu nén. Kết quả: ${resultSummary}`;
-      savePersistedState(serverState);
+      await savePersistedState(serverState);
 
       return res.json({
         success: true,
@@ -1452,7 +1548,7 @@ async function startServer() {
   setInterval(async () => {
     try {
       const now = new Date();
-      const vnDate = now.toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+      const vnDate = getVietnamDateIso(now);
       const vnTimeParts = now.toLocaleTimeString('vi-VN', { 
         timeZone: 'Asia/Ho_Chi_Minh', 
         hour12: false 
@@ -1469,12 +1565,12 @@ async function startServer() {
         serverState.lastCronDate = vnDate;
         console.log(`[TASAGO CRON 07:00 AM] Kích hoạt kiểm tra lịch nén mẫu định kỳ ngày ${vnDate}...`);
 
-        const urgentSamples = serverState.samples.filter(
+        const urgentSamples = getCurrentSamples().filter(
           s => s.status === 'due_today' || s.status === 'overdue'
         );
 
         if (urgentSamples.length > 0) {
-          const todayIso = now.toISOString().split('T')[0];
+          const todayIso = getVietnamDateIso(now);
           const { html, text } = buildDailyEmailHtml(urgentSamples, serverState.stations, todayIso);
           const emailRecipients = serverState.config.emailRecipients || ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'];
           const cronLogItems: string[] = [];
@@ -1528,7 +1624,7 @@ async function startServer() {
           serverState.lastCronLog = `[TỰ ĐỘNG 07:00 AM] Đã xử lý ${urgentSamples.length} mẫu nén: ${cronLogItems.join(' | ')}`;
           console.log(serverState.lastCronLog);
         }
-        savePersistedState(serverState);
+        await savePersistedState(serverState);
       }
     } catch (cronErr) {
       console.debug('Cron interval check note:', cronErr);

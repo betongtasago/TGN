@@ -39,7 +39,7 @@ import {
   cleanPhoneNumber,
   GOOGLE_APPS_SCRIPT_ZALO_TEMPLATE
 } from '../utils/notificationService';
-import { formatDateVN } from '../utils/storage';
+import { formatDateVN, apiFetch } from '../utils/storage';
 
 interface NotificationModalProps {
   isOpen: boolean;
@@ -86,7 +86,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const [smtpHost, setSmtpHost] = useState(config.smtpHost || 'smtp.gmail.com');
   const [smtpPort, setSmtpPort] = useState(config.smtpPort || 587);
   const [smtpUser, setSmtpUser] = useState(config.smtpUser || 'tasagotnt@gmail.com');
-  const [smtpPass, setSmtpPass] = useState(config.smtpPass || '');
+  const [smtpPass, setSmtpPass] = useState(config.smtpPass === '[PROTECTED]' ? '' : (config.smtpPass || ''));
   const [smtpSecure, setSmtpSecure] = useState(config.smtpSecure ?? false); // false for 587 STARTTLS
   const [emailSender, setEmailSender] = useState(config.emailSender || 'Bê Tông Tasago <tasagotnt@gmail.com>');
   const [emailServiceUrl, setEmailServiceUrl] = useState(config.emailServiceUrl || '');
@@ -106,7 +106,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   // Zalo Bot Settings (Personal & Group)
   const [zaloWebhookUrl, setZaloWebhookUrl] = useState(config.zaloWebhookUrl || '');
-  const [zaloBotToken, setZaloBotToken] = useState(config.zaloBotToken || '');
+  const [zaloBotToken, setZaloBotToken] = useState(config.zaloBotToken === '[PROTECTED]' ? '' : (config.zaloBotToken || ''));
   const [zaloGroupId, setZaloGroupId] = useState(config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago');
   const [zaloPersonalPhone, setZaloPersonalPhone] = useState(config.zaloPersonalPhone || '0942320923');
   const [zaloPersonalPhones, setZaloPersonalPhones] = useState<string[]>(() => {
@@ -228,7 +228,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
     // Sync state directly with server backend for 24/7 background 07:00 AM Cron
     try {
-      await fetch('/api/server-sync', {
+      await apiFetch('/api/server-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -259,7 +259,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     setSmtpVerifyResult(null);
 
     try {
-      const res = await fetch('/api/notifications/verify-smtp', {
+      const res = await apiFetch('/api/notifications/verify-smtp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -307,7 +307,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     setEmailTestResult(null);
 
     try {
-      const res = await fetch('/api/notifications/send-email', {
+      const res = await apiFetch('/api/notifications/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -359,7 +359,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     try {
       // First sync current config to server
       const currentConfig = buildActiveConfig();
-      await fetch('/api/server-sync', {
+      await apiFetch('/api/server-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -370,7 +370,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
       });
 
       // Trigger cron
-      const res = await fetch('/api/cron/trigger', {
+      const res = await apiFetch('/api/cron/trigger', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -408,7 +408,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     setWebhookTestResult(null);
 
     try {
-      const res = await fetch('/api/notifications/test-zalo', {
+      const res = await apiFetch('/api/notifications/test-zalo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

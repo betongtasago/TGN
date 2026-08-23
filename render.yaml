@@ -3,13 +3,17 @@ services:
     name: tasago-nenmau-api
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev --legacy-peer-deps && npm run build:server
+    buildCommand: npm install --include=dev --legacy-peer-deps && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: AUTH_SECRET
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SMTP_HOST
         sync: false

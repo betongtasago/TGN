@@ -307,6 +307,21 @@ export function addNotificationLog(log: Omit<NotificationLog, 'id' | 'timestamp'
   return newLog;
 }
 
+export async function syncNotificationLog(log: NotificationLog): Promise<NotificationLog[] | null> {
+  try {
+    const res = await apiFetch('/api/notification-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ log }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return Array.isArray(data.notificationLogs) ? data.notificationLogs : null;
+  } catch {
+    return null;
+  }
+}
+
 export function resetAllDataToDefault(): void {
   localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(INITIAL_USERS));
   localStorage.setItem(STORAGE_KEYS.STATIONS, JSON.stringify(INITIAL_STATIONS));

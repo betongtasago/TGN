@@ -1,5 +1,5 @@
 import { ConcreteSample, Station, NotificationConfig, NotificationLog } from '../types';
-import { formatDateVN, addNotificationLog } from './storage';
+import { formatDateVN, addNotificationLog, apiFetch, syncNotificationLog } from './storage';
 
 export interface FormattedNotification {
   title: string;
@@ -335,7 +335,7 @@ export async function dispatchNotification(
     const recipientLabel = config.zaloRecipientType === 'personal' ? `Zalo Cá Nhân (${personalPhone})` : config.zaloRecipientType === 'group' ? `Nhóm Zalo (${groupName})` : `Zalo Cá Nhân (${personalPhone}) & Nhóm (${groupName})`;
 
     try {
-      const zaloRes = await fetch(apiUrl('/api/notifications/send-zalo'), {
+      const zaloRes = await apiFetch(apiUrl('/api/notifications/send-zalo'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -374,6 +374,8 @@ export async function dispatchNotification(
       errorDetails 
     }); 
     logIds.push(log.id);
+    const persistedLogs = await syncNotificationLog(log);
+    if (persistedLogs) localStorage.setItem('tasago_notif_logs_v3', JSON.stringify(persistedLogs));
   }
 
   // 2. Email Dispatching
@@ -384,7 +386,7 @@ export async function dispatchNotification(
     let emailError: string | undefined;
 
     try {
-      const response = await fetch(apiUrl('/api/notifications/send-email'), { 
+      const response = await apiFetch(apiUrl('/api/notifications/send-email'), {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
@@ -419,6 +421,8 @@ export async function dispatchNotification(
       errorDetails: emailError 
     }); 
     logIds.push(log.id);
+    const persistedLogs = await syncNotificationLog(log);
+    if (persistedLogs) localStorage.setItem('tasago_notif_logs_v3', JSON.stringify(persistedLogs));
   }
 
   return { 

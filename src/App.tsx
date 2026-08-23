@@ -177,7 +177,7 @@ export default function App() {
         const data = await res.json();
         setLastSyncedAt(new Date());
 
-        if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+        if (Array.isArray(data.users)) {
           setUsers(prev => {
             if (JSON.stringify(prev) !== JSON.stringify(data.users)) {
               saveUsers(data.users);
@@ -187,7 +187,7 @@ export default function App() {
           });
         }
 
-        if (data.samples && Array.isArray(data.samples) && data.samples.length > 0) {
+        if (Array.isArray(data.samples)) {
           const recalced = recalculateSampleStatuses(data.samples);
           setSamples(prev => {
             if (JSON.stringify(prev) !== JSON.stringify(recalced)) {
@@ -198,7 +198,7 @@ export default function App() {
           });
         }
 
-        if (data.stations && Array.isArray(data.stations) && data.stations.length > 0) {
+        if (Array.isArray(data.stations)) {
           setStations(prev => {
             if (JSON.stringify(prev) !== JSON.stringify(data.stations)) {
               saveStations(data.stations);
@@ -213,6 +213,15 @@ export default function App() {
             if (JSON.stringify(prev) !== JSON.stringify(data.config)) {
               saveNotificationConfig(data.config);
               return data.config;
+            }
+            return prev;
+          });
+        }
+
+        if (Array.isArray(data.notificationLogs)) {
+          setNotificationLogs(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(data.notificationLogs)) {
+              return data.notificationLogs;
             }
             return prev;
           });
@@ -333,6 +342,9 @@ export default function App() {
               if (data.config && typeof data.config === 'object') {
                 setNotificationConfig(data.config);
                 saveNotificationConfig(data.config);
+              }
+              if (data.notificationLogs && Array.isArray(data.notificationLogs)) {
+                setNotificationLogs(data.notificationLogs);
               }
             }
           } catch (err) {
