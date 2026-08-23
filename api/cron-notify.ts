@@ -1,11 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 
+const TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const MAX_ZALO_LENGTH = 2000;
+
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function vietnamDateIso(date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Ho_Chi_Minh',
+    timeZone: TIME_ZONE,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -27,6 +30,19 @@ function escapeHtml(value: unknown): string {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+function splitZaloText(text: string): string[] {
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > MAX_ZALO_LENGTH) {
+    let cutAt = remaining.lastIndexOf('\n', MAX_ZALO_LENGTH);
+    if (cutAt < Math.floor(MAX_ZALO_LENGTH * 0.6)) cutAt = MAX_ZALO_LENGTH;
+    chunks.push(remaining.slice(0, cutAt).trim());
+    remaining = remaining.slice(cutAt).trim();
+  }
+  if (remaining) chunks.push(remaining);
+  return chunks;
 }
 
 function buildReport(samples: any[], stations: any[], today: string) {
@@ -54,15 +70,77 @@ function buildReport(samples: any[], stations: any[], today: string) {
   };
 }
 
+async function sendEmail(config: any, recipients: string[], report: { text: string; html: string }, today: string) {
+  const smtpUser = String(config.smtpUser || process.env.SMTP_USER || '').trim();
+  const smtpPass = String(config.smtpPass || process.env.SMTP_PASS || '').replace(/\s+/g, '');
+  if (!smtpUser || !smtpPass) return 'Email lỗi: chưa cấu hình SMTP User/Mật khẩu ứng dụng.';
+
+  const port = Number(config.smtpPort || process.env.SMTP_PORT || 587);
+  const secure = config.smtpSecure !== undefined
+    ? Boolean(config.smtpSecure)
+    : String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
+  const transporter = nodemailer.createTransport({
+    host: config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com',
+    port,
+    secure,
+    requireTLS: !secure,
+    auth: { user: smtpUser, pass: smtpPass },
+    tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
+  });
+  const info = await transporter.sendMail({
+    from: config.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${smtpUser}>`,
+    to: recipients.join(', '),
+    subject: `[TASAGO] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`,
+    text: report.text,
+    html: report.html,
+  });
+  return `Email thành công (${info.messageId || 'accepted'}) tới ${recipients.length} địa chỉ.`;
+}
+
+async function sendZalo(config: any, text: string) {
+  const botToken = String(config.zaloBotToken || process.env.ZALO_BOT_TOKEN || '').trim();
+  if (!botToken) return 'Zalo lỗi: chưa cấu hình Bot Token.';
+
+  const recipientType = config.zaloRecipientType || 'both';
+  const chatIds: string[] = [];
+  if (recipientType === 'personal' || recipientType === 'both') {
+    const chatId = String(config.zaloPersonalChatId || '').trim();
+    if (!chatId) return 'Zalo lỗi: chưa có Personal Chat ID.';
+    chatIds.push(chatId);
+  }
+  if (recipientType === 'group' || recipientType === 'both') {
+    const chatId = String(config.zaloGroupChatId || '').trim();
+    if (!chatId) return 'Zalo lỗi: chưa có Group Chat ID.';
+    chatIds.push(chatId);
+  }
+
+  const endpoint = `https://bot-api.zaloplatforms.com/bot${encodeURIComponent(botToken)}/sendMessage`;
+  for (const chatId of chatIds) {
+    for (const chunk of splitZaloText(text)) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: chunk }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || payload?.ok !== true) {
+        throw new Error(`Chat ${chatId}: ${payload?.description || `HTTP ${response.status}`}`);
+      }
+    }
+  }
+  return `Zalo Bot API thành công tới ${chatIds.length} cuộc trò chuyện.`;
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
 
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET?.trim();
   if (cronSecret) {
-    const supplied = req.headers?.authorization === `Bearer ${cronSecret}`
+    const authorization = req.headers?.authorization || req.headers?.Authorization || '';
+    const supplied = authorization === `Bearer ${cronSecret}`
       ? cronSecret
       : typeof req.query?.secret === 'string' ? req.query.secret : '';
     if (supplied !== cronSecret) return res.status(401).json({ success: false, message: 'Unauthorized' });
@@ -70,78 +148,62 @@ export default async function handler(req: any, res: any) {
 
   const url = process.env.SUPABASE_URL?.trim();
   const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim();
-  if (!url || !key) {
-    return res.status(503).json({ success: false, message: 'Chưa cấu hình Supabase cho cron.' });
-  }
+  if (!url || !key) return res.status(503).json({ success: false, message: 'Chưa cấu hình Supabase cho cron.' });
 
   try {
     const supabase = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
     const { data: state, error } = await supabase
       .from('app_state')
-      .select('stations, samples, config')
+      .select('stations, samples, config, last_cron_date')
       .eq('id', 'default')
       .single();
-    if (error || !state) return res.status(502).json({ success: false, message: error?.message || 'Không tìm thấy app_state trong Supabase.' });
+    if (error || !state) return res.status(502).json({ success: false, message: error?.message || 'Không tìm thấy app_state.' });
 
     const today = vietnamDateIso();
+    if (state.last_cron_date === today) {
+      return res.json({ success: true, skipped: true, message: 'Cron hôm nay đã được xử lý.', executedDate: today });
+    }
+
     const samples = Array.isArray(state.samples) ? state.samples : [];
     const urgent = samples.filter((sample: any) => {
       if (['tested_passed', 'tested_failed', 'cancelled'].includes(sample.status)) return false;
       return sample.scheduledTestDate === today || (sample.scheduledTestDate && sample.scheduledTestDate < today);
-    }).map((sample: any) => ({
-      ...sample,
-      status: sample.scheduledTestDate < today ? 'overdue' : 'due_today',
-    }));
-
-    if (urgent.length === 0) {
-      return res.json({ success: true, message: 'Không có mẫu đến hạn hoặc quá hạn.', sampleCount: 0, executedDate: today });
-    }
+    }).map((sample: any) => ({ ...sample, status: sample.scheduledTestDate < today ? 'overdue' : 'due_today' }));
 
     const config = state.config && typeof state.config === 'object' ? state.config : {};
-    const recipients = (Array.isArray(config.emailRecipients) ? config.emailRecipients : (process.env.EMAIL_RECIPIENTS || '').split(','))
-      .map((value: string) => value.trim()).filter(isEmail);
-    const report = buildReport(urgent, Array.isArray(state.stations) ? state.stations : [], today);
-    const subject = `[TASAGO] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`;
-    let emailSent = false;
-    let emailDetail = 'Chưa cấu hình kênh email.';
+    const stations = Array.isArray(state.stations) ? state.stations : [];
+    const recipients = (Array.isArray(config.emailRecipients) ? config.emailRecipients : [])
+      .map((value: unknown) => String(value).trim()).filter(isEmail);
+    const report = buildReport(urgent, stations, today);
+    const results: string[] = [];
 
-    const smtpPass = (process.env.SMTP_PASS || '').replace(/\s+/g, '');
-    if (recipients.length && process.env.SMTP_USER && smtpPass) {
-      const port = Number(process.env.SMTP_PORT || 587);
-      const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port,
-        secure: String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465,
-        requireTLS: port !== 465,
-        auth: { user: process.env.SMTP_USER, pass: smtpPass },
-      });
-      const info = await transporter.sendMail({
-        from: process.env.SMTP_FROM || `Bê Tông Tasago <${process.env.SMTP_USER}>`,
-        to: recipients.join(', '), subject, text: report.text, html: report.html,
-      });
-      emailSent = true;
-      emailDetail = `Đã gửi SMTP (${info.messageId})`;
-    } else if (recipients.length && process.env.RESEND_API_KEY) {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.RESEND_API_KEY}` },
-        body: JSON.stringify({ from: process.env.SMTP_FROM || 'Tasago Portal <onboarding@resend.dev>', to: recipients, subject, text: report.text, html: report.html }),
-      });
-      emailSent = response.ok;
-      emailDetail = response.ok ? 'Đã gửi Resend' : `Resend HTTP ${response.status}`;
+    if (urgent.length > 0) {
+      if (config.autoEmailEnabled !== false) {
+        try {
+          results.push(await sendEmail(config, recipients, report, today));
+        } catch (emailError: any) {
+          results.push(`Email lỗi: ${emailError.message}`);
+        }
+      }
+      if (config.autoZaloEnabled !== false) {
+        try {
+          results.push(await sendZalo(config, report.text));
+        } catch (zaloError: any) {
+          results.push(`Zalo lỗi: ${zaloError.message}`);
+        }
+      }
+    } else {
+      results.push('Không có mẫu đến hạn hoặc quá hạn.');
     }
 
-    let zaloSent = false;
-    if (typeof config.zaloWebhookUrl === 'string' && config.zaloWebhookUrl.startsWith('http')) {
-      const response = await fetch(config.zaloWebhookUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(process.env.ZALO_BOT_TOKEN ? { Authorization: `Bearer ${process.env.ZALO_BOT_TOKEN}` } : {}) },
-        body: JSON.stringify({ event: 'CRON_07AM_TASAGO_SAMPLE_ALERT', company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO', message: report.text, samples: urgent }),
-      });
-      zaloSent = response.ok;
-    }
+    const log = `[VERCEL CRON 07:00] ${today}: ${results.join(' | ')}`;
+    const { error: updateError } = await supabase
+      .from('app_state')
+      .update({ last_cron_date: today, last_cron_log: log, updated_at: new Date().toISOString() })
+      .eq('id', 'default');
+    if (updateError) throw updateError;
 
-    return res.json({ success: emailSent || zaloSent, executedDate: today, sampleCount: urgent.length, emailSent, emailDetail, zaloSent, recipients });
+    return res.json({ success: true, executedDate: today, sampleCount: urgent.length, details: results, log });
   } catch (error: any) {
     console.error('Lỗi Vercel cron:', error);
     return res.status(500).json({ success: false, message: error?.message || 'Lỗi không xác định khi chạy cron.' });

@@ -115,6 +115,14 @@ git push -u origin main
 Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
 
 
-### Cấu hình gửi Email trên Vercel
+### Cấu hình gửi Email và Zalo tự động
 
-Khai báo trong **Project Settings → Environment Variables** (Production): `SMTP_HOST`, `SMTP_PORT` (`465` hoặc `587`), `SMTP_SECURE` (`true` cho 465, `false` cho 587), `SMTP_USER`, `SMTP_PASS` (Gmail cần App Password), `SMTP_FROM` và `EMAIL_RECIPIENTS` (danh sách phân cách bằng dấu phẩy cho Vercel Cron). Nếu không có SMTP hoặc `RESEND_API_KEY`, endpoint trả lỗi rõ ràng thay vì báo gửi thành công giả.
+Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua SMTP; với Gmail phải dùng **App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Nhập SMTP host/port/user/password và danh sách người nhận trong Trung tâm thông báo, bấm **Kiểm tra kết nối**, sau đó bấm **Lưu cấu hình**.
+
+Zalo được gửi thật qua **Zalo Bot API**. Nhập Bot Token, đặt Webhook URL là `https://<backend-render-cua-ban>.onrender.com/api/zalo/webhook`, tạo Webhook Secret riêng và lưu cấu hình. Nhắn một tin riêng cho Bot hoặc một tin trong nhóm đã thêm Bot; webhook sẽ tự lưu Personal/Group Chat ID vào `app_state`. Số điện thoại và tên nhóm chỉ là nhãn hiển thị, không thay thế Chat ID.
+
+Backend Render cung cấp API và webhook. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email/Zalo. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render.
+
+Khai báo trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` và `VITE_API_URL` (URL backend Render, không phải URL Supabase). Trong **Render → Environment** khai báo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`; SMTP/Zalo có thể lưu trong cấu hình admin trên Supabase hoặc khai báo bằng biến môi trường server. Không đưa service-role key, Bot Token, SMTP password hay Cron Secret vào GitHub/frontend.
+
+Nếu thiếu SMTP/Bot Token/Chat ID, hệ thống trả lỗi cấu hình rõ ràng và không còn báo thành công giả.

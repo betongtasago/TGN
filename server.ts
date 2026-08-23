@@ -95,12 +95,13 @@ function sanitizeConfig(config: any) {
     ...config,
     smtpPass: config.smtpPass ? '[PROTECTED]' : '',
     zaloBotToken: config.zaloBotToken ? '[PROTECTED]' : '',
+    zaloWebhookSecret: config.zaloWebhookSecret ? '[PROTECTED]' : '',
   };
 }
 
 function mergeConfigPreservingSecrets(current: any, incoming: any) {
   const merged = { ...(current || {}), ...(incoming || {}) };
-  for (const key of ['smtpPass', 'zaloBotToken']) {
+  for (const key of ['smtpPass', 'zaloBotToken', 'zaloWebhookSecret']) {
     if (!incoming || incoming[key] === undefined || incoming[key] === '' || incoming[key] === '[PROTECTED]') {
       if (current?.[key]) merged[key] = current[key];
       else delete merged[key];
@@ -168,9 +169,12 @@ interface ServerState {
     smtpSecure?: boolean;
     emailServiceUrl?: string;
     zaloWebhookUrl?: string;
+    zaloWebhookSecret?: string;
     zaloBotToken?: string;
     zaloGroupId?: string;
+    zaloGroupChatId?: string;
     zaloPersonalPhone?: string;
+    zaloPersonalChatId?: string;
     zaloPersonalPhones?: string[];
     zaloRecipientType?: 'personal' | 'group' | 'both';
   };
@@ -541,6 +545,105 @@ function buildDailyEmailHtml(samples: any[], stations: any[], targetDateStr: str
   return { html, text, urgentCount };
 }
 
+async function sendConfiguredEmail(samples: any[], config: any, targetDate = getVietnamDateIso(), subject?: string) {
+  const recipients = (Array.isArray(config?.emailRecipients) ? config.emailRecipients : [])
+    .map((recipient: unknown) => String(recipient).trim())
+    .filter((recipient: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient));
+  if (recipients.length === 0) {
+    return { success: false, message: 'Chưa cấu hình địa chỉ email người nhận hợp lệ.' };
+  }
+
+  const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(config);
+  if (!user || !pass) {
+    return { success: false, message: 'Chưa cấu hình SMTP_USER và SMTP_PASS hoặc Mật khẩu ứng dụng Gmail.' };
+  }
+
+  const { html, text, urgentCount } = buildDailyEmailHtml(samples, serverState.stations, targetDate);
+  const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(targetDate)}`;
+  const sender = config?.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${user}>`;
+  const info = await transporter.sendMail({
+    from: sender.includes('<') ? sender : `Bê Tông Tasago <${user}>`,
+    to: recipients.join(', '),
+    subject: emailSubject,
+    text,
+    html,
+  });
+
+  return {
+    success: true,
+    message: `Đã gửi email tới ${recipients.length} địa chỉ qua SMTP ${host}:${port} (${isSecure ? 'SSL' : 'STARTTLS'}).`,
+    messageId: info.messageId,
+    recipients,
+    urgentCount,
+  };
+}
+
+function splitZaloText(text: string, maxLength = 2000): string[] {
+  const chunks: string[] = [];
+  let remaining = text;
+  while (remaining.length > maxLength) {
+    let cutAt = remaining.lastIndexOf('\n', maxLength);
+    if (cutAt < Math.floor(maxLength * 0.6)) cutAt = maxLength;
+    chunks.push(remaining.slice(0, cutAt).trim());
+    remaining = remaining.slice(cutAt).trim();
+  }
+  if (remaining) chunks.push(remaining);
+  return chunks;
+}
+
+async function sendZaloBotMessage(botToken: string, chatId: string, text: string) {
+  const endpoint = `https://bot-api.zaloplatforms.com/bot${encodeURIComponent(botToken)}/sendMessage`;
+  let lastPayload: any = null;
+  for (const chunk of splitZaloText(text)) {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: chunk }),
+    });
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || payload?.ok !== true) {
+      const detail = payload?.description || `HTTP ${response.status}`;
+      throw new Error(`Zalo Bot API từ chối gửi tới ${chatId}: ${detail}`);
+    }
+    lastPayload = payload;
+  }
+  return lastPayload;
+}
+
+async function sendConfiguredZalo(samples: any[], config: any, targetDate = getVietnamDateIso(), customMessage?: string) {
+  const botToken = config?.zaloBotToken || process.env.ZALO_BOT_TOKEN || '';
+  if (!botToken) {
+    return { success: false, message: 'Chưa cấu hình Zalo Bot Token. Hãy lấy Bot Token trong Zalo Bot Platform.' };
+  }
+
+  const recipientType = config?.zaloRecipientType || 'both';
+  const targets: Array<{ type: 'personal' | 'group'; label: string; chatId: string }> = [];
+  if (recipientType === 'personal' || recipientType === 'both') {
+    const chatId = String(config?.zaloPersonalChatId || '').trim();
+    if (!chatId) return { success: false, message: 'Chưa có Personal Chat ID. Hãy nhắn một tin cho Bot để webhook tự ghi nhận Chat ID.' };
+    targets.push({ type: 'personal', label: 'Zalo cá nhân', chatId });
+  }
+  if (recipientType === 'group' || recipientType === 'both') {
+    const chatId = String(config?.zaloGroupChatId || '').trim();
+    if (!chatId) return { success: false, message: 'Chưa có Group Chat ID. Hãy thêm Bot vào nhóm và nhập Group Chat ID.' };
+    targets.push({ type: 'group', label: 'nhóm Zalo', chatId });
+  }
+
+  const { text, urgentCount } = buildDailyEmailHtml(samples, serverState.stations, targetDate);
+  const message = customMessage || text;
+  const delivered: string[] = [];
+  for (const target of targets) {
+    await sendZaloBotMessage(botToken, target.chatId, message);
+    delivered.push(target.label);
+  }
+  return {
+    success: true,
+    message: `Đã gửi tin nhắn qua Zalo Bot API tới ${delivered.join(' và ')}.`,
+    recipients: targets.map(target => target.chatId),
+    urgentCount,
+  };
+}
+
 async function startServer() {
   try {
     if (supabaseConfigured) {
@@ -717,6 +820,36 @@ async function startServer() {
       }
     }
   }
+
+  // Zalo Bot webhook: Zalo calls this endpoint when a user or group sends a message.
+  // It is intentionally public, but every request must carry the configured secret.
+  app.post('/api/zalo/webhook', async (req, res) => {
+    const expectedSecret = serverState.config.zaloWebhookSecret || process.env.ZALO_WEBHOOK_SECRET || '';
+    const receivedSecret = req.header('X-Bot-Api-Secret-Token') || '';
+    if (!expectedSecret || receivedSecret !== expectedSecret) {
+      return res.status(403).json({ ok: false, message: 'Webhook secret không hợp lệ.' });
+    }
+
+    try {
+      const message = req.body?.result?.message;
+      const chatId = String(message?.chat?.id || '').trim();
+      const chatType = String(message?.chat?.chat_type || '').toUpperCase();
+      if (chatId) {
+        if (chatType === 'GROUP') serverState.config.zaloGroupChatId = chatId;
+        else serverState.config.zaloPersonalChatId = chatId;
+        await savePersistedState(serverState);
+        broadcastSseEvent({
+          type: 'CONFIG_UPDATED',
+          config: sanitizeConfig(serverState.config),
+          timestamp: Date.now(),
+        });
+      }
+      return res.json({ ok: true, captured: Boolean(chatId), chatType: chatType || 'PRIVATE' });
+    } catch (error: any) {
+      console.error('[ZALO WEBHOOK ERROR]', error);
+      return res.status(500).json({ ok: false, message: 'Không thể xử lý webhook Zalo.' });
+    }
+  });
 
   // Health check endpoint
   app.get('/api/health', (req, res) => {
@@ -1163,7 +1296,7 @@ async function startServer() {
   });
 
   // 2. Test/Verify SMTP Connection (e.g. Gmail STARTTLS port 587)
-  app.post('/api/notifications/verify-smtp', requireAuth, async (req, res) => {
+  app.post('/api/notifications/verify-smtp', requireAuth, requireAdmin, async (req, res) => {
     try {
       const { smtpConfig } = req.body;
       const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
@@ -1211,7 +1344,7 @@ async function startServer() {
   });
 
   // 3. API Route: Send Real Email Notification via SMTP, Resend, or Google Apps Script Webhook
-  app.post('/api/notifications/send-email', requireAuth, async (req, res) => {
+  app.post('/api/notifications/send-email', requireAuth, requireAdmin, async (req, res) => {
     try {
       const {
         recipients,
@@ -1329,13 +1462,9 @@ async function startServer() {
         }
       }
 
-      // Method 4: Ready Mode with complete instructions
-      return res.status(200).json({
-        success: true,
-        channel: 'ready_mode',
-        message: `Đã đóng gói bản tin HTML hoàn chỉnh cho ${validRecipients.length} email (${validRecipients.join(', ')}). Nhập mật khẩu ứng dụng Gmail vào mục Cài Đặt SMTP để gửi trực tiếp 24/7.`,
-        recipients: validRecipients,
-        previewSubject: emailSubject
+      return res.status(503).json({
+        success: false,
+        message: 'Chưa cấu hình SMTP hợp lệ. Hãy nhập SMTP User và Mật khẩu ứng dụng rồi bấm Kiểm tra kết nối trước khi gửi.'
       });
 
     } catch (error: any) {
@@ -1347,169 +1476,52 @@ async function startServer() {
     }
   });
 
-  // 4. API Route: Test Zalo Bot Webhook (Personal & Group)
-  app.post('/api/notifications/test-zalo', requireAuth, async (req, res) => {
+  // 4. Send a real test message through the official Zalo Bot API.
+  app.post('/api/notifications/test-zalo', requireAuth, requireAdmin, async (req, res) => {
     try {
-      const { webhookUrl, botToken, personalPhone, groupId } = req.body;
-      const targetWebhook = webhookUrl || serverState.config.zaloWebhookUrl || process.env.ZALO_WEBHOOK_URL;
-      const targetPhone = personalPhone || serverState.config.zaloPersonalPhone || '0942320923';
-      const targetGroup = groupId || serverState.config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago';
-      const token = botToken || serverState.config.zaloBotToken || process.env.ZALO_BOT_TOKEN;
-
-      if (!targetWebhook || !targetWebhook.startsWith('http')) {
-        return res.status(400).json({
-          success: false,
-          message: 'Vui lòng cung cấp URL Webhook hợp lệ (bắt đầu bằng http:// hoặc https://).'
-        });
-      }
-
-      const vnNow = new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-      const vnDate = formatDateVN(getVietnamDateIso());
-      const testMsg = `🔔 [TASAGO BOT ZALO TEST]\n⏰ Thời gian: ${vnNow} ngày ${vnDate}\n👤 Người nhận Zalo cá nhân: ${targetPhone}\n👥 Nhóm nhận: ${targetGroup}\n✅ Kết nối Webhook Bot Zalo thành công! Hệ thống kiểm định nén mẫu bê tông sẵn sàng phát thông báo tự động 07:00 Sáng.`;
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
+      const requestConfig = {
+        ...serverState.config,
+        ...req.body,
+        zaloBotToken: req.body?.botToken || serverState.config.zaloBotToken,
+        zaloPersonalChatId: req.body?.personalChatId || serverState.config.zaloPersonalChatId,
+        zaloGroupChatId: req.body?.groupChatId || serverState.config.zaloGroupChatId,
+        zaloRecipientType: req.body?.recipientType || serverState.config.zaloRecipientType || 'both',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const webhookResponse = await fetch(targetWebhook, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          event: 'TEST_ZALO_BOT_PING',
-          app: 'Tasago Concrete Testing System',
-          timestamp: new Date().toISOString(),
-          vietnamTime: `${vnNow} ${vnDate}`,
-          recipient_phone: targetPhone,
-          group_id: targetGroup,
-          message: testMsg,
-          text: testMsg
-        })
-      });
-
-      const responseText = await webhookResponse.text().catch(() => '');
-
-      return res.status(200).json({
-        success: webhookResponse.ok || webhookResponse.status < 400,
-        status: webhookResponse.status,
-        message: webhookResponse.ok 
-          ? `Đã gửi gói tin thử nghiệm thành công tới Webhook Bot Zalo! (HTTP ${webhookResponse.status})`
-          : `Máy chủ Webhook phản hồi HTTP ${webhookResponse.status}: ${responseText.slice(0, 150)}`,
-        targetPhone,
-        targetGroup
-      });
-    } catch (e: any) {
-      console.error('Lỗi khi test Zalo Bot:', e);
-      return res.status(500).json({
-        success: false,
-        message: `Không thể kết nối Webhook Bot Zalo: ${e.message}`
-      });
+      const result = await sendConfiguredZalo(
+        getCurrentSamples().slice(0, 1),
+        requestConfig,
+        getVietnamDateIso(),
+        `🔔 [TASAGO BOT ZALO TEST]\n⏰ ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}\n✅ Kết nối Zalo Bot API thành công.`
+      );
+      return res.status(result.success ? 200 : 400).json(result);
+    } catch (error: any) {
+      console.error('Lỗi khi test Zalo Bot API:', error);
+      return res.status(502).json({ success: false, message: error.message || 'Không thể gửi thử qua Zalo Bot API.' });
     }
   });
 
-  // 5. API Route: Send Real Zalo Bot Notification (Personal & Group)
-  app.post('/api/notifications/send-zalo', requireAuth, async (req, res) => {
+  // 5. Send a real Zalo notification through the official Bot API.
+  app.post('/api/notifications/send-zalo', requireAuth, requireAdmin, async (req, res) => {
     try {
-      const { 
-        samples, 
-        stations, 
-        webhookUrl, 
-        botToken, 
-        personalPhone, 
-        groupId, 
-        recipientType,
-        customMessage 
-      } = req.body;
-
-      const targetWebhook = webhookUrl || serverState.config.zaloWebhookUrl || process.env.ZALO_WEBHOOK_URL;
-      const targetPhone = personalPhone || serverState.config.zaloPersonalPhone || '0942320923';
-      const targetGroup = groupId || serverState.config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago';
-      const token = botToken || serverState.config.zaloBotToken || process.env.ZALO_BOT_TOKEN;
-
-      const targetSamples = Array.isArray(samples) && samples.length > 0 ? samples : getCurrentSamples();
-      const targetStations = Array.isArray(stations) && stations.length > 0 ? stations : serverState.stations;
-      const todayIso = getVietnamDateIso();
-
-      const { text, urgentCount } = buildDailyEmailHtml(targetSamples, targetStations, todayIso);
-      const messageContent = customMessage || text;
-
-      if (!targetWebhook || !targetWebhook.startsWith('http')) {
-        return res.status(200).json({
-          success: true,
-          channel: 'ready_mode_zalo',
-          message: `Đã đóng gói bản tin Zalo cho ${targetSamples.length} mẫu nén. Bạn có thể mở zalo.me/${targetPhone} để gửi nhanh hoặc cài đặt Webhook Google Apps Script để bắn tự động.`,
-          personalPhone: targetPhone,
-          groupName: targetGroup,
-          sampleCount: targetSamples.length,
-          urgentCount
-        });
-      }
-
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json'
+      const targetSamples = Array.isArray(req.body?.samples) && req.body.samples.length > 0 ? req.body.samples : getCurrentSamples();
+      const requestConfig = {
+        ...serverState.config,
+        ...req.body,
+        zaloBotToken: req.body?.botToken || serverState.config.zaloBotToken,
+        zaloPersonalChatId: req.body?.personalChatId || serverState.config.zaloPersonalChatId,
+        zaloGroupChatId: req.body?.groupChatId || serverState.config.zaloGroupChatId,
+        zaloRecipientType: req.body?.recipientType || serverState.config.zaloRecipientType || 'both',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const webhookResponse = await fetch(targetWebhook, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          event: 'SAMPLE_COMPRESSION_DAILY_REMINDER',
-          company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
-          timestamp: new Date().toISOString(),
-          recipient_type: recipientType || 'both',
-          recipient_phone: targetPhone,
-          group_id: targetGroup,
-          urgent_count: urgentCount,
-          sample_count: targetSamples.length,
-          message: messageContent,
-          text: messageContent,
-          samples: targetSamples.map(s => ({
-            id: s.id,
-            sampleCode: s.sampleCode,
-            projectName: s.projectName,
-            component: s.component,
-            volumeM3: s.volumeM3,
-            grade: s.concreteGrade,
-            ageType: s.ageType,
-            castDate: s.castDate,
-            scheduledDate: s.scheduledTestDate,
-            contractor: s.contractor,
-            contactPerson: s.contactPerson,
-            contactPhone: s.contactPhone,
-            samplerName: s.samplerName,
-            status: s.status
-          }))
-        })
-      });
-
-      const responseText = await webhookResponse.text().catch(() => '');
-
-      return res.status(200).json({
-        success: webhookResponse.ok || webhookResponse.status < 400,
-        status: webhookResponse.status,
-        message: webhookResponse.ok
-          ? `Đã bắn tin tự động thành công qua Webhook Bot Zalo (${recipientType === 'personal' ? 'Zalo Cá Nhân ' + targetPhone : recipientType === 'group' ? 'Nhóm Zalo ' + targetGroup : 'Cả Cá Nhân & Nhóm'})!`
-          : `Gửi Webhook Zalo (HTTP ${webhookResponse.status}): ${responseText.slice(0, 150)}`,
-        urgentCount,
-        sampleCount: targetSamples.length
-      });
-
-    } catch (e: any) {
-      console.error('Lỗi khi gửi Zalo Bot:', e);
-      return res.status(500).json({
-        success: false,
-        message: `Lỗi kết nối Webhook Zalo Bot: ${e.message}`
-      });
+      const result = await sendConfiguredZalo(targetSamples, requestConfig, getVietnamDateIso(), req.body?.customMessage);
+      return res.status(result.success ? 200 : 400).json({ ...result, sampleCount: targetSamples.length });
+    } catch (error: any) {
+      console.error('Lỗi khi gửi Zalo Bot API:', error);
+      return res.status(502).json({ success: false, message: error.message || 'Không thể gửi qua Zalo Bot API.' });
     }
   });
 
   // 6. Trigger 07:00 AM Cron Manually on Server (Email + Zalo Bot)
-  app.post('/api/cron/trigger', requireAuth, async (req, res) => {
+  app.post('/api/cron/trigger', requireAuth, requireAdmin, async (req, res) => {
     try {
       const todayIso = getVietnamDateIso();
       const urgentSamples = getCurrentSamples().filter(
@@ -1526,54 +1538,27 @@ async function startServer() {
         });
       }
 
-      const { html, text } = buildDailyEmailHtml(targetSamples, serverState.stations, todayIso);
       const logParts: string[] = [];
 
-      // 1. Email via SMTP
       if (serverState.config.autoEmailEnabled) {
-        const { transporter, host, user, pass } = createSmtpTransporter(serverState.config);
-        if (host && user && pass) {
-          try {
-            const info = await transporter.sendMail({
-              from: serverState.config.emailSender || `Bê Tông Tasago <${user}>`,
-              to: emailRecipients.join(', '),
-              subject: `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(todayIso)}`,
-              text: text,
-              html: html
-            });
-            logParts.push(`Email SMTP thành công (${info.messageId})`);
-          } catch (mErr: any) {
-            logParts.push(`Email SMTP lỗi: ${mErr.message}`);
-          }
-        }
-      }
-
-      // 2. Zalo Webhook Bot
-      if (serverState.config.autoZaloEnabled && serverState.config.zaloWebhookUrl?.startsWith('http')) {
         try {
-          const zRes = await fetch(serverState.config.zaloWebhookUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(serverState.config.zaloBotToken ? { 'Authorization': `Bearer ${serverState.config.zaloBotToken}` } : {})
-            },
-            body: JSON.stringify({
-              event: 'CRON_07AM_TASAGO_SAMPLE_ALERT',
-              company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
-              timestamp: new Date().toISOString(),
-              recipient_phone: serverState.config.zaloPersonalPhone || '0942320923',
-              group_id: serverState.config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago',
-              message: text,
-              samples: targetSamples
-            })
-          });
-          logParts.push(`Zalo Bot Webhook HTTP ${zRes.status}`);
-        } catch (zErr: any) {
-          logParts.push(`Zalo Bot lỗi: ${zErr.message}`);
+          const emailResult = await sendConfiguredEmail(targetSamples, serverState.config, todayIso);
+          logParts.push(emailResult.success ? `Email SMTP thành công (${emailResult.messageId || 'accepted'})` : `Email lỗi: ${emailResult.message}`);
+        } catch (emailError: any) {
+          logParts.push(`Email lỗi: ${emailError.message}`);
         }
       }
 
-      const resultSummary = logParts.length > 0 ? logParts.join(' | ') : 'Đã chuẩn bị bản tin hoàn tất';
+      if (serverState.config.autoZaloEnabled) {
+        try {
+          const zaloResult = await sendConfiguredZalo(targetSamples, serverState.config, todayIso);
+          logParts.push(zaloResult.success ? zaloResult.message : `Zalo lỗi: ${zaloResult.message}`);
+        } catch (zaloError: any) {
+          logParts.push(`Zalo lỗi: ${zaloError.message}`);
+        }
+      }
+
+      const resultSummary = logParts.length > 0 ? logParts.join(' | ') : 'Chưa bật kênh gửi Email/Zalo';
       serverState.lastCronDate = todayIso;
       serverState.lastCronLog = `[Thủ công 07:00 AM] Phát thông báo lúc ${new Date().toLocaleTimeString('vi-VN')} cho ${targetSamples.length} mẫu nén. Kết quả: ${resultSummary}`;
       await savePersistedState(serverState);
@@ -1590,8 +1575,9 @@ async function startServer() {
     }
   });
 
-  // Background 7:00 AM Cron Interval (Vietnam GMT+7)
+  // Development fallback cron. Production uses Vercel Cron so Render Free sleep does not stop delivery.
   setInterval(async () => {
+    if (process.env.NODE_ENV === 'production') return;
     try {
       const now = new Date();
       const vnDate = getVietnamDateIso(now);
@@ -1606,70 +1592,41 @@ async function startServer() {
       const targetHour = serverState.config.autoSendHour ?? 7;
       const targetMinute = serverState.config.autoSendMinute ?? 0;
 
-      // Trigger at configured time (default 07:00 AM VN Time) once per day
+      // Trigger at the configured Vietnam time once per day.
       if (hour === targetHour && minute === targetMinute && serverState.lastCronDate !== vnDate) {
-        serverState.lastCronDate = vnDate;
-        console.log(`[TASAGO CRON 07:00 AM] Kích hoạt kiểm tra lịch nén mẫu định kỳ ngày ${vnDate}...`);
-
+        console.log(`[TASAGO CRON] Kích hoạt kiểm tra lịch nén mẫu ngày ${vnDate}...`);
         const urgentSamples = getCurrentSamples().filter(
           s => s.status === 'due_today' || s.status === 'overdue'
         );
+        const cronLogItems: string[] = [];
 
-        if (urgentSamples.length > 0) {
-          const todayIso = getVietnamDateIso(now);
-          const { html, text } = buildDailyEmailHtml(urgentSamples, serverState.stations, todayIso);
-          const emailRecipients = serverState.config.emailRecipients || ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'];
-          const cronLogItems: string[] = [];
-
-          // 1. Send via SMTP
+        if (urgentSamples.length === 0) {
+          cronLogItems.push('Không có mẫu đến hạn hoặc quá hạn');
+        } else {
           if (serverState.config.autoEmailEnabled) {
-            const { transporter, host, user, pass } = createSmtpTransporter(serverState.config);
-            if (host && user && pass) {
-              try {
-                await transporter.sendMail({
-                  from: serverState.config.emailSender || `Bê Tông Tasago <${user}>`,
-                  to: emailRecipients.join(', '),
-                  subject: `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(todayIso)}`,
-                  text: text,
-                  html: html
-                });
-                cronLogItems.push(`Email tới ${emailRecipients.length} địa chỉ`);
-              } catch (mailErr: any) {
-                cronLogItems.push(`Email lỗi: ${mailErr.message}`);
-                console.error('[CRON EMAIL ERROR]', mailErr.message);
-              }
-            }
-          }
-
-          // 2. Send via Zalo Bot Webhook (Personal & Group)
-          if (serverState.config.autoZaloEnabled && serverState.config.zaloWebhookUrl?.startsWith('http')) {
             try {
-              const zRes = await fetch(serverState.config.zaloWebhookUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(serverState.config.zaloBotToken ? { 'Authorization': `Bearer ${serverState.config.zaloBotToken}` } : {})
-                },
-                body: JSON.stringify({
-                  event: 'CRON_07AM_DAILY_ALERT',
-                  company: 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
-                  timestamp: new Date().toISOString(),
-                  recipient_phone: serverState.config.zaloPersonalPhone || '0942320923',
-                  group_id: serverState.config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago',
-                  message: text,
-                  samples: urgentSamples
-                })
-              });
-              cronLogItems.push(`Bot Zalo Webhook HTTP ${zRes.status}`);
-            } catch (zaloErr: any) {
-              cronLogItems.push(`Bot Zalo lỗi: ${zaloErr.message}`);
-              console.error('[CRON ZALO ERROR]', zaloErr.message);
+              const emailResult = await sendConfiguredEmail(urgentSamples, serverState.config, vnDate);
+              cronLogItems.push(emailResult.success ? emailResult.message : `Email lỗi: ${emailResult.message}`);
+            } catch (emailError: any) {
+              cronLogItems.push(`Email lỗi: ${emailError.message}`);
+              console.error('[CRON EMAIL ERROR]', emailError.message);
             }
           }
 
-          serverState.lastCronLog = `[TỰ ĐỘNG 07:00 AM] Đã xử lý ${urgentSamples.length} mẫu nén: ${cronLogItems.join(' | ')}`;
-          console.log(serverState.lastCronLog);
+          if (serverState.config.autoZaloEnabled) {
+            try {
+              const zaloResult = await sendConfiguredZalo(urgentSamples, serverState.config, vnDate);
+              cronLogItems.push(zaloResult.success ? zaloResult.message : `Zalo lỗi: ${zaloResult.message}`);
+            } catch (zaloError: any) {
+              cronLogItems.push(`Zalo lỗi: ${zaloError.message}`);
+              console.error('[CRON ZALO ERROR]', zaloError.message);
+            }
+          }
         }
+
+        serverState.lastCronDate = vnDate;
+        serverState.lastCronLog = `[TỰ ĐỘNG ${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}] Đã xử lý ${urgentSamples.length} mẫu: ${cronLogItems.join(' | ')}`;
+        console.log(serverState.lastCronLog);
         await savePersistedState(serverState);
       }
     } catch (cronErr) {

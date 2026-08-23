@@ -106,9 +106,12 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   // Zalo Bot Settings (Personal & Group)
   const [zaloWebhookUrl, setZaloWebhookUrl] = useState(config.zaloWebhookUrl || '');
+  const [zaloWebhookSecret, setZaloWebhookSecret] = useState(config.zaloWebhookSecret === '[PROTECTED]' ? '' : (config.zaloWebhookSecret || ''));
   const [zaloBotToken, setZaloBotToken] = useState(config.zaloBotToken === '[PROTECTED]' ? '' : (config.zaloBotToken || ''));
   const [zaloGroupId, setZaloGroupId] = useState(config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago');
+  const [zaloGroupChatId, setZaloGroupChatId] = useState(config.zaloGroupChatId || '');
   const [zaloPersonalPhone, setZaloPersonalPhone] = useState(config.zaloPersonalPhone || '0942320923');
+  const [zaloPersonalChatId, setZaloPersonalChatId] = useState(config.zaloPersonalChatId || '');
   const [zaloPersonalPhones, setZaloPersonalPhones] = useState<string[]>(() => {
     const list = Array.isArray(config.zaloPersonalPhones) ? config.zaloPersonalPhones : [];
     return list.length > 0 ? list : ['0942320923', '0913999888'];
@@ -135,7 +138,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const notificationPreview = generateSampleNotification(samplesToNotify, stations);
   const mailtoUrl = generateMailtoUrl(emailList, notificationPreview.title, notificationPreview.bodyText);
 
-  if (!isOpen) return null;
+  if (!isOpen || currentUser?.role !== 'admin') return null;
 
   // Add Phone Number to personal list
   const handleAddPhone = (e: React.FormEvent) => {
@@ -214,9 +217,12 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     emailSender,
     emailServiceUrl,
     zaloWebhookUrl,
+    zaloWebhookSecret,
     zaloBotToken,
     zaloGroupId,
+    zaloGroupChatId,
     zaloPersonalPhone,
+    zaloPersonalChatId,
     zaloPersonalPhones,
     zaloRecipientType,
     autoZaloEnabled,
@@ -400,8 +406,16 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 
   // 4. Test Webhook Zalo (Personal & Group via Backend)
   const handleTestWebhook = async () => {
-    if (!zaloWebhookUrl || !zaloWebhookUrl.startsWith('http')) {
-      alert('Vui lòng nhập URL Webhook hợp lệ (bắt đầu bằng http:// hoặc https://)');
+    if (!zaloBotToken && !config.zaloBotToken) {
+      alert('Vui lòng nhập Bot Token trước khi gửi thử.');
+      return;
+    }
+    if ((zaloRecipientType === 'personal' || zaloRecipientType === 'both') && !zaloPersonalChatId && !config.zaloPersonalChatId) {
+      alert('Chưa có Personal Chat ID. Hãy nhắn một tin cho Bot để webhook tự ghi nhận Chat ID.');
+      return;
+    }
+    if ((zaloRecipientType === 'group' || zaloRecipientType === 'both') && !zaloGroupChatId && !config.zaloGroupChatId) {
+      alert('Chưa có Group Chat ID. Hãy thêm Bot vào nhóm và nhập Group Chat ID.');
       return;
     }
     setTestingWebhook(true);
@@ -414,8 +428,12 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         body: JSON.stringify({
           webhookUrl: zaloWebhookUrl,
           botToken: zaloBotToken,
+          webhookSecret: zaloWebhookSecret,
           personalPhone: zaloPersonalPhone || '0942320923',
-          groupId: zaloGroupId || 'Nhóm Kỹ Thuật Tasago'
+          personalChatId: zaloPersonalChatId,
+          groupId: zaloGroupId || 'Nhóm Kỹ Thuật Tasago',
+          groupChatId: zaloGroupChatId,
+          recipientType: zaloRecipientType
         })
       });
 
@@ -1157,14 +1175,14 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="font-black text-blue-950 text-sm sm:text-base">
-                    Cấu Hình Tự Động Gửi Thông Báo Qua Zalo Bot Cá Nhân & Nhóm
+                    Cấu Hình Tự Động Gửi Thông Báo Qua Zalo Bot API
                   </h4>
                   <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    Webhook 24/7
+                    Bot API 24/7
                   </span>
                 </div>
                 <p className="text-slate-600 text-xs leading-relaxed">
-                  Mỗi 07:00 sáng hoặc khi có mẫu đến hạn/quá hạn nén, hệ thống tự động phát tin nhắn qua Webhook Zalo Bot tới <strong>Số điện thoại cá nhân</strong> của KTV/Quản lý hoặc <strong>Nhóm Zalo kỹ thuật</strong>.
+                  Mỗi 07:00 sáng, backend Render sẽ gửi tin nhắn thật qua Zalo Bot API tới các Chat ID đã cấu hình. Webhook chỉ dùng để Zalo gửi sự kiện về hệ thống và tự nhận diện Chat ID.
                 </p>
               </div>
             </div>
@@ -1331,48 +1349,80 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                 </div>
               )}
 
-              {/* Group Name & Bot Token */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Official Zalo Bot API credentials and recipients */}
+              <div className="space-y-3 rounded-xl border border-blue-200 bg-white p-3.5">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1 text-xs">
-                    Tên Nhóm Zalo Nhận Tin:
+                    Bot Token (dùng để gửi tin thật):
                   </label>
                   <input
-                    type="text"
-                    value={zaloGroupId}
-                    onChange={(e) => setZaloGroupId(e.target.value)}
-                    placeholder="Nhóm Kỹ Thuật Tasago"
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1 text-xs">
-                    Số Điện Thoại Nhận Chính:
-                  </label>
-                  <input
-                    type="text"
-                    value={zaloPersonalPhone}
-                    onChange={(e) => setZaloPersonalPhone(cleanPhoneNumber(e.target.value))}
-                    placeholder="0942320923"
+                    type="password"
+                    value={zaloBotToken}
+                    onChange={(e) => setZaloBotToken(e.target.value)}
+                    placeholder={config.zaloBotToken === '[PROTECTED]' ? 'Đã lưu bảo mật — để trống nếu không đổi' : 'Dán Bot Token từ Zalo Bot Platform'}
                     className="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-mono text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <p className="mt-1 text-[10px] text-slate-500">Không dùng Webhook Secret làm Bot Token. Bot Token chỉ được gửi từ backend tới Zalo.</p>
                 </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1 text-xs">Tên nhóm Zalo:</label>
+                    <input
+                      type="text"
+                      value={zaloGroupId}
+                      onChange={(e) => setZaloGroupId(e.target.value)}
+                      placeholder="Nhóm Kỹ Thuật Tasago"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1 text-xs">Group Chat ID:</label>
+                    <input
+                      type="text"
+                      value={zaloGroupChatId}
+                      onChange={(e) => setZaloGroupChatId(e.target.value)}
+                      placeholder="Tự điền sau khi Bot nhận tin trong nhóm"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-mono text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1 text-xs">Số điện thoại Zalo:</label>
+                    <input
+                      type="text"
+                      value={zaloPersonalPhone}
+                      onChange={(e) => setZaloPersonalPhone(cleanPhoneNumber(e.target.value))}
+                      placeholder="0942320923"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-mono text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 mb-1 text-xs">Personal Chat ID:</label>
+                    <input
+                      type="text"
+                      value={zaloPersonalChatId}
+                      onChange={(e) => setZaloPersonalChatId(e.target.value)}
+                      placeholder="Tự điền sau khi Bot nhận tin riêng"
+                      className="w-full bg-white border border-slate-300 rounded-xl p-2.5 font-mono text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] leading-relaxed text-slate-500">Số điện thoại chỉ là thông tin hiển thị. Zalo Bot API cần Chat ID thực tế, được lấy tự động từ webhook khi bạn nhắn tin cho Bot.</p>
               </div>
 
-              {/* Webhook URL with Test Button */}
+              {/* Webhook callback URL with secret */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="font-bold text-slate-800 block text-xs">
-                    Webhook Endpoint URL (Google Apps Script / Webhook Zalo Bot):
+                    Webhook nhận sự kiện từ Zalo Bot:
                   </label>
                   <button
                     type="button"
-                    onClick={() => setShowScriptModal(true)}
+                    onClick={() => window.open('https://bot.zapps.me/docs/apis/sendMessage/', '_blank', 'noopener,noreferrer')}
                     className="text-blue-700 hover:text-blue-800 font-bold text-[11px] flex items-center gap-1 underline cursor-pointer"
                   >
-                    <FileCode className="w-3.5 h-3.5" />
-                    <span>Lấy mã nguồn Google Apps Script mẫu</span>
+                    <BookOpen className="w-3.5 h-3.5" />
+                    <span>Xem tài liệu Zalo Bot API</span>
                   </button>
                 </div>
 
@@ -1381,13 +1431,13 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     type="url"
                     value={zaloWebhookUrl}
                     onChange={(e) => setZaloWebhookUrl(e.target.value)}
-                    placeholder="https://script.google.com/macros/s/.../exec"
+                    placeholder="https://nenmauv2-u9xx.onrender.com/api/zalo/webhook"
                     className="flex-1 bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   <button
                     type="button"
                     onClick={handleTestWebhook}
-                    disabled={testingWebhook || !zaloWebhookUrl}
+                    disabled={testingWebhook || !zaloBotToken && config.zaloBotToken !== '[PROTECTED]'}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-2.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-md disabled:opacity-50"
                   >
                     {testingWebhook ? (
@@ -1395,8 +1445,19 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
                     ) : (
                       <Zap className="w-3.5 h-3.5 text-yellow-300" />
                     )}
-                    <span>⚡ Bắn Thử Zalo</span>
+                    <span>⚡ Gửi thử qua Bot API</span>
                   </button>
+                </div>
+                <div className="mt-2">
+                  <label className="block font-bold text-slate-800 mb-1 text-xs">Webhook Secret Token:</label>
+                  <input
+                    type="password"
+                    value={zaloWebhookSecret}
+                    onChange={(e) => setZaloWebhookSecret(e.target.value)}
+                    placeholder={config.zaloWebhookSecret === '[PROTECTED]' ? 'Đã lưu bảo mật — để trống nếu không đổi' : 'Secret Token đã tạo trong Zalo Bot Platform'}
+                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 text-xs font-mono outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="mt-1 text-[10px] text-slate-500">Zalo gửi secret này trong header <code>X-Bot-Api-Secret-Token</code>; đây không phải Bot Token.</p>
                 </div>
               </div>
 
@@ -1422,23 +1483,20 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-blue-950 font-bold text-xs">
                   <FileCode className="w-4 h-4 text-blue-700" />
-                  <span>Google Apps Script - Cầu Nối Miễn Phí Gửi Zalo Tự Động</span>
+                  <span>Kết nối Zalo Bot Platform</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(GOOGLE_APPS_SCRIPT_ZALO_TEMPLATE);
-                    setCopiedScript(true);
-                    setTimeout(() => setCopiedScript(false), 2500);
-                  }}
+                <a
+                  href="https://bot.zapps.me/docs/apis/sendMessage/"
+                  target="_blank"
+                  rel="noreferrer"
                   className="bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
                 >
-                  {copiedScript ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedScript ? 'Đã sao chép!' : 'Sao Chép Code Apps Script'}</span>
-                </button>
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Mở tài liệu Bot API</span>
+                </a>
               </div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                Tạo một dự án Google Apps Script mới tại <a href="https://script.google.com" target="_blank" rel="noreferrer" className="text-blue-700 font-bold underline">script.google.com</a>, dán toàn bộ đoạn mã trên và nhấn <strong>Triển khai dưới dạng Ứng dụng web (Web App)</strong> với quyền truy cập <em>"Bất kỳ ai (Anyone)"</em>. Sau đó copy URL dán vào ô Webhook Endpoint phía trên.
+                Trong Zalo Bot Platform, đặt Webhook URL là <code className="bg-white px-1 rounded text-blue-800">https://nenmauv2-u9xx.onrender.com/api/zalo/webhook</code> và nhập cùng Secret Token. Sau đó nhắn một tin riêng cho Bot hoặc gửi tin trong nhóm đã thêm Bot; hệ thống sẽ tự lưu Chat ID vào Supabase.
               </p>
             </div>
 
@@ -1511,88 +1569,37 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
         {/* Tab 6: GUIDE & INSTRUCTIONS */}
         {activeTab === 'guide' && (
           <div className="p-5 sm:p-6 space-y-5 overflow-y-auto max-h-[75vh] text-xs text-slate-700">
-            {/* Section 1: Zalo Bot Setup Guide */}
+            {/* Section 1: Official Zalo Bot Platform setup */}
             <div className="bg-gradient-to-br from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 p-5 rounded-2xl space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-black text-blue-950 text-sm flex items-center space-x-2">
                   <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center">
                     <MessageSquare className="w-4 h-4" />
                   </div>
-                  <span>Hướng Dẫn Cấu Hình Tự Động Gửi Zalo Bot Cá Nhân & Nhóm</span>
+                  <span>Hướng Dẫn Zalo Bot API Chính Thức</span>
                 </h4>
-                <span className="bg-blue-100 text-blue-800 text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">
-                  Miễn phí 100%
-                </span>
+                <a href="https://bot.zapps.me/docs/apis/sendMessage/" target="_blank" rel="noreferrer" className="text-blue-700 text-[10px] font-bold underline">Tài liệu API</a>
               </div>
               <p className="text-slate-600 leading-relaxed">
-                Để hệ thống tự động gửi tin nhắn báo cáo lịch nén mẫu bê tông hàng ngày tới <strong>Số Zalo cá nhân</strong> hoặc <strong>Nhóm Zalo kỹ thuật</strong>, bạn có thể thiết lập Webhook hoàn toàn miễn phí thông qua Google Apps Script theo 4 bước đơn giản:
+                Backend Render gửi tin trực tiếp tới Zalo bằng Bot Token và Chat ID. Số điện thoại hoặc tên nhóm chỉ để hiển thị, không thể thay thế Chat ID.
               </p>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 shadow-xs space-y-1.5">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span>
-                    <span>Tạo Dự Án Google Apps Script</span>
-                  </div>
-                  <p className="text-slate-600 text-[11px] leading-normal">
-                    Truy cập <a href="https://script.google.com" target="_blank" rel="noreferrer" className="text-blue-700 font-bold underline">script.google.com</a>, bấm <strong>Dự án mới (New project)</strong>.
-                  </p>
+                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 space-y-1.5">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">1</span><span>Lấy Bot Token</span></div>
+                  <p className="text-slate-600 text-[11px] leading-normal">Lấy Bot Token trong Zalo Bot Platform và dán vào trường <strong>Bot Token</strong>. Không dùng Webhook Secret làm Bot Token.</p>
                 </div>
-
-                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 shadow-xs space-y-1.5">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span>
-                    <span>Dán Mã Nguồn Tự Động</span>
-                  </div>
-                  <p className="text-slate-600 text-[11px] leading-normal">
-                    Xóa sạch mã cũ trong tệp <code className="bg-slate-100 px-1 rounded text-blue-800">Code.gs</code> và dán toàn bộ mã nguồn Google Apps Script mẫu được cung cấp bên dưới.
-                  </p>
+                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 space-y-1.5">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span><span>Cấu hình Webhook</span></div>
+                  <p className="text-slate-600 text-[11px] leading-normal">Đặt Webhook URL là <code className="bg-slate-100 px-1 rounded text-blue-800">https://nenmauv2-u9xx.onrender.com/api/zalo/webhook</code> và dùng Secret Token riêng.</p>
                 </div>
-
-                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 shadow-xs space-y-1.5">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">3</span>
-                    <span>Triển Khai Dạng Web App</span>
-                  </div>
-                  <p className="text-slate-600 text-[11px] leading-normal">
-                    Bấm <strong>Triển khai (Deploy)</strong> &gt; <strong>Triển khai mới (New deployment)</strong> &gt; Chọn loại <strong>Ứng dụng web (Web App)</strong>. Đặt quyền truy cập là <em>"Bất kỳ ai (Anyone)"</em>.
-                  </p>
+                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 space-y-1.5">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">3</span><span>Lấy Personal Chat ID</span></div>
+                  <p className="text-slate-600 text-[11px] leading-normal">Lưu cấu hình, nhắn một tin riêng cho Bot. Webhook sẽ tự lưu ID vào ô <strong>Personal Chat ID</strong> trong Supabase.</p>
                 </div>
-
-                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 shadow-xs space-y-1.5">
-                  <div className="font-bold text-blue-900 flex items-center gap-1.5">
-                    <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">4</span>
-                    <span>Dán URL & Bắn Thử Tin Nhắn</span>
-                  </div>
-                  <p className="text-slate-600 text-[11px] leading-normal">
-                    Sao chép URL Web App kết thúc bằng <code className="bg-slate-100 px-1 rounded text-blue-800">/exec</code> và dán vào ô Webhook URL ở tab Bot Zalo, sau đó nhấn <strong>⚡ Bắn Thử Zalo</strong>.
-                  </p>
+                <div className="bg-white p-3.5 rounded-xl border border-blue-200/80 space-y-1.5">
+                  <div className="font-bold text-blue-900 flex items-center gap-1.5"><span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">4</span><span>Lấy Group Chat ID</span></div>
+                  <p className="text-slate-600 text-[11px] leading-normal">Thêm Bot vào nhóm, gửi một tin trong nhóm, sau đó lấy Group Chat ID webhook tự ghi nhận và bấm <strong>Gửi thử qua Bot API</strong>.</p>
                 </div>
-              </div>
-
-              {/* Code Box with 1-Click Copy */}
-              <div className="mt-3 bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                  <span className="font-mono text-emerald-400 text-xs font-bold flex items-center gap-1.5">
-                    <FileCode className="w-4 h-4" />
-                    <span>Mã nguồn Google Apps Script (Code.gs)</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(GOOGLE_APPS_SCRIPT_ZALO_TEMPLATE);
-                      setCopiedScript(true);
-                      setTimeout(() => setCopiedScript(false), 2500);
-                    }}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
-                  >
-                    {copiedScript ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedScript ? 'Đã sao chép!' : 'Sao Chép Toàn Bộ Mã'}</span>
-                  </button>
-                </div>
-                <pre className="text-[11px] font-mono text-slate-300 overflow-x-auto max-h-60 p-2 bg-slate-950/70 rounded-lg whitespace-pre">
-                  {GOOGLE_APPS_SCRIPT_ZALO_TEMPLATE}
-                </pre>
               </div>
             </div>
 

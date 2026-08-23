@@ -204,23 +204,25 @@ export const Header: React.FC<HeaderProps> = ({
         {/* User Info & Actions */}
         <div className="flex items-center gap-2 sm:gap-3 text-sm">
           
-          {/* Notification Alert Button */}
-          <button
-            onClick={onOpenNotificationModal}
-            className={`relative p-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              urgentCount > 0 
-                ? 'bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 shadow-sm animate-pulse' 
-                : 'bg-emerald-700/80 hover:bg-emerald-700 text-emerald-100'
-            }`}
-            title="Nhắc nhở Zalo / Email nén mẫu"
-          >
-            <Bell className="w-4 h-4" />
-            {urgentCount > 0 && (
-              <span className="text-xs hidden sm:inline font-bold">
-                {urgentCount} cần nén
-              </span>
-            )}
-          </button>
+          {/* Notification Center is an admin-only control. */}
+          {currentUser?.role === 'admin' && (
+            <button
+              onClick={onOpenNotificationModal}
+              className={`relative p-2 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                urgentCount > 0
+                  ? 'bg-amber-400 text-slate-950 font-bold hover:bg-amber-300 shadow-sm animate-pulse'
+                  : 'bg-emerald-700/80 hover:bg-emerald-700 text-emerald-100'
+              }`}
+              title="Trung tâm thông báo Email / Zalo"
+            >
+              <Bell className="w-4 h-4" />
+              {urgentCount > 0 && (
+                <span className="text-xs hidden sm:inline font-bold">
+                  {urgentCount} cần nén
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Admin Station & User Management Shortcut */}
           {currentUser?.role === 'admin' && (
@@ -367,14 +369,16 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Xuất Báo Cáo</span>
           </button>
 
-          <button
-            onClick={onOpenNotificationModal}
-            className="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-          >
-            <Send className="w-3.5 h-3.5 text-blue-600" />
-            <span className="hidden sm:inline">Zalo Bot & Email</span>
-            <span className="sm:hidden">Thông Báo</span>
-          </button>
+          {currentUser?.role === 'admin' && (
+            <button
+              onClick={onOpenNotificationModal}
+              className="bg-slate-100 text-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <Send className="w-3.5 h-3.5 text-blue-600" />
+              <span className="hidden sm:inline">Trung Tâm Thông Báo</span>
+              <span className="sm:hidden">Thông Báo</span>
+            </button>
+          )}
 
           {/* Real-time Cloud Sync Status Button */}
           {onManualSync && (

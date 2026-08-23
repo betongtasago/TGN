@@ -323,12 +323,13 @@ export async function dispatchNotification(
   if (!samples.length) return { success: false, message: 'Không có mẫu bê tông nào để gửi thông báo.', logIds: [] };
   
   const notif = generateSampleNotification(samples, stations); 
-  const logIds: string[] = []; 
+  const logIds: string[] = [];
   const results: string[] = [];
+  let successfulChannels = 0;
 
   // 1. Zalo Bot Dispatching (Personal & Group)
   if (channel === 'zalo_bot' || channel === 'both') {
-    let zaloStatus: 'success' | 'failed' | 'simulated' = 'simulated'; 
+    let zaloStatus: 'success' | 'failed' = 'failed';
     let errorDetails: string | undefined;
     const personalPhone = config.zaloPersonalPhone || '0942320923';
     const groupName = config.zaloGroupId || 'Nhóm Kỹ Thuật Tasago';
@@ -344,7 +345,9 @@ export async function dispatchNotification(
           webhookUrl: config.zaloWebhookUrl,
           botToken: config.zaloBotToken,
           personalPhone,
+          personalChatId: config.zaloPersonalChatId,
           groupId: groupName,
+          groupChatId: config.zaloGroupChatId,
           recipientType: config.zaloRecipientType || 'both',
           customMessage: notif.bodyText
         })
@@ -353,6 +356,7 @@ export async function dispatchNotification(
       const zaloData = await zaloRes.json().catch(() => null);
       if (zaloRes.ok && zaloData?.success) {
         zaloStatus = 'success';
+        successfulChannels += 1;
         errorDetails = zaloData.message;
         results.push(`Bot Zalo: ${zaloData.message || 'Thành công'}`);
       } else {
@@ -399,8 +403,9 @@ export async function dispatchNotification(
 
       const data = await response.json().catch(() => null); 
       if (response.ok && data?.success) { 
-        emailStatus = 'success'; 
-        emailError = data.message; 
+        emailStatus = 'success';
+        successfulChannels += 1;
+        emailError = data.message;
         results.push(`Email: Đã gửi tới ${recipients.length || 2} địa chỉ`); 
       } else { 
         emailError = data?.message || `Máy chủ email trả về HTTP ${response.status}`; 
@@ -425,10 +430,12 @@ export async function dispatchNotification(
     if (persistedLogs) localStorage.setItem('tasago_notif_logs_v3', JSON.stringify(persistedLogs));
   }
 
-  return { 
-    success: true, 
-    message: `Đã kích hoạt gửi thông báo (${results.join(' | ')}) cho ${samples.length} mẫu nén.`, 
-    logIds 
+  return {
+    success: successfulChannels > 0,
+    message: results.length > 0
+      ? `Kết quả gửi thông báo: ${results.join(' | ')}`
+      : 'Không có kênh gửi nào được chọn.',
+    logIds
   };
 }
 

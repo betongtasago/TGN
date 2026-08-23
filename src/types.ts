@@ -125,9 +125,12 @@ export interface NotificationLog {
 export interface NotificationConfig {
   autoZaloEnabled: boolean;
   zaloWebhookUrl: string;
+  zaloWebhookSecret?: string;
   zaloBotToken: string;
   zaloGroupId: string;
-  zaloPersonalPhone?: string;     // Số điện thoại Zalo cá nhân nhận tin chính (ví dụ: 0942320923)
+  zaloGroupChatId?: string;
+  zaloPersonalPhone?: string;
+  zaloPersonalChatId?: string;     // Số điện thoại Zalo cá nhân nhận tin chính (ví dụ: 0942320923)
   zaloPersonalPhones?: string[];   // Danh sách các SĐT Zalo cá nhân nhận tin
   zaloRecipientType?: 'personal' | 'group' | 'both'; // Gửi cho cá nhân, nhóm hay cả hai
   autoEmailEnabled: boolean;
