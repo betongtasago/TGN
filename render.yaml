@@ -12,7 +12,7 @@ services:
       - key: AUTH_SECRET
         sync: false
       - key: SUPABASE_URL
-        sync: false
+        value: https://mqzampgzppxeppyuqvxm.supabase.co
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SMTP_HOST
