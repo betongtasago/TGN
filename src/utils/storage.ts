@@ -40,6 +40,12 @@ export function setAuthToken(token: string | null): void {
   }
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+
+export function apiUrl(path: string): string {
+  return `${API_BASE_URL}${path}`;
+}
+
 // Wrapper around fetch() that automatically attaches the auth token to
 // every API call. Use this instead of raw fetch() for any /api/* request.
 export async function apiFetch(input: string, init: RequestInit = {}): Promise<Response> {
@@ -48,7 +54,8 @@ export async function apiFetch(input: string, init: RequestInit = {}): Promise<R
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
-  return fetch(input, { ...init, headers });
+  const target = input.startsWith('/api/') ? apiUrl(input) : input;
+  return fetch(target, { ...init, headers });
 }
 
 export type ViewMode = 'auto' | 'pc' | 'mobile';

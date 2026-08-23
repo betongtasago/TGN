@@ -11,7 +11,7 @@ import {
   EyeOff
 } from 'lucide-react';
 import { User } from '../types';
-import { setAuthToken } from '../utils/storage';
+import { apiUrl, setAuthToken } from '../utils/storage';
 
 interface AuthScreenProps {
   users?: User[];
@@ -42,7 +42,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     setLoading(true);
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: username.trim(), password }),
