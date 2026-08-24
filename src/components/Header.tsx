@@ -172,7 +172,7 @@ export const Header: React.FC<HeaderProps> = ({
           title="Về trang chủ quản lý mẫu"
           aria-label="Về trang chủ quản lý mẫu"
         >
-          <span className="block w-[132px] sm:w-[210px] aspect-[1560/630] bg-white rounded-xl shadow-sm shrink-0 p-1 sm:p-1.5 overflow-hidden">
+          <span className="block w-[132px] sm:w-[210px] aspect-[961/375] bg-white rounded-xl shadow-sm shrink-0 p-1 sm:p-1.5 overflow-hidden">
             <img
               src="/brand-logo.png"
               alt="Bê Tông Xanh Sài Gòn"
