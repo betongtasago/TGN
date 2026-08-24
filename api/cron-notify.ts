@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendViaGmailRelay } from '../gmailRelay';
+import { buildProfessionalEmail } from '../emailTemplate';
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -20,27 +21,6 @@ function escapeHtml(value: unknown): string {
   return String(value ?? '')
     .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
-}
-
-function buildReport(samples: any[], stations: any[], today: string) {
-  const stationMap = new Map(stations.map(station => [station.id, station.name]));
-  const lines = ['CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO', `BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG - ${formatDateVN(today)}`, ''];
-  for (const [index, sample] of samples.entries()) {
-    const status = sample.status === 'overdue' ? 'QUÁ HẠN CHƯA NÉN' : 'ĐẾN HẠN HÔM NAY';
-    lines.push(
-      `${index + 1}. [${status}] ${sample.projectName || sample.sampleCode || sample.id}`,
-      `   Trạm: ${stationMap.get(sample.stationId) || 'Trạm Tasago'}`,
-      `   Hạng mục: ${sample.component || '---'} (${sample.volumeM3 ?? 0} m³)`,
-      `   Mác: ${sample.concreteGrade || '---'} | Tuổi nén: ${sample.ageType || '---'} (${sample.ageDays ?? '-'} ngày)`,
-      `   Đúc: ${formatDateVN(sample.castDate)} -> Nén: ${formatDateVN(sample.scheduledTestDate)}`,
-      `   Nhà thầu: ${sample.contractor || '---'} | Liên hệ: ${sample.contactPerson || '---'} - ${sample.contactPhone || '---'}`,
-      `   KTV lấy mẫu: ${sample.samplerName || '---'}`, '',
-    );
-  }
-  return {
-    text: lines.join('\n'),
-    html: `<div style="font-family:Arial,sans-serif;max-width:700px;margin:auto"><h2>CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</h2><p>Báo cáo ngày ${escapeHtml(formatDateVN(today))}</p>${samples.map((sample, index) => `<section style="border:1px solid #d1d5db;border-left:4px solid #059669;padding:12px;margin:12px 0"><strong>${index + 1}. ${escapeHtml(sample.projectName || sample.sampleCode || sample.id)}</strong><p>Trạm: ${escapeHtml(stationMap.get(sample.stationId) || 'Trạm Tasago')}<br>Hạng mục: ${escapeHtml(sample.component)} (${escapeHtml(sample.volumeM3)} m³)<br>Mác: ${escapeHtml(sample.concreteGrade)} | Tuổi nén: ${escapeHtml(sample.ageType)} (${escapeHtml(sample.ageDays)} ngày)<br>Đúc: ${escapeHtml(formatDateVN(sample.castDate))} - Nén: ${escapeHtml(formatDateVN(sample.scheduledTestDate))}<br>Nhà thầu: ${escapeHtml(sample.contractor)}<br>Liên hệ: ${escapeHtml(sample.contactPerson)} - ${escapeHtml(sample.contactPhone)}<br>KTV: ${escapeHtml(sample.samplerName)}</p></section>`).join('')}</div>`,
-  };
 }
 
 async function sendEmail(config: any, recipients: string[], report: { text: string; html: string }, today: string) {
@@ -93,7 +73,11 @@ export default async function handler(req: any, res: any) {
 
     if (urgent.length > 0) {
       if (config.autoEmailEnabled !== false) {
-        try { results.push(await sendEmail(config, recipients, buildReport(urgent, stations, today), today)); }
+        try { results.push(await sendEmail(config, recipients, buildProfessionalEmail(urgent, stations, {
+          targetDate: today,
+          title: 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG',
+          subtitle: 'Thông báo tự động từ lịch kiểm định chất lượng bê tông',
+        }), today)); }
         catch (emailError: any) { results.push(`Email lỗi: ${emailError?.message || 'lỗi Gmail relay'}`); }
       } else {
         results.push('Email tự động đang tắt.');

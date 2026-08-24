@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { sendViaGmailRelay, verifyGmailRelay } from './gmailRelay';
+import { buildProfessionalEmail } from './emailTemplate';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_USERS, INITIAL_STATIONS, INITIAL_SAMPLES, INITIAL_NOTIFICATION_CONFIG } from './src/data/initialData';
 import { loadSupabaseState, persistSupabaseState, supabaseConfigured } from './supabaseStore';
@@ -353,171 +354,7 @@ function getCurrentSamples(): any[] {
 }
 
 
-// Helper: Generate Rich HTML Email Template
-function buildDailyEmailHtml(samples: any[], stations: any[], targetDateStr: string): { html: string; text: string; urgentCount: number } {
-  const stationMap = new Map<string, any>();
-  stations.forEach(s => stationMap.set(s.id, s));
-
-  const shapeMap: Record<string, string> = {
-    cube_150: 'Mẫu vuông 150x150x150mm',
-    cylinder_150_300: 'Mẫu trụ Ø150x300mm',
-    waterproof_150: 'Mẫu trụ chống thấm',
-    expansion: 'Mẫu bù co ngót',
-    other: 'Mẫu quy cách đặc biệt',
-  };
-
-  const count = samples.length;
-  const urgentCount = samples.filter(s => s.status === 'due_today' || s.status === 'overdue').length;
-
-  let text = `📢 CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO\n`;
-  text += `🔔 BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG 07:00 SÁNG (${formatDateVN(targetDateStr)})\n`;
-  text += `⏰ Thời gian phát: ${new Date().toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })} ngày ${formatDateVN(targetDateStr)}\n`;
-  text += `-------------------------------------------\n\n`;
-
-  samples.forEach((sample, idx) => {
-    const station = stationMap.get(sample.stationId);
-    const stationName = station ? station.name : 'Trạm Tasago';
-    const shape = shapeMap[sample.sampleShape] || sample.sampleShape;
-    const badge = sample.status === 'due_today' ? '[ĐẾN HẠN HÔM NAY]' : sample.status === 'overdue' ? '[QUÁ HẠN CHƯA NÉN]' : '[SẮP ĐẾN HẠN]';
-
-    text += `${idx + 1}. ${badge} - ${sample.projectName}\n`;
-    text += `   🏢 Trạm: ${stationName}\n`;
-    text += `   🏗️ Hạng mục: ${sample.component} (${sample.volumeM3} m³)\n`;
-    text += `   🧪 Mác: ${sample.concreteGrade} (Độ sụt: ${sample.slumpCm}cm)\n`;
-    text += `   ⏱️ Tuổi nén: ${sample.ageType} (${sample.ageDays} ngày) - ${shape}\n`;
-    text += `   📅 Đúc: ${formatDateVN(sample.castDate)} ➔ Nén: ${formatDateVN(sample.scheduledTestDate)}\n`;
-    text += `   👤 Đơn vị thi công: ${sample.contractor}\n`;
-    text += `   📞 Liên hệ: ${sample.contactPerson} - ${sample.contactPhone}\n`;
-    text += `   👨‍🔬 KTV lấy mẫu: ${sample.samplerName}\n\n`;
-  });
-
-  text += `-------------------------------------------\n⚡ Ban Chỉ Huy Trạm & Phòng Thí nghiệm chuẩn bị máy nén và cập nhật kết quả lên Cổng Tasago.`;
-
-  let html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Báo Cáo Lịch Nén Mẫu Tasago</title>
-    </head>
-    <body style="margin: 0; padding: 20px; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1e293b;">
-      <div style="max-width: 680px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border: 1px solid #cbd5e1;">
-        
-        <!-- Header Banner -->
-        <div style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: #ffffff; padding: 24px 28px;">
-          <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #a7f3d0; margin-bottom: 4px;">
-            CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
-          </div>
-          <h1 style="margin: 0; font-size: 20px; font-weight: 800; line-height: 1.3;">
-            BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG (07:00 SÁNG)
-          </h1>
-          <p style="margin: 6px 0 0 0; font-size: 13px; color: #e6fffa;">
-            Ngày ${formatDateVN(targetDateStr)} • Tự động nhắc nhở lịch kiểm định chất lượng bê tông
-          </p>
-        </div>
-
-        <!-- Alert Summary -->
-        <div style="padding: 20px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-          <div style="background: #ecfdf5; border-left: 4px solid #059669; padding: 14px 16px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-            <div>
-              <div style="font-weight: 700; color: #065f46; font-size: 14px;">
-                🔔 Tổng cộng: <strong>${count} mẫu bê tông</strong> có lịch nén cần thực hiện
-              </div>
-              <div style="font-size: 12px; color: #047857; margin-top: 2px;">
-                Trong đó có <strong style="color: #dc2626;">${urgentCount} mẫu</strong> đến hạn hôm nay hoặc quá hạn cần nén khẩn cấp.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sample List -->
-        <div style="padding: 20px 24px;">
-  `;
-
-  samples.forEach((sample, idx) => {
-    const station = stationMap.get(sample.stationId);
-    const stationName = station ? station.name : 'Trạm Bê Tông Tasago';
-    const shape = shapeMap[sample.sampleShape] || sample.sampleShape;
-    const isUrgent = sample.status === 'due_today' || sample.status === 'overdue';
-    const isOverdue = sample.status === 'overdue';
-
-    html += `
-      <div style="background: #ffffff; border: 1px solid ${isUrgent ? '#fca5a5' : '#e2e8f0'}; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
-        <div style="border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: 800; font-size: 15px; color: ${isUrgent ? '#991b1b' : '#0f766e'};">
-            #${idx + 1}. ${sample.projectName}
-          </span>
-          <span style="background: ${isOverdue ? '#fee2e2' : isUrgent ? '#fef3c7' : '#e0f2fe'}; color: ${isOverdue ? '#991b1b' : isUrgent ? '#92400e' : '#0369a1'}; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; text-transform: uppercase;">
-            ${isOverdue ? '⚠️ QUÁ HẠN NÉN' : sample.status === 'due_today' ? '🔴 ĐẾN HẠN HÔM NAY' : '🔵 SẮP ĐẾN HẠN'}
-          </span>
-        </div>
-
-        <table style="width: 100%; font-size: 13px; color: #334155; border-collapse: collapse; line-height: 1.6;">
-          <tr>
-            <td style="width: 38%; font-weight: 700; color: #64748b; padding: 3px 0;">Trạm sản xuất:</td>
-            <td style="padding: 3px 0;"><strong style="color: #0f172a;">${stationName}</strong></td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Hạng mục & Khối lượng:</td>
-            <td style="padding: 3px 0;">${sample.component} — <strong style="color: #047857;">${sample.volumeM3} m³</strong></td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Mác bê tông & Độ sụt:</td>
-            <td style="padding: 3px 0;"><strong style="color: #0f766e;">${sample.concreteGrade}</strong> (Độ sụt: ${sample.slumpCm} cm)</td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Tuổi nén & Quy cách:</td>
-            <td style="padding: 3px 0;"><strong style="color: #dc2626;">${sample.ageType} (${sample.ageDays} ngày)</strong> • ${shape} (${sample.groupCount} tổ/${sample.pieceCount} viên)</td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Ngày đúc ➔ Ngày nén:</td>
-            <td style="padding: 3px 0;">${formatDateVN(sample.castDate)} ➔ <strong style="color: #b91c1c; font-size: 14px;">${formatDateVN(sample.scheduledTestDate)}</strong></td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Đơn vị thi công:</td>
-            <td style="padding: 3px 0;">${sample.contractor}</td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Liên hệ công trình:</td>
-            <td style="padding: 3px 0;"><strong>${sample.contactPerson}</strong> — SĐT: <a href="tel:${sample.contactPhone}" style="color: #0284c7; font-weight: 700; text-decoration: none;">${sample.contactPhone}</a></td>
-          </tr>
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">KTV lấy mẫu:</td>
-            <td style="padding: 3px 0;">${sample.samplerName}</td>
-          </tr>
-          ${sample.notes ? `
-          <tr>
-            <td style="font-weight: 700; color: #64748b; padding: 3px 0;">Ghi chú:</td>
-            <td style="padding: 3px 0; color: #64748b; font-style: italic;">${sample.notes}</td>
-          </tr>` : ''}
-        </table>
-      </div>
-    `;
-  });
-
-  html += `
-        </div>
-
-        <!-- Footer -->
-        <div style="padding: 16px 24px; background: #0f172a; color: #94a3b8; font-size: 12px; text-align: center; border-top: 1px solid #1e293b;">
-          <div style="font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">
-            CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO — HỆ THỐNG KIỂM ĐỊNH CHẤT LƯỢNG BÊ TÔNG
-          </div>
-          <div>BÊ TÔNG XANH SÀI GÒN • BÊ TÔNG CỦA MỌI CÔNG TRÌNH</div>
-          <div style="margin-top: 8px; font-size: 11px; color: #64748b;">
-            Email này được gửi tự động mỗi 07:00 sáng từ máy chủ cổng Portal Tasago.
-          </div>
-        </div>
-
-      </div>
-    </body>
-    </html>
-  `;
-
-  return { html, text, urgentCount };
-}
-
+// Shared professional HTML/plain-text template for automatic and manual reports.
 async function sendConfiguredEmail(samples: any[], config: any, targetDate = getVietnamDateIso(), subject?: string) {
   const recipients = (Array.isArray(config?.emailRecipients) ? config.emailRecipients : [])
     .map((recipient: unknown) => String(recipient).trim())
@@ -526,7 +363,11 @@ async function sendConfiguredEmail(samples: any[], config: any, targetDate = get
     return { success: false, message: 'Chưa cấu hình địa chỉ email người nhận hợp lệ.' };
   }
 
-  const { html, text, urgentCount } = buildDailyEmailHtml(samples, serverState.stations, targetDate);
+  const { html, text, urgentCount } = buildProfessionalEmail(samples, serverState.stations, {
+    targetDate,
+    title: 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG',
+    subtitle: 'Tự động nhắc nhở lịch kiểm định chất lượng bê tông',
+  });
   const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(targetDate)}`;
   const sender = String(config?.emailSender || 'Bê Tông Tasago').split('<')[0].trim() || 'Bê Tông Tasago';
   const result = await sendViaGmailRelay({
