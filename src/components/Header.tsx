@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="w-full font-sans sticky top-0 z-40 shadow-md">
       {/* Top Banner - Hotline & Support Bar */}
-      <div className="bg-emerald-950 text-emerald-300 px-4 sm:px-6 py-1 text-[11px] flex justify-between items-center border-b border-emerald-900/60">
+      <div className="bg-[#075E38] text-emerald-100 px-4 sm:px-6 py-1 text-[11px] flex justify-between items-center border-b border-[#064A2C]">
         <div className="flex items-center gap-3">
           <span className="font-semibold text-emerald-200 hidden sm:inline">
             CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
@@ -157,24 +157,29 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Primary Top Nav - Professional Emerald Bar */}
-      <nav className="bg-emerald-800 text-white px-4 sm:px-6 py-2.5 flex justify-between items-center">
+      <nav className="bg-[#08783D] text-white px-4 sm:px-6 py-2.5 flex justify-between items-center">
         
         {/* Brand & Logo */}
         <div 
           className="flex items-center gap-3 cursor-pointer select-none" 
           onClick={() => onChangeTab('samples')}
+          title="Bê Tông Xanh Sài Gòn"
         >
-          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0">
-            <span className="text-emerald-800 font-black text-lg sm:text-xl tracking-tight">TSG</span>
+          <div className="w-[118px] h-11 sm:w-[166px] sm:h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 px-1.5 sm:px-2 overflow-hidden">
+            <img
+              src="/brand-logo.png"
+              alt="Bê Tông Xanh Sài Gòn"
+              className="w-full h-full object-contain"
+            />
           </div>
-          <div>
+          <div className="hidden sm:block">
             <h1 className="text-base sm:text-lg font-bold leading-none tracking-tight text-white flex items-center gap-2">
-              <span>TASAGO</span>
-              <span className="text-[10px] bg-emerald-700/90 text-emerald-200 px-1.5 py-0.5 rounded font-mono hidden sm:inline">
+              <span>QUẢN LÝ TASAGO</span>
+              <span className="text-[10px] bg-[#0B6B36] text-emerald-100 px-1.5 py-0.5 rounded font-mono hidden lg:inline">
                 2026
               </span>
             </h1>
-            <p className="text-[10px] uppercase tracking-widest text-emerald-200 opacity-90 font-medium mt-0.5">
+            <p className="text-[10px] uppercase tracking-widest text-emerald-100 opacity-90 font-medium mt-0.5">
               Quản Lý Nén Mẫu Bê Tông
             </p>
           </div>

@@ -156,6 +156,7 @@ export function buildProfessionalEmail(
   const urgentCount = overdueCount + dueTodayCount;
   const targetDate = options.targetDate || vietnamDateIso();
   const appUrl = resolveAppUrl(options.appUrl);
+  const logoUrl = appUrl ? `${appUrl}/brand-logo.png` : '';
   const generatedAt = options.generatedAt || new Date();
   const title = options.title || 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG';
   const subtitle = options.subtitle || 'Tự động nhắc nhở lịch kiểm định chất lượng bê tông';
@@ -183,19 +184,20 @@ export function buildProfessionalEmail(
   const html = `<!doctype html>
 <html lang="vi">
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:0;background:#F1F5F9;color:#1E293B;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background:#F4FAF6;color:#173A28;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:#F1F5F9;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:#F4FAF6;">
     <tr><td align="center" style="padding:24px 10px;">
       <table role="presentation" width="680" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:680px;border-collapse:separate;background:#FFFFFF;border:1px solid #D7E1E8;border-radius:14px;overflow:hidden;">
-        <tr><td bgcolor="#075E54" style="padding:24px 28px;background:#075E54;color:#FFFFFF;">
+        <tr><td bgcolor="#08783D" style="padding:20px 28px;background:#08783D;color:#FFFFFF;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;"><tr>
             <td style="vertical-align:top;">
-              <div style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:#A7F3D0;line-height:16px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
+              ${logoUrl ? `<div style="display:inline-block;padding:7px 10px;background:#FFFFFF;border-radius:10px;margin-bottom:10px;"><img src="${escapeHtml(logoUrl)}" width="250" alt="Bê Tông Xanh Sài Gòn" style="display:block;width:250px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;"></div>` : '<div style="font-size:16px;font-weight:900;letter-spacing:.5px;color:#FFFFFF;line-height:22px;">BÊ TÔNG XANH SAIGON</div>'}
+              <div style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:#D1FAE5;line-height:16px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
               <div style="margin-top:7px;font-size:22px;font-weight:800;line-height:28px;color:#FFFFFF;">${escapeHtml(title)}</div>
               <div style="margin-top:7px;font-size:13px;line-height:20px;color:#D1FAE5;">${escapeHtml(subtitle)}</div>
             </td>
-            <td align="right" style="width:86px;padding-left:10px;vertical-align:top;"><div style="display:inline-block;padding:9px 10px;border:1px solid #6EE7B7;border-radius:9px;color:#ECFDF5;font-size:11px;font-weight:800;line-height:14px;">TASAGO<br><span style="font-size:9px;font-weight:600;">QA / QC</span></div></td>
+            <td align="right" style="width:86px;padding-left:10px;vertical-align:top;"><div style="display:inline-block;padding:9px 10px;border:1px solid #B7E4C7;border-radius:9px;color:#F0FDF4;font-size:10px;font-weight:900;line-height:13px;">TASAGO<br><span style="font-size:9px;font-weight:600;color:#D1FAE5;">QA / QC</span></div></td>
           </tr></table>
         </td></tr>
         <tr><td style="padding:24px 28px 8px;">
@@ -211,10 +213,10 @@ export function buildProfessionalEmail(
         </td></tr>
         <tr><td style="padding:0 28px 10px;"><div style="font-size:14px;font-weight:800;letter-spacing:.2px;color:#0F172A;">Danh sách cần thực hiện</div><div style="margin-top:5px;font-size:12px;color:#64748B;line-height:18px;">Vui lòng kiểm tra thông tin từng mẫu trước khi bố trí nén.</div></td></tr>
         <tr><td style="padding:8px 28px 18px;">${cards || '<div style="padding:18px;background:#F8FAFC;border-radius:9px;color:#64748B;font-size:13px;">Không có mẫu cần thông báo.</div>'}</td></tr>
-        <tr><td bgcolor="#0F172A" style="padding:20px 28px;background:#0F172A;color:#CBD5E1;">
+        <tr><td bgcolor="#075E38" style="padding:20px 28px;background:#075E38;color:#D1FAE5;">
           <div style="font-size:12px;font-weight:700;line-height:18px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
-          <div style="margin-top:4px;font-size:11px;line-height:17px;color:#94A3B8;">BÊ TÔNG XANH SÀI GÒN · BÊ TÔNG CỦA MỌI CÔNG TRÌNH</div>
-          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #334155;font-size:10px;line-height:16px;color:#64748B;">Email tự động từ Cổng Quản Lý Tasago. Vui lòng không trả lời trực tiếp email này.</div>
+          <div style="margin-top:4px;font-size:11px;line-height:17px;color:#B7E4C7;">BÊ TÔNG XANH SÀI GÒN · BÊ TÔNG CỦA MỌI CÔNG TRÌNH</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2E8B57;font-size:10px;line-height:16px;color:#A7F3D0;">Email tự động từ Cổng Quản Lý Tasago. Vui lòng không trả lời trực tiếp email này.</div>
         </td></tr>
       </table>
     </td></tr>
