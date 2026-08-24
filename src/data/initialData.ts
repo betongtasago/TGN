@@ -408,14 +408,9 @@ export const INITIAL_SAMPLES: ConcreteSample[] = [
 export const INITIAL_NOTIFICATION_CONFIG: NotificationConfig = {
   autoEmailEnabled: true,
   emailRecipients: ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'],
-  emailSender: 'Bê Tông Tasago <tasagotnt@gmail.com>',
+  emailSender: '',
   reminderDaysBefore: 0,
   autoSendHour: 7,
   autoSendMinute: 0,
   enableSoundAlert: true,
-  smtpHost: 'smtp.gmail.com',
-  smtpPort: 587,
-  smtpSecure: false,
-  smtpUser: 'tasagotnt@gmail.com',
-  smtpPass: '',
 };

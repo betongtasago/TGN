@@ -34,7 +34,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('email');
   const [sending, setSending] = useState(false);
-  const [verifyingSmtp, setVerifyingSmtp] = useState(false);
+  const [verifyingResend, setVerifyingResend] = useState(false);
   const [triggeringCron, setTriggeringCron] = useState(false);
   const [targetFilter, setTargetFilter] = useState<'urgent' | 'all' | 'single'>(preselectedSample ? 'single' : 'urgent');
   const [emailList, setEmailList] = useState<string[]>(() => {
@@ -46,12 +46,7 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   const [autoSendHour, setAutoSendHour] = useState(config.autoSendHour ?? 7);
   const [autoSendMinute, setAutoSendMinute] = useState(config.autoSendMinute ?? 0);
   const [reminderDaysBefore, setReminderDaysBefore] = useState(config.reminderDaysBefore ?? 0);
-  const [smtpHost, setSmtpHost] = useState(config.smtpHost || 'smtp.gmail.com');
-  const [smtpPort, setSmtpPort] = useState(config.smtpPort || 587);
-  const [smtpUser, setSmtpUser] = useState(config.smtpUser || 'tasagotnt@gmail.com');
-  const [smtpPass, setSmtpPass] = useState(config.smtpPass === '[PROTECTED]' ? '' : (config.smtpPass || ''));
-  const [smtpSecure, setSmtpSecure] = useState(config.smtpSecure ?? false);
-  const [emailSender, setEmailSender] = useState(config.emailSender || 'Bê Tông Tasago <tasagotnt@gmail.com>');
+  const [resendFrom, setResendFrom] = useState(config.emailSender || '');
   const [verifyResult, setVerifyResult] = useState<ActionResult>(null);
   const [sendResult, setSendResult] = useState<ActionResult>(null);
   const [cronResult, setCronResult] = useState<ActionResult>(null);
@@ -79,24 +74,21 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     autoSendHour,
     autoSendMinute,
     reminderDaysBefore,
-    smtpHost,
-    smtpPort: Number(smtpPort),
-    smtpUser,
-    smtpPass,
-    smtpSecure,
-    emailSender,
+    emailSender: resendFrom.trim(),
   });
 
   const handleSaveConfig = async () => {
     const nextConfig = buildConfig();
     onSaveConfig(nextConfig);
     try {
-      await apiFetch('/api/server-sync', {
+      const response = await apiFetch('/api/server-sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ config: nextConfig }),
       });
-      setSendResult({ success: true, message: 'Đã lưu cấu hình email vào máy chủ và Supabase.' });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || data?.success === false) throw new Error(data?.message || `HTTP ${response.status}`);
+      setSendResult({ success: true, message: 'Đã lưu cấu hình Email Resend vào máy chủ và Supabase.' });
     } catch (error: any) {
       setSendResult({ success: false, message: `Đã lưu cục bộ nhưng chưa đồng bộ máy chủ: ${error?.message || 'lỗi kết nối'}` });
     }
@@ -113,31 +105,35 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
     setNewEmail('');
   };
 
-  const handleVerifySmtp = async () => {
-    if (!smtpUser || !smtpPass) {
-      setVerifyResult({ success: false, message: 'Cần nhập SMTP user và Gmail App Password trước khi kiểm tra.' });
+  const handleVerifyResend = async () => {
+    if (!resendFrom.trim() || !resendFrom.includes('@')) {
+      setVerifyResult({ success: false, message: 'Hãy nhập địa chỉ sender thuộc domain đã xác minh trên Resend.' });
       return;
     }
-    setVerifyingSmtp(true);
+    setVerifyingResend(true);
     setVerifyResult(null);
     try {
-      const response = await apiFetch('/api/notifications/verify-smtp', {
+      const response = await apiFetch('/api/notifications/verify-resend', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ smtpConfig: { smtpHost, smtpPort: Number(smtpPort), smtpUser, smtpPass, smtpSecure } }),
+        body: JSON.stringify({ from: resendFrom.trim() }),
       });
       const data = await response.json().catch(() => null);
       setVerifyResult({ success: response.ok && Boolean(data?.success), message: data?.message || `Máy chủ trả về HTTP ${response.status}.` });
     } catch (error: any) {
-      setVerifyResult({ success: false, message: `Không thể kết nối SMTP: ${error?.message || 'lỗi mạng'}` });
+      setVerifyResult({ success: false, message: `Không thể kiểm tra Resend: ${error?.message || 'lỗi mạng'}` });
     } finally {
-      setVerifyingSmtp(false);
+      setVerifyingResend(false);
     }
   };
 
   const handleSendEmail = async () => {
     if (!emailList.length) {
       setSendResult({ success: false, message: 'Hãy thêm ít nhất một địa chỉ nhận email.' });
+      return;
+    }
+    if (!resendFrom.trim()) {
+      setSendResult({ success: false, message: 'Hãy nhập địa chỉ sender Resend trước khi gửi.' });
       return;
     }
     setSending(true);
@@ -179,20 +175,20 @@ export const NotificationModal: React.FC<NotificationModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-2 sm:p-5" onClick={onClose}>
       <div className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-slate-50 shadow-2xl" onClick={event => event.stopPropagation()}>
-        <div className="flex items-center justify-between bg-emerald-800 px-4 py-3 text-white sm:px-6"><div><h2 className="text-base font-bold sm:text-lg">Trung tâm thông báo Email</h2><p className="text-xs text-emerald-100">Gửi thủ công và tự động từ máy chủ Render qua SMTP</p></div><button onClick={onClose} className="rounded-lg p-2 hover:bg-emerald-700" aria-label="Đóng"><X className="w-5 h-5" /></button></div>
+        <div className="flex items-center justify-between bg-emerald-800 px-4 py-3 text-white sm:px-6"><div><h2 className="text-base font-bold sm:text-lg">Trung tâm thông báo Email</h2><p className="text-xs text-emerald-100">Gửi qua Resend API từ máy chủ Render</p></div><button onClick={onClose} className="rounded-lg p-2 hover:bg-emerald-700" aria-label="Đóng"><X className="w-5 h-5" /></button></div>
         <div className="flex gap-1 overflow-x-auto border-b border-slate-200 bg-white px-2 py-2 sm:px-4">{tabs.map(tab => <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold sm:text-sm ${activeTab === tab.id ? 'bg-emerald-100 text-emerald-800' : 'text-slate-500 hover:bg-slate-100'}`}>{tab.icon}{tab.label}</button>)}</div>
         <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
           {activeTab === 'email' && <div className="space-y-5">
-            <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-bold text-emerald-900">Email tự động hằng ngày</h3><p className="mt-1 text-xs text-emerald-800">Vercel Cron gọi endpoint lúc 07:00 giờ Việt Nam; máy chủ đọc dữ liệu thật từ Supabase.</p></div><label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={autoEmailEnabled} onChange={event => setAutoEmailEnabled(event.target.checked)} className="peer sr-only" /><span className="h-6 w-11 rounded-full bg-slate-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-emerald-600 peer-checked:after:translate-x-full" /></label></div><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><label className="text-xs font-semibold text-slate-700">Giờ<input type="number" min="0" max="23" value={autoSendHour} onChange={event => setAutoSendHour(Number(event.target.value))} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">Phút<input type="number" min="0" max="59" value={autoSendMinute} onChange={event => setAutoSendMinute(Number(event.target.value))} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">Nhắc trước (ngày)<input type="number" min="0" max="30" value={reminderDaysBefore} onChange={event => setReminderDaysBefore(Number(event.target.value))} className={inputClass} /></label><button onClick={handleRunCron} disabled={triggeringCron} className="mt-5 inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-60"><RefreshCw className={`w-4 h-4 ${triggeringCron ? 'animate-spin' : ''}`} />Chạy thử cron</button></div>{resultBox(cronResult)}</section>
+            <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-bold text-emerald-900">Email tự động hằng ngày</h3><p className="mt-1 text-xs text-emerald-800">Vercel Cron gọi endpoint lúc 07:00 giờ Việt Nam; máy chủ đọc dữ liệu thật từ Supabase rồi gửi qua Resend.</p></div><label className="relative inline-flex cursor-pointer items-center"><input type="checkbox" checked={autoEmailEnabled} onChange={event => setAutoEmailEnabled(event.target.checked)} className="peer sr-only" /><span className="h-6 w-11 rounded-full bg-slate-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all peer-checked:bg-emerald-600 peer-checked:after:translate-x-full" /></label></div><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4"><label className="text-xs font-semibold text-slate-700">Giờ<input type="number" min="0" max="23" value={autoSendHour} onChange={event => setAutoSendHour(Number(event.target.value))} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">Phút<input type="number" min="0" max="59" value={autoSendMinute} onChange={event => setAutoSendMinute(Number(event.target.value))} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">Nhắc trước (ngày)<input type="number" min="0" max="30" value={reminderDaysBefore} onChange={event => setReminderDaysBefore(Number(event.target.value))} className={inputClass} /></label><button onClick={handleRunCron} disabled={triggeringCron} className="mt-5 inline-flex items-center justify-center gap-1 rounded-lg bg-amber-500 px-3 py-2 text-xs font-bold text-white hover:bg-amber-600 disabled:opacity-60"><RefreshCw className={`w-4 h-4 ${triggeringCron ? 'animate-spin' : ''}`} />Chạy thử cron</button></div>{resultBox(cronResult)}</section>
             <section className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">Danh sách email nhận báo cáo</h3><div className="mt-3 flex flex-wrap gap-2">{emailList.map(email => <span key={email} className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">{email}<button onClick={() => setEmailList(previous => previous.filter(item => item !== email))} className="text-slate-400 hover:text-red-600" aria-label={`Xóa ${email}`}><Trash2 className="w-3 h-3" /></button></span>)}</div><form onSubmit={handleAddEmail} className="mt-3 flex gap-2"><input value={newEmail} onChange={event => setNewEmail(event.target.value)} placeholder="them-email@example.com" className={inputClass} /><button className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-bold text-white hover:bg-slate-800">Thêm</button></form></section>
-            <section className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">SMTP gửi email</h3><p className="mt-1 text-xs text-slate-500">Gmail: dùng App Password 16 ký tự, không dùng mật khẩu đăng nhập Gmail. Máy chủ đã ưu tiên IPv4 để tránh lỗi ENETUNREACH IPv6.</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><label className="text-xs font-semibold text-slate-700">SMTP Host<input value={smtpHost} onChange={event => setSmtpHost(event.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">SMTP Port<input type="number" value={smtpPort} onChange={event => setSmtpPort(Number(event.target.value))} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">SMTP User<input value={smtpUser} onChange={event => setSmtpUser(event.target.value)} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700">App Password<input type="password" value={smtpPass} onChange={event => setSmtpPass(event.target.value)} placeholder={config.smtpPass === '[PROTECTED]' ? 'Đã lưu - nhập lại nếu đổi' : '16 ký tự'} className={inputClass} /></label><label className="text-xs font-semibold text-slate-700 sm:col-span-2">Tên người gửi<input value={emailSender} onChange={event => setEmailSender(event.target.value)} className={inputClass} /></label></div><label className="mt-3 inline-flex items-center gap-2 text-xs text-slate-700"><input type="checkbox" checked={smtpSecure} onChange={event => setSmtpSecure(event.target.checked)} />SSL trực tiếp (port 465); bỏ chọn cho STARTTLS (port 587)</label><div className="mt-4 flex flex-wrap gap-2"><button onClick={handleVerifySmtp} disabled={verifyingSmtp} className="inline-flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 disabled:opacity-60"><Server className="w-4 h-4" />{verifyingSmtp ? 'Đang kiểm tra...' : 'Kiểm tra SMTP'}</button><button onClick={handleSaveConfig} className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800"><Check className="w-4 h-4" />Lưu cấu hình</button></div>{resultBox(verifyResult)}{resultBox(sendResult)}</section>
+            <section className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">Resend API</h3><p className="mt-1 text-xs text-slate-500">API key chỉ đặt trên Render/Vercel, không nhập vào trình duyệt. Địa chỉ sender phải thuộc domain đã xác minh trên Resend.</p><label className="mt-3 block text-xs font-semibold text-slate-700">Địa chỉ người gửi Resend<input value={resendFrom} onChange={event => setResendFrom(event.target.value)} placeholder="Tasago <noreply@domain-da-xac-minh.vn>" className={inputClass} /></label><div className="mt-4 flex flex-wrap gap-2"><button onClick={handleVerifyResend} disabled={verifyingResend} className="inline-flex items-center gap-1 rounded-lg border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-800 hover:bg-blue-100 disabled:opacity-60"><Server className="w-4 h-4" />{verifyingResend ? 'Đang kiểm tra...' : 'Kiểm tra Resend'}</button><button onClick={handleSaveConfig} className="inline-flex items-center gap-1 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-800"><Check className="w-4 h-4" />Lưu cấu hình</button></div>{resultBox(verifyResult)}{resultBox(sendResult)}</section>
           </div>}
           {activeTab === 'send' && <div className="space-y-4"><section className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">Chọn nội dung gửi</h3><div className="mt-3 grid gap-2 sm:grid-cols-3">{(['urgent', 'all', 'single'] as const).map(filter => <button key={filter} onClick={() => setTargetFilter(filter)} className={`rounded-lg border p-3 text-left text-xs ${targetFilter === filter ? 'border-emerald-500 bg-emerald-50 text-emerald-900' : 'border-slate-200 text-slate-600'}`}><strong>{filter === 'urgent' ? 'Mẫu đến hạn' : filter === 'all' ? 'Tất cả mẫu' : 'Mẫu đang chọn'}</strong><span className="mt-1 block text-slate-500">{filter === 'urgent' ? `${urgentSamples.length} mẫu` : filter === 'all' ? `${samples.length} mẫu` : preselectedSample ? preselectedSample.sampleCode : 'Chưa chọn mẫu'}</span></button>)}</div></section><section className="rounded-xl border border-blue-200 bg-blue-50 p-4"><p className="text-sm text-blue-900">Sẽ gửi <strong>{preview.sampleSummary}</strong> tới: {emailList.join(', ') || 'chưa có người nhận'}.</p><button onClick={handleSendEmail} disabled={sending || !emailList.length} className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-60"><Send className="w-4 h-4" />{sending ? 'Đang gửi email...' : 'Gửi email ngay'}</button>{resultBox(sendResult)}</section></div>}
-          {activeTab === 'preview' && <div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">{preview.title}</h3><p className="mt-2 text-xs text-slate-500">{preview.sampleSummary} - nội dung HTML sẽ được gửi qua SMTP.</p><pre className="mt-4 max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-slate-900 p-4 text-xs leading-relaxed text-slate-100">{preview.bodyText}</pre></div>}
+          {activeTab === 'preview' && <div className="rounded-xl border border-slate-200 bg-white p-4"><h3 className="font-bold text-slate-900">{preview.title}</h3><p className="mt-2 text-xs text-slate-500">{preview.sampleSummary} - nội dung sẽ được gửi qua Resend API.</p><pre className="mt-4 max-h-[50vh] overflow-auto whitespace-pre-wrap rounded-lg bg-slate-900 p-4 text-xs leading-relaxed text-slate-100">{preview.bodyText}</pre></div>}
           {activeTab === 'logs' && <div className="space-y-3">{notificationLogs.filter(log => log.channel === 'email').length === 0 ? <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Chưa có log email.</div> : notificationLogs.filter(log => log.channel === 'email').map(log => <div key={log.id} className="rounded-xl border border-slate-200 bg-white p-4"><div className="flex flex-wrap items-center justify-between gap-2"><span className={`rounded-full px-2 py-1 text-xs font-bold ${log.status === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>{log.status === 'success' ? 'Thành công' : 'Thất bại'}</span><span className="text-xs text-slate-500">{new Date(log.timestamp).toLocaleString('vi-VN')}</span></div><p className="mt-2 text-xs text-slate-700">Người nhận: {log.recipient}</p>{log.errorDetails && <p className="mt-1 text-xs text-red-700">Lỗi: {log.errorDetails}</p>}</div>)}</div>}
-          {activeTab === 'guide' && <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700"><h3 className="font-bold text-slate-900">Thiết lập email production</h3><ol className="list-decimal space-y-2 pl-5 text-xs leading-relaxed"><li>Bật xác thực 2 bước cho tài khoản Gmail gửi thư.</li><li>Tạo Google App Password 16 ký tự và nhập vào ô App Password trong màn hình này.</li><li>Giữ Host <code>smtp.gmail.com</code>, Port <code>587</code>, SSL trực tiếp tắt để dùng STARTTLS.</li><li>Bấm “Kiểm tra SMTP”, sau đó “Lưu cấu hình”. Mật khẩu được giữ ở backend và không gửi ra frontend.</li><li>Vercel Cron gọi <code>/api/cron-notify</code> lúc <code>00:00 UTC</code> (07:00 Việt Nam). Có thể bấm “Chạy thử cron” để kiểm tra log.</li></ol><div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Nếu vẫn gặp ENETUNREACH, kiểm tra Render đã redeploy bản mới và thử port 465 với SSL trực tiếp. Không đưa App Password vào GitHub.</div></div>}
+          {activeTab === 'guide' && <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700"><h3 className="font-bold text-slate-900">Thiết lập Resend production</h3><ol className="list-decimal space-y-2 pl-5 text-xs leading-relaxed"><li>Tạo tài khoản Resend và xác minh domain gửi email trong mục Domains.</li><li>Tạo API key có quyền gửi email, ưu tiên key giới hạn ở quyền sending-only và domain production.</li><li>Đặt `RESEND_API_KEY` và `RESEND_FROM` trên Render/Vercel Environment Variables. Không đặt API key trong giao diện hoặc GitHub.</li><li>Nhập đúng địa chỉ `RESEND_FROM` vào ô sender, bấm “Kiểm tra Resend”, sau đó “Lưu cấu hình”.</li><li>Vercel Cron gọi <code>/api/cron-notify</code> lúc <code>00:00 UTC</code> (07:00 Việt Nam). Có thể bấm “Chạy thử cron” để kiểm tra log.</li></ol><div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">Nếu Resend báo sender chưa được xác minh, hãy dùng đúng email thuộc domain đã verify và kiểm tra lại DNS records của domain. API key không bao giờ được lưu vào Supabase.</div></div>}
         </div>
-        <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6"><span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Email là kênh thông báo đang được hỗ trợ</span><button onClick={onClose} className="rounded-lg bg-slate-100 px-4 py-2 font-bold text-slate-700 hover:bg-slate-200">Đóng</button></div>
+        <div className="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-500 sm:px-6"><span className="inline-flex items-center gap-1"><Clock className="w-3.5 h-3.5" />Email qua Resend API</span><button onClick={onClose} className="rounded-lg bg-slate-100 px-4 py-2 font-bold text-slate-700 hover:bg-slate-200">Đóng</button></div>
       </div>
     </div>
   );

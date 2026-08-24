@@ -29,7 +29,7 @@ Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiế
 
 3. **Cảnh Báo & Nhắc Nhở Tự Động:**
    - Đánh dấu trạng thái tự động theo thời gian thực: *Đến hạn hôm nay*, *Quá hạn chưa nén*, *Chưa đến hạn*, *Đã nén đạt / không đạt*.
-   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Email SMTP** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
+   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Resend Email API** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
 
 4. **Xuất Báo Cáo Excel Chuyên Nghiệp (.xlsx):**
    - Xuất bảng theo dõi tiến độ nén mẫu theo từng công trình của từng trạm với đầy đủ thông tin doanh nghiệp Tasago, tên khách hàng, tên dự án công trình và danh sách chi tiết các hạng mục, mác, khối lượng, số tổ mẫu, cường độ nén (MPa), % đạt và khung chữ ký xác nhận 3 bên.
@@ -115,12 +115,12 @@ git push -u origin main
 Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
 
 
-### Cấu hình gửi Email tự động
+### Cấu hình gửi Email tự động qua Resend
 
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua SMTP; với Gmail phải dùng **App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Nhập SMTP host/port/user/password và danh sách người nhận trong Trung tâm thông báo, bấm **Kiểm tra SMTP**, sau đó bấm **Lưu cấu hình**. Bản backend mới ưu tiên IPv4 và có timeout rõ ràng để tránh lỗi `ENETUNREACH` khi Render chọn IPv6 không khả dụng.
+Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi qua **Resend Email API** bằng HTTPS, không cần Gmail App Password, SMTP host, port hoặc xử lý IPv4/IPv6. Tạo API key trên [Resend](https://resend.com/api-keys), xác minh domain gửi thư trong [Resend Domains](https://resend.com/domains), sau đó đặt `RESEND_API_KEY` và `RESEND_FROM` trong môi trường máy chủ. API key không được nhập vào giao diện, lưu trong Supabase hoặc commit vào GitHub.
 
-Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render. Nút **Chạy thử cron** trong trung tâm admin gọi cron thủ công qua backend Render.
+Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gọi Resend API. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render. Nút **Chạy thử cron** trong Trung tâm Email gọi cron thủ công qua backend Render.
 
-Khai báo trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` và `VITE_API_URL` (URL backend Render, không phải URL Supabase). Trong **Render → Environment** khai báo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`, cùng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `CRON_SECRET` nếu muốn cấu hình SMTP bằng biến môi trường. Không đưa service-role key, SMTP password hay Cron Secret vào GitHub/frontend.
+Đặt trong **Render → Environment**: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`, `RESEND_API_KEY`, `RESEND_FROM` và `CRON_SECRET`. Đặt trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `RESEND_FROM`, `CRON_SECRET` và `VITE_API_URL=https://nenmauv2-u9xx.onrender.com`. Nên tạo Resend API key chỉ có quyền gửi email và giới hạn theo domain production nếu tài khoản hỗ trợ.
 
-Nếu thiếu SMTP user/password hoặc người nhận, hệ thống trả lỗi cấu hình rõ ràng và không báo thành công giả. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
+Trong Trung tâm Email, nhập `RESEND_FROM` vào ô **Địa chỉ người gửi Resend**, bấm **Kiểm tra Resend**, rồi bấm **Lưu cấu hình**. Hệ thống vẫn lưu danh sách người nhận, lịch gửi và lịch sử log qua Supabase. Nếu thiếu API key, sender domain hoặc người nhận hợp lệ, hệ thống trả lỗi rõ ràng và không báo thành công giả. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.

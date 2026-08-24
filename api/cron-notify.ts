@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import dns from 'node:dns';
-import nodemailer from 'nodemailer';
-
-dns.setDefaultResultOrder('ipv4first');
+import { sendViaResend } from '../resendEmail';
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -48,27 +45,17 @@ function buildReport(samples: any[], stations: any[], today: string) {
 
 async function sendEmail(config: any, recipients: string[], report: { text: string; html: string }, today: string) {
   if (!recipients.length) return 'Email lỗi: chưa cấu hình địa chỉ email người nhận hợp lệ.';
-  const smtpUser = String(config.smtpUser || process.env.SMTP_USER || '').trim();
-  const smtpPass = String(config.smtpPass || process.env.SMTP_PASS || '').replace(/\s+/g, '');
-  if (!smtpUser || !smtpPass) return 'Email lỗi: chưa cấu hình SMTP User/Mật khẩu ứng dụng.';
-
-  const host = String(config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-  const port = Number(config.smtpPort || process.env.SMTP_PORT || 587);
-  const secure = config.smtpSecure !== undefined ? Boolean(config.smtpSecure) : String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
-  const transporter = nodemailer.createTransport({
-    host, port, secure, requireTLS: !secure,
-    auth: { user: smtpUser, pass: smtpPass },
-    connectionTimeout: 15000, greetingTimeout: 15000, socketTimeout: 30000,
-    tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
-  });
-  const info = await transporter.sendMail({
-    from: config.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${smtpUser}>`,
-    to: recipients.join(', '),
+  const result = await sendViaResend({
+    from: config.emailSender,
+    to: recipients,
     subject: `[TASAGO] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`,
     text: report.text,
     html: report.html,
+    idempotencyKey: `daily-sample-report/${today}/${recipients.join(',')}`.slice(0, 256),
   });
-  return `Email thành công (${info.messageId || 'accepted'}) tới ${recipients.length} địa chỉ qua SMTP ${host}:${port}.`;
+  return result.success
+    ? `Email Resend thành công (${result.messageId || 'accepted'}) tới ${recipients.length} địa chỉ.`
+    : `Email Resend lỗi: ${result.message}`;
 }
 
 export default async function handler(req: any, res: any) {
@@ -78,11 +65,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const cronSecret = process.env.CRON_SECRET?.trim();
-  if (cronSecret) {
-    const authorization = req.headers?.authorization || req.headers?.Authorization || '';
-    const supplied = authorization === `Bearer ${cronSecret}` ? cronSecret : typeof req.query?.secret === 'string' ? req.query.secret : '';
-    if (supplied !== cronSecret) return res.status(401).json({ success: false, message: 'Unauthorized' });
-  }
+  if (!cronSecret) return res.status(503).json({ success: false, message: 'Chưa cấu hình CRON_SECRET cho Vercel Cron.' });
+  const authorization = req.headers?.authorization || req.headers?.Authorization || '';
+  const supplied = authorization === `Bearer ${cronSecret}` ? cronSecret : typeof req.query?.secret === 'string' ? req.query.secret : '';
+  if (supplied !== cronSecret) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
   const url = process.env.SUPABASE_URL?.trim();
   const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim();

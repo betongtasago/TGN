@@ -15,17 +15,9 @@ services:
         value: https://mqzampgzppxeppyuqvxm.supabase.co
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
-      - key: SMTP_HOST
+      - key: RESEND_API_KEY
         sync: false
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_SECURE
-        value: "false"
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: SMTP_FROM
+      - key: RESEND_FROM
         sync: false
       - key: FRONTEND_ORIGIN
         sync: false
