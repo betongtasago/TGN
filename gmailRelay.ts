@@ -6,6 +6,12 @@ export interface GmailRelayEmail {
   senderName?: string;
 }
 
+type RelayResponse = {
+  success?: boolean;
+  message?: string;
+  messageId?: string;
+};
+
 function getRelaySettings() {
   const url = String(process.env.GMAIL_RELAY_URL || '').trim().replace(/\/$/, '');
   const secret = String(process.env.GMAIL_RELAY_SECRET || '').trim();
@@ -15,11 +21,20 @@ function getRelaySettings() {
   return { url, secret };
 }
 
+function relayStatusMessage(status: number) {
+  if (status === 403) {
+    return 'Google Apps Script từ chối HTTP 403. Hãy kiểm tra deployment là Web app, URL kết thúc bằng /exec, chạy dưới tài khoản chủ sở hữu và quyền truy cập là Anyone with the link; không dùng URL /dev.';
+  }
+  if (status === 404) {
+    return 'Không tìm thấy Gmail relay. Hãy kiểm tra GMAIL_RELAY_URL là Web app URL kết thúc bằng /exec và redeploy Apps Script nếu cần.';
+  }
+  return `Gmail relay trả về HTTP ${status}.`;
+}
+
 async function relayRequest(path: string, init: RequestInit = {}) {
   const { url, secret } = getRelaySettings();
   const headers = new Headers(init.headers);
   if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
-
   let body = init.body;
   if ((init.method || 'GET').toUpperCase() === 'POST') {
     let payload: Record<string, unknown> = {};
@@ -34,9 +49,15 @@ async function relayRequest(path: string, init: RequestInit = {}) {
   }
 
   const response = await fetch(`${url}${path}`, { ...init, body, headers });
-  const payload = await response.json().catch(() => null) as { success?: boolean; message?: string; messageId?: string } | null;
+  const responseText = await response.text();
+  let payload: RelayResponse | null = null;
+  try {
+    payload = responseText ? JSON.parse(responseText) as RelayResponse : null;
+  } catch {
+    payload = null;
+  }
   if (!response.ok || payload?.success === false) {
-    throw new Error(payload?.message || `Gmail relay trả về HTTP ${response.status}.`);
+    throw new Error(payload?.message || relayStatusMessage(response.status));
   }
   return payload || { success: true };
 }

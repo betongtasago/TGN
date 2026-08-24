@@ -166,7 +166,7 @@ Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, m
 
 Trong Trung tâm Email, chuyển sang **Gửi Email**, chọn một mẫu nhỏ và bấm **Gửi email ngay**. Nếu email đến hộp thư, kiểm tra tiếp tab **Lịch sử** và bật **Email tự động hằng ngày**. Nút **Chạy thử cron** giúp kiểm tra luồng đọc dữ liệu Supabase và gửi báo cáo trước khi chờ lịch 07:00.
 
-Nếu báo `Chưa cấu hình GMAIL_RELAY_URL`, kiểm tra Render và Vercel đã có đúng hai biến `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET`, rồi redeploy. Nếu báo `Unauthorized`, chuỗi `GMAIL_RELAY_SECRET` không trùng với `RELAY_SECRET` trong Google Apps Script. Nếu báo `GmailApp lỗi`, mở Apps Script bằng đúng tài khoản Gmail gửi thư và cấp lại quyền gửi email.
+Nếu báo `Chưa cấu hình GMAIL_RELAY_URL`, kiểm tra Render và Vercel đã có đúng hai biến `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET`, rồi redeploy. Nếu báo `Unauthorized`, chuỗi `GMAIL_RELAY_SECRET` không trùng với `RELAY_SECRET` trong Google Apps Script. Nếu báo HTTP `403`, hãy vào **Deploy → Manage deployments**, xác nhận loại là **Web app**, URL đang dùng kết thúc bằng `/exec` (không phải `/dev`), ứng dụng chạy dưới tài khoản Gmail gửi thư và quyền truy cập là **Anyone with the link**; sau khi đổi mã hoặc quyền, hãy tạo deployment/version mới rồi cập nhật lại `GMAIL_RELAY_URL`. Nếu báo `GmailApp lỗi`, mở Apps Script bằng đúng tài khoản Gmail gửi thư và cấp lại quyền gửi email.
 
 Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_RELAY_SECRET` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
 
