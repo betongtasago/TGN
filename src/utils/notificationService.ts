@@ -223,8 +223,13 @@ export async function dispatchNotification(
         subject: notification.title,
         html: notification.htmlContent,
         plainText: notification.bodyText,
-        resendConfig: {
-          from: config.emailSender,
+        smtpConfig: {
+          smtpHost: config.smtpHost,
+          smtpPort: config.smtpPort,
+          smtpUser: config.smtpUser,
+          smtpPass: config.smtpPass,
+          smtpSecure: config.smtpSecure,
+          smtpFrom: config.emailSender,
         },
       }),
     });

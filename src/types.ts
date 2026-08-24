@@ -129,6 +129,11 @@ export interface NotificationConfig {
   autoSendHour: number;       // Giờ gửi tự động (ví dụ: 7 = 7:00 sáng)
   autoSendMinute?: number;     // Phút gửi tự động (mặc định: 0)
   enableSoundAlert: boolean;
+  smtpHost?: string;
+  smtpPort?: number;
+  smtpUser?: string;
+  smtpPass?: string;
+  smtpSecure?: boolean;
 }
 
 export interface SampleFilterOptions {

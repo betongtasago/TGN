@@ -3,11 +3,15 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { sendViaResend, verifyResendConfiguration } from './resendEmail';
+import dns from 'node:dns';
+import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_USERS, INITIAL_STATIONS, INITIAL_SAMPLES, INITIAL_NOTIFICATION_CONFIG } from './src/data/initialData';
 import { loadSupabaseState, persistSupabaseState, supabaseConfigured } from './supabaseStore';
 
+// Render environments can prefer Gmail's IPv6 address even when outbound IPv6
+// is unavailable. Prefer IPv4 for reliable SMTP connections.
+dns.setDefaultResultOrder('ipv4first');
 
 // ============================================================
 // AUTH: password hashing + signed session tokens
@@ -94,7 +98,6 @@ const REMOVED_NOTIFICATION_KEYS = [
   'autoZaloEnabled', 'zaloWebhookUrl', 'zaloWebhookSecret', 'zaloBotToken',
   'zaloGroupId', 'zaloGroupChatId', 'zaloPersonalPhone', 'zaloPersonalChatId',
   'zaloPersonalPhones', 'zaloRecipientType',
-  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure',
 ];
 
 function stripRemovedNotificationFields(value: any) {
@@ -105,7 +108,11 @@ function stripRemovedNotificationFields(value: any) {
 
 function sanitizeConfig(config: any) {
   if (!config || typeof config !== 'object') return config;
-  return stripRemovedNotificationFields(config);
+  const emailConfig = stripRemovedNotificationFields(config);
+  return {
+    ...emailConfig,
+    smtpPass: config.smtpPass ? '[PROTECTED]' : '',
+  };
 }
 
 function mergeConfigPreservingSecrets(current: any, incoming: any) {
@@ -113,6 +120,10 @@ function mergeConfigPreservingSecrets(current: any, incoming: any) {
     ...stripRemovedNotificationFields(current),
     ...stripRemovedNotificationFields(incoming),
   };
+  if (!incoming || incoming.smtpPass === undefined || incoming.smtpPass === '' || incoming.smtpPass === '[PROTECTED]') {
+    if (current?.smtpPass) merged.smtpPass = current.smtpPass;
+    else delete merged.smtpPass;
+  }
   return merged;
 }
 const TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60; // 30 days — field technicians may go long stretches offline
@@ -167,6 +178,11 @@ interface ServerState {
     emailSender?: string;
     autoSendHour?: number;
     autoSendMinute?: number;
+    smtpHost?: string;
+    smtpPort?: number;
+    smtpUser?: string;
+    smtpPass?: string;
+    smtpSecure?: boolean;
   };
   lastCronDate: string;
   lastCronLog: string;
@@ -341,7 +357,37 @@ function getCurrentSamples(): any[] {
   return (serverState.samples || []).map(refreshServerSampleStatus);
 }
 
-// Resend is called only from the server side. The API key is never sent to the browser.
+// Helper: Create Nodemailer Transporter with STARTTLS
+function createSmtpTransporter(smtpConfig?: any) {
+  const host = smtpConfig?.smtpHost || serverState.config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
+  const port = Number(smtpConfig?.smtpPort || serverState.config.smtpPort || process.env.SMTP_PORT || 587);
+  const user = (smtpConfig?.smtpUser || serverState.config.smtpUser || process.env.SMTP_USER || 'tasagotnt@gmail.com').trim();
+  const requestPass = smtpConfig?.smtpPass && smtpConfig.smtpPass !== '[PROTECTED]' ? smtpConfig.smtpPass : '';
+  const rawPass = requestPass || serverState.config.smtpPass || process.env.SMTP_PASS || '';
+  // Clean password: strip all spaces that are commonly added when copying Gmail App Passwords (e.g. "abcd efgh ijkl mnop")
+  const pass = rawPass.replace(/\s+/g, '');
+  const isSecure = smtpConfig?.smtpSecure !== undefined ? Boolean(smtpConfig.smtpSecure) : (port === 465);
+
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure: isSecure, // false for 587 (STARTTLS), true for 465 (SSL)
+    requireTLS: !isSecure, // Enforce STARTTLS on port 587
+    auth: {
+      user,
+      pass
+    },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    tls: {
+      rejectUnauthorized: false,
+      minVersion: 'TLSv1.2'
+    }
+  });
+
+  return { transporter, host, port, user, pass, isSecure };
+}
 
 // Helper: Generate Rich HTML Email Template
 function buildDailyEmailHtml(samples: any[], stations: any[], targetDateStr: string): { html: string; text: string; urgentCount: number } {
@@ -516,18 +562,29 @@ async function sendConfiguredEmail(samples: any[], config: any, targetDate = get
     return { success: false, message: 'Chưa cấu hình địa chỉ email người nhận hợp lệ.' };
   }
 
+  const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(config);
+  if (!user || !pass) {
+    return { success: false, message: 'Chưa cấu hình SMTP_USER và SMTP_PASS hoặc Mật khẩu ứng dụng Gmail.' };
+  }
+
   const { html, text, urgentCount } = buildDailyEmailHtml(samples, serverState.stations, targetDate);
   const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(targetDate)}`;
-  const result = await sendViaResend({
-    from: config?.emailSender,
-    to: recipients,
+  const sender = config?.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${user}>`;
+  const info = await transporter.sendMail({
+    from: sender.includes('<') ? sender : `Bê Tông Tasago <${user}>`,
+    to: recipients.join(', '),
     subject: emailSubject,
     text,
     html,
-    idempotencyKey: `daily-sample-report/${targetDate}/${recipients.join(',')}`.slice(0, 256),
   });
 
-  return { ...result, urgentCount };
+  return {
+    success: true,
+    message: `Đã gửi email tới ${recipients.length} địa chỉ qua SMTP ${host}:${port} (${isSecure ? 'SSL' : 'STARTTLS'}).`,
+    messageId: info.messageId,
+    recipients,
+    urgentCount,
+  };
 }
 
 async function startServer() {
@@ -535,11 +592,6 @@ async function startServer() {
     if (supabaseConfigured) {
       serverState = await loadSupabaseState(serverState);
       let changed = false;
-      const cleanedConfig = stripRemovedNotificationFields(serverState.config);
-      if (JSON.stringify(cleanedConfig) !== JSON.stringify(serverState.config)) {
-        serverState.config = cleanedConfig;
-        changed = true;
-      }
       for (const user of serverState.users || []) {
         if (user && typeof user.password === 'string' && user.password && !isHashedPassword(user.password)) {
           user.password = hashPassword(user.password);
@@ -1241,45 +1293,119 @@ async function startServer() {
     }
   });
 
-  // 2. Verify Resend API configuration without sending a real email.
-  app.post('/api/notifications/verify-resend', requireAuth, requireAdmin, async (req, res) => {
+  // 2. Test/Verify SMTP Connection (e.g. Gmail STARTTLS port 587)
+  app.post('/api/notifications/verify-smtp', requireAuth, requireAdmin, async (req, res) => {
     try {
-      const result = await verifyResendConfiguration(req.body?.from || serverState.config.emailSender);
-      return res.status(result.success ? 200 : 400).json(result);
+      const { smtpConfig } = req.body;
+      const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
+
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message: 'Vui lòng nhập địa chỉ Email tài khoản gửi (ví dụ: tasagotnt@gmail.com).'
+        });
+      }
+
+      if (!pass) {
+        return res.status(400).json({
+          success: false,
+          message: 'Vui lòng nhập Mật khẩu ứng dụng (Google App Password 16 ký tự).'
+        });
+      }
+
+      // Verify connection and authentication
+      await transporter.verify();
+
+      return res.status(200).json({
+        success: true,
+        message: `Kết nối máy chủ SMTP ${host}:${port} (${isSecure ? 'SSL' : 'STARTTLS'}) thành công! Tài khoản "${user}" đã xác thực hợp lệ và sẵn sàng gửi email tự động.`,
+        details: {
+          host,
+          port,
+          user,
+          protocol: isSecure ? 'SSL (Port 465)' : 'STARTTLS (Port 587)',
+          status: 'AUTHENTICATED'
+        }
+      });
     } catch (error: any) {
-      console.error('Lỗi khi kiểm tra Resend:', error);
-      return res.status(500).json({ success: false, message: `Không thể kiểm tra Resend API: ${error?.message || 'lỗi không xác định'}` });
+      console.error('Lỗi khi kiểm tra SMTP:', error);
+      let note = '';
+      if (error.message?.includes('535') || error.message?.includes('BadCredentials') || error.message?.includes('Username and Password not accepted')) {
+        note = ' (Gợi ý cho Gmail: Bạn cần dùng Mật khẩu ứng dụng 16 ký tự tạo tại myaccount.google.com/apppasswords thay vì mật khẩu đăng nhập cá nhân).';
+      }
+      return res.status(500).json({
+        success: false,
+        message: `Không thể kết nối máy chủ SMTP: ${error.message}${note}`,
+        error: error.message
+      });
     }
   });
 
-  // 3. Send a real email notification through Resend.
+  // 3. API Route: Send Real Email Notification via SMTP, Resend, or Google Apps Script Webhook
   app.post('/api/notifications/send-email', requireAuth, requireAdmin, async (req, res) => {
     try {
-      const { recipients, subject, html, plainText, resendConfig } = req.body || {};
-      if (!Array.isArray(recipients) || recipients.length === 0) {
-        return res.status(400).json({ success: false, message: 'Danh sách địa chỉ email người nhận không được để trống.' });
+      const {
+        recipients,
+        subject,
+        html,
+        plainText,
+        smtpConfig
+      } = req.body;
+
+      if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Danh sách địa chỉ email người nhận không được để trống.'
+        });
       }
 
       const validRecipients = recipients
-        .map((recipient: unknown) => String(recipient).trim())
-        .filter((recipient: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient));
+        .map((r: string) => r.trim())
+        .filter((r: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r));
+
       if (validRecipients.length === 0) {
-        return res.status(400).json({ success: false, message: 'Không có địa chỉ email hợp lệ nào trong danh sách.' });
+        return res.status(400).json({
+          success: false,
+          message: 'Không có địa chỉ email hợp lệ nào trong danh sách.'
+        });
       }
 
       const todayStr = new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-      const result = await sendViaResend({
-        from: resendConfig?.from || serverState.config.emailSender,
-        to: validRecipients,
-        subject: subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${todayStr}`,
-        text: plainText,
-        html,
-        idempotencyKey: `manual-sample-report/${Date.now()}`,
+      const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${todayStr}`;
+      const senderName = smtpConfig?.smtpFrom || serverState.config.emailSender || process.env.SMTP_FROM || 'Bê Tông Tasago <tasagotnt@gmail.com>';
+
+      // Nodemailer SMTP Server (Gmail STARTTLS Port 587 / SSL Port 465)
+      const { transporter, host, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
+
+      if (host && user && pass) {
+        const info = await transporter.sendMail({
+          from: senderName.includes('<') ? senderName : `Bê Tông Tasago <${user}>`,
+          to: validRecipients.join(', '),
+          subject: emailSubject,
+          text: plainText,
+          html: html
+        });
+
+        return res.status(200).json({
+          success: true,
+          channel: 'smtp_transport',
+          message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ (${validRecipients.join(', ')}) qua máy chủ SMTP (${host}:${isSecure ? 465 : 587})!`,
+          messageId: info.messageId,
+          recipients: validRecipients
+        });
+      }
+
+      return res.status(503).json({
+        success: false,
+        message: 'Chưa cấu hình SMTP hợp lệ. Hãy nhập SMTP User và Mật khẩu ứng dụng rồi bấm Kiểm tra kết nối trước khi gửi.'
       });
-      return res.status(result.success ? 200 : 502).json({ ...result, channel: 'resend_api' });
+
     } catch (error: any) {
-      console.error('Lỗi khi gửi email Resend:', error);
-      return res.status(500).json({ success: false, message: `Lỗi khi phát email qua Resend: ${error?.message || 'lỗi không xác định'}` });
+      console.error('Lỗi khi gửi email:', error);
+      return res.status(500).json({
+        success: false,
+        message: `Lỗi khi phát email SMTP: ${error.message}${error.code === 'ENETUNREACH' ? ' — Render không thể kết nối IPv6; bản mới đã ưu tiên IPv4, hãy redeploy backend.' : ''}`
+      });
     }
   });
 
@@ -1306,7 +1432,7 @@ async function startServer() {
       if (serverState.config.autoEmailEnabled) {
         try {
           const emailResult = await sendConfiguredEmail(targetSamples, serverState.config, todayIso);
-          logParts.push(emailResult.success ? emailResult.message : `Email lỗi: ${emailResult.message}`);
+          logParts.push(emailResult.success ? `Email SMTP thành công (${emailResult.messageId || 'accepted'})` : `Email lỗi: ${emailResult.message}`);
         } catch (emailError: any) {
           logParts.push(`Email lỗi: ${emailError.message}`);
         }

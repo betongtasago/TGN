@@ -269,13 +269,6 @@ export function recalculateSampleStatuses(samples: ConcreteSample[]): ConcreteSa
   return samples.map(refreshSampleStatus);
 }
 
-const LEGACY_NOTIFICATION_CONFIG_KEYS = [
-  'smtpHost', 'smtpPort', 'smtpUser', 'smtpPass', 'smtpSecure',
-  'autoZaloEnabled', 'zaloWebhookUrl', 'zaloWebhookSecret', 'zaloBotToken',
-  'zaloGroupId', 'zaloGroupChatId', 'zaloPersonalPhone', 'zaloPersonalChatId',
-  'zaloPersonalPhones', 'zaloRecipientType',
-];
-
 export function getStoredNotificationConfig(): NotificationConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATION_CONFIG);
@@ -283,10 +276,7 @@ export function getStoredNotificationConfig(): NotificationConfig {
       localStorage.setItem(STORAGE_KEYS.NOTIFICATION_CONFIG, JSON.stringify(INITIAL_NOTIFICATION_CONFIG));
       return INITIAL_NOTIFICATION_CONFIG;
     }
-    const parsed = JSON.parse(raw);
-    const cleaned = { ...parsed };
-    LEGACY_NOTIFICATION_CONFIG_KEYS.forEach(key => delete cleaned[key]);
-    return { ...INITIAL_NOTIFICATION_CONFIG, ...cleaned };
+    return JSON.parse(raw);
   } catch {
     return INITIAL_NOTIFICATION_CONFIG;
   }
