@@ -160,19 +160,26 @@ export const Header: React.FC<HeaderProps> = ({
       <nav className="bg-[#08783D] text-white px-4 sm:px-6 py-2.5 flex justify-between items-center">
         
         {/* Brand & Logo */}
-        <div 
-          className="flex items-center gap-3 cursor-pointer select-none" 
-          onClick={() => onChangeTab('samples')}
-          title="Bê Tông Xanh Sài Gòn"
+        <button
+          type="button"
+          className="flex items-center gap-3 cursor-pointer select-none text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4A72C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#08783D]"
+          onClick={() => {
+            onChangeTab('samples');
+            if (typeof window !== 'undefined' && window.location.search) {
+              window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+            }
+          }}
+          title="Về trang chủ quản lý mẫu"
+          aria-label="Về trang chủ quản lý mẫu"
         >
-          <div className="w-[132px] sm:w-[210px] bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 px-1.5 sm:px-2 py-1 overflow-hidden">
+          <span className="block w-[132px] sm:w-[210px] aspect-[1560/630] bg-white rounded-xl shadow-sm shrink-0 p-1 sm:p-1.5 overflow-hidden">
             <img
               src="/brand-logo.png"
               alt="Bê Tông Xanh Sài Gòn"
-              className="block w-full h-auto object-contain"
+              className="block w-full h-full object-contain"
             />
-          </div>
-          <div className="hidden sm:block">
+          </span>
+          <span className="hidden sm:block">
             <h1 className="text-base sm:text-lg font-bold leading-none tracking-tight text-white flex items-center gap-2">
               <span>QUẢN LÝ TASAGO</span>
               <span className="text-[10px] bg-[#0B6B36] text-emerald-100 px-1.5 py-0.5 rounded font-mono hidden lg:inline">
@@ -182,8 +189,8 @@ export const Header: React.FC<HeaderProps> = ({
             <p className="text-[10px] uppercase tracking-widest text-emerald-100 opacity-90 font-medium mt-0.5">
               Quản Lý Nén Mẫu Bê Tông
             </p>
-          </div>
-        </div>
+          </span>
+        </button>
 
         {/* Desktop Main Navigation Tabs */}
         <div className="hidden md:flex gap-5 text-sm font-medium">
