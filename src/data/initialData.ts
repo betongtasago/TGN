@@ -413,9 +413,4 @@ export const INITIAL_NOTIFICATION_CONFIG: NotificationConfig = {
   autoSendHour: 7,
   autoSendMinute: 0,
   enableSoundAlert: true,
-  smtpHost: 'smtp.gmail.com',
-  smtpPort: 587,
-  smtpSecure: false,
-  smtpUser: 'tasagotnt@gmail.com',
-  smtpPass: '',
 };

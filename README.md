@@ -29,7 +29,7 @@ Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiế
 
 3. **Cảnh Báo & Nhắc Nhở Tự Động:**
    - Đánh dấu trạng thái tự động theo thời gian thực: *Đến hạn hôm nay*, *Quá hạn chưa nén*, *Chưa đến hạn*, *Đã nén đạt / không đạt*.
-   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Email SMTP** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
+   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Gmail HTTPS relay** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
 
 4. **Xuất Báo Cáo Excel Chuyên Nghiệp (.xlsx):**
    - Xuất bảng theo dõi tiến độ nén mẫu theo từng công trình của từng trạm với đầy đủ thông tin doanh nghiệp Tasago, tên khách hàng, tên dự án công trình và danh sách chi tiết các hạng mục, mác, khối lượng, số tổ mẫu, cường độ nén (MPa), % đạt và khung chữ ký xác nhận 3 bên.
@@ -115,31 +115,33 @@ git push -u origin main
 Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
 
 
-### Cấu hình gửi Email tự động qua Gmail SMTP
+### Cấu hình gửi Email tự động qua Gmail HTTPS relay
 
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua Gmail SMTP. Bạn phải dùng **Gmail App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Backend đã bật ưu tiên IPv4 và timeout kết nối để giảm lỗi `ENETUNREACH` trên Render.
+Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Bản production mới **không còn gửi trực tiếp đến Gmail SMTP**, vì Render Free đã chặn outbound TCP đến các cổng SMTP `25`, `465` và `587`.[1] Email được chuyển qua một Google Apps Script HTTPS relay, rồi `GmailApp` gửi bằng chính tài khoản Gmail của công ty.
 
-#### Bước 1: Tạo Gmail App Password
+#### Bước 1: Tạo Gmail HTTPS relay
 
-Đăng nhập tài khoản Gmail sẽ dùng để gửi báo cáo. Vào [Google Account Security](https://myaccount.google.com/security), bật **2-Step Verification**, sau đó mở [App Passwords](https://myaccount.google.com/apppasswords). Tạo một App Password mới với tên `nenmauv2`.
+Mở [script.google.com](https://script.google.com/) bằng tài khoản Gmail dùng để gửi báo cáo, tạo một project mới và sao chép nội dung file `scripts/gmail-relay/Code.gs` trong repository vào trình soạn thảo. Thay:
 
-Google sẽ hiển thị một mật khẩu 16 ký tự, thường có khoảng trắng khi hiển thị. Đây là mật khẩu dành riêng cho ứng dụng. Không dùng mật khẩu Gmail chính và không đưa App Password vào GitHub hoặc cuộc trò chuyện.
+```javascript
+const RELAY_SECRET = 'THAY_BANG_CHUOI_BI_MAT_DAI';
+```
+
+bằng một chuỗi bí mật dài tối thiểu 32 ký tự. Giữ nguyên chuỗi này để nhập vào Render và Vercel.
+
+Bấm **Deploy → New deployment → Web app**, chọn chạy dưới tài khoản Gmail của bạn và chọn **Anyone with the link**. Bấm **Deploy**, cấp các quyền Gmail được yêu cầu, sau đó sao chép **Web app URL** có dạng `https://script.google.com/macros/s/.../exec`.
 
 #### Bước 2: Cấu hình Render
 
-Trong **Render → Service → Environment**, thêm các biến sau:
+Trong **Render → Service → Environment**, thêm:
 
 ```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=dia-chi-gmail-gui@example.com
-SMTP_PASS=app-password-16-ky-tu
-SMTP_FROM=Bê Tông Tasago <dia-chi-gmail-gui@example.com>
+GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
+GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
 CRON_SECRET=mot-chuoi-bi-mat-dai
 ```
 
-Giữ nguyên các biến Supabase và xác thực hiện có: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` và `FRONTEND_ORIGIN`. `SMTP_PASS` không cần nhập khoảng trắng; backend tự loại khoảng trắng khi kết nối. Sau khi lưu biến, chọn **Manual Deploy → Deploy latest commit**.
+Giữ nguyên các biến Supabase và xác thực hiện có: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` và `FRONTEND_ORIGIN`. Không cần đặt `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` nữa. Sau khi lưu biến, chọn **Manual Deploy → Deploy latest commit**.
 
 #### Bước 3: Cấu hình Vercel Cron
 
@@ -148,37 +150,30 @@ Trong **Vercel → Project Settings → Environment Variables → Production**, 
 ```env
 SUPABASE_URL=https://mqzampgzppxeppyuqvxm.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=service-role-key-cua-Supabase
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=dia-chi-gmail-gui@example.com
-SMTP_PASS=app-password-16-ky-tu
-SMTP_FROM=Bê Tông Tasago <dia-chi-gmail-gui@example.com>
+GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
+GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
 CRON_SECRET=mot-chuoi-bi-mat-dai
 VITE_API_URL=https://nenmauv2-u9xx.onrender.com
 ```
 
-`CRON_SECRET` trên Vercel phải giống hệt `CRON_SECRET` trên Render. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng khoảng 07:00 giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email. Sau khi thêm biến Vercel, chọn **Redeploy**.
+`CRON_SECRET` trên Vercel phải giống hệt `CRON_SECRET` trên Render. `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET` cũng phải giống cấu hình Render. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng khoảng 07:00 giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gọi Gmail relay qua HTTPS. Sau khi thêm biến Vercel, chọn **Redeploy**.
 
 #### Bước 4: Cấu hình trong website
 
-Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, mở **Trung tâm thông báo Email** và nhập:
-
-| Trường | Giá trị |
-|---|---|
-| SMTP Host | `smtp.gmail.com` |
-| SMTP Port | `587` |
-| SMTP User | Địa chỉ Gmail gửi thư |
-| App Password | App Password 16 ký tự của Google |
-| SSL trực tiếp | Tắt khi dùng port 587 |
-| Tên người gửi | `Bê Tông Tasago <địa-chi-gmail-gửi-thư>` |
-
-Thêm danh sách người nhận báo cáo, bấm **Kiểm tra SMTP**, rồi bấm **Lưu cấu hình**. Website lưu cấu hình phục vụ backend; App Password không được hiển thị lại ra giao diện.
+Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, mở **Trung tâm thông báo Email** và nhập tên hiển thị người gửi, ví dụ `Bê Tông Tasago`. Không nhập SMTP Host, SMTP Port hoặc App Password vào website nữa. Thêm danh sách người nhận báo cáo, bấm **Kiểm tra Gmail relay**, rồi bấm **Lưu cấu hình**. Website chỉ lưu người nhận, lịch gửi và tên hiển thị vào Supabase; secret relay chỉ nằm trong biến môi trường server.
 
 #### Bước 5: Gửi thử và bật tự động
 
 Trong Trung tâm Email, chuyển sang **Gửi Email**, chọn một mẫu nhỏ và bấm **Gửi email ngay**. Nếu email đến hộp thư, kiểm tra tiếp tab **Lịch sử** và bật **Email tự động hằng ngày**. Nút **Chạy thử cron** giúp kiểm tra luồng đọc dữ liệu Supabase và gửi báo cáo trước khi chờ lịch 07:00.
 
-Nếu Render báo `ENETUNREACH`, hãy kiểm tra service đã deploy commit mới nhất, `SMTP_HOST` là `smtp.gmail.com`, `SMTP_PORT` là `587`, `SMTP_SECURE=false`, rồi thử lại. Nếu Gmail báo lỗi xác thực, tạo App Password mới; không dùng mật khẩu Gmail thông thường.
+Nếu báo `Chưa cấu hình GMAIL_RELAY_URL`, kiểm tra Render và Vercel đã có đúng hai biến `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET`, rồi redeploy. Nếu báo `Unauthorized`, chuỗi `GMAIL_RELAY_SECRET` không trùng với `RELAY_SECRET` trong Google Apps Script. Nếu báo `GmailApp lỗi`, mở Apps Script bằng đúng tài khoản Gmail gửi thư và cấp lại quyền gửi email.
 
-Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_PASS` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
+Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_RELAY_SECRET` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
+
+## Tài liệu tham khảo
+
+[1]: https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports "Render: Free web services and SMTP ports"
+
+[2]: https://developers.google.com/apps-script/guides/web "Google: Apps Script Web Apps"
+
+[3]: https://developers.google.com/apps-script/reference/gmail/gmail-app "Google: GmailApp reference"

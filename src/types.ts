@@ -133,7 +133,8 @@ export interface NotificationConfig {
   smtpPort?: number;
   smtpUser?: string;
   smtpPass?: string;
-  smtpSecure?: boolean;
+  smtpSecure?: boolean; // Legacy fields retained for migration compatibility.
+  gmailRelayUrl?: string;
 }
 
 export interface SampleFilterOptions {

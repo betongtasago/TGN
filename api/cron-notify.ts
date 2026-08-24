@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createIpv4SmtpTransporter } from '../smtpIpv4';
+import { sendViaGmailRelay } from '../gmailRelay';
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -45,28 +45,15 @@ function buildReport(samples: any[], stations: any[], today: string) {
 
 async function sendEmail(config: any, recipients: string[], report: { text: string; html: string }, today: string) {
   if (!recipients.length) return 'Email lỗi: chưa cấu hình địa chỉ email người nhận hợp lệ.';
-  const smtpUser = String(config.smtpUser || process.env.SMTP_USER || '').trim();
-  const smtpPass = String(config.smtpPass || process.env.SMTP_PASS || '').replace(/\s+/g, '');
-  if (!smtpUser || !smtpPass) return 'Email lỗi: chưa cấu hình SMTP User/Mật khẩu ứng dụng.';
-
-  const host = String(config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
-  const port = Number(config.smtpPort || process.env.SMTP_PORT || 587);
-  const secure = config.smtpSecure !== undefined ? Boolean(config.smtpSecure) : String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
-  const { transporter, connectHost } = await createIpv4SmtpTransporter({
-    host,
-    port,
-    secure,
-    user: smtpUser,
-    pass: smtpPass,
-  });
-  const info = await transporter.sendMail({
-    from: config.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${smtpUser}>`,
-    to: recipients.join(', '),
+  const senderName = String(config.emailSender || 'Bê Tông Tasago').split('<')[0].trim() || 'Bê Tông Tasago';
+  const result = await sendViaGmailRelay({
+    recipients,
     subject: `[TASAGO] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`,
     text: report.text,
     html: report.html,
+    senderName,
   });
-  return `Email thành công (${info.messageId || 'accepted'}) tới ${recipients.length} địa chỉ qua SMTP ${host}:${port} (IPv4 ${connectHost}).`;
+  return result.message || `Email thành công tới ${recipients.length} địa chỉ qua Gmail HTTPS relay.`;
 }
 
 export default async function handler(req: any, res: any) {
@@ -107,7 +94,7 @@ export default async function handler(req: any, res: any) {
     if (urgent.length > 0) {
       if (config.autoEmailEnabled !== false) {
         try { results.push(await sendEmail(config, recipients, buildReport(urgent, stations, today), today)); }
-        catch (emailError: any) { results.push(`Email lỗi: ${emailError?.message || 'lỗi SMTP'}`); }
+        catch (emailError: any) { results.push(`Email lỗi: ${emailError?.message || 'lỗi Gmail relay'}`); }
       } else {
         results.push('Email tự động đang tắt.');
       }
