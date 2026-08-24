@@ -729,8 +729,10 @@ export default function App() {
 
   // Handler: Save Notification Config
   const handleSaveNotificationConfig = async (config: NotificationConfig) => {
-    setNotificationConfig(config);
-    saveNotificationConfig(config);
+    const clientSafeConfig = { ...config } as NotificationConfig & { smtpPass?: string };
+    delete clientSafeConfig.smtpPass;
+    setNotificationConfig(clientSafeConfig);
+    saveNotificationConfig(clientSafeConfig);
     try {
       await apiFetch('/api/server-sync', {
         method: 'POST',

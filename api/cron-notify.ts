@@ -78,11 +78,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const cronSecret = process.env.CRON_SECRET?.trim();
-  if (cronSecret) {
-    const authorization = req.headers?.authorization || req.headers?.Authorization || '';
-    const supplied = authorization === `Bearer ${cronSecret}` ? cronSecret : typeof req.query?.secret === 'string' ? req.query.secret : '';
-    if (supplied !== cronSecret) return res.status(401).json({ success: false, message: 'Unauthorized' });
-  }
+  if (!cronSecret) return res.status(503).json({ success: false, message: 'Chưa cấu hình CRON_SECRET cho Vercel Cron.' });
+  const authorization = req.headers?.authorization || req.headers?.Authorization || '';
+  const supplied = authorization === `Bearer ${cronSecret}` ? cronSecret : typeof req.query?.secret === 'string' ? req.query.secret : '';
+  if (supplied !== cronSecret) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
   const url = process.env.SUPABASE_URL?.trim();
   const key = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim();

@@ -27,14 +27,15 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
-
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  const authorization = req.headers?.authorization || req.headers?.Authorization || '';
+  if (!cronSecret || authorization !== `Bearer ${cronSecret}`) return res.status(401).json({ success: false, message: 'Unauthorized' });
   try {
     const {
       recipients,
       subject,
       html,
-      plainText,
-      smtpConfig
+      plainText
     } = req.body || {};
 
     const rawList = Array.isArray(recipients) ? recipients : (process.env.EMAIL_RECIPIENTS || '').split(',');
@@ -51,18 +52,13 @@ export default async function handler(req: any, res: any) {
 
     const todayStr = new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
     const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông - ${todayStr}`;
-    const supplied = smtpConfig || {};
-
-    const host = process.env.SMTP_HOST || supplied.smtpHost || 'smtp.gmail.com';
-    const port = Number(process.env.SMTP_PORT || supplied.smtpPort || 587);
-    const user = (process.env.SMTP_USER || supplied.smtpUser || 'tasagotnt@gmail.com').trim();
-    const rawPass = (process.env.SMTP_PASS || supplied.smtpPass || '');
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+    const port = Number(process.env.SMTP_PORT || 587);
+    const user = (process.env.SMTP_USER || '').trim();
+    const rawPass = process.env.SMTP_PASS || '';
     const pass = rawPass.replace(/\s+/g, '');
-    const isSecure = supplied.smtpSecure !== undefined 
-      ? Boolean(supplied.smtpSecure) 
-      : String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
-
-    const from = process.env.SMTP_FROM || supplied.smtpFrom || (user ? `Bê Tông Tasago <${user}>` : 'Bê Tông Tasago <tasagotnt@gmail.com>');
+    const isSecure = String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
+    const from = process.env.SMTP_FROM || (user ? `Bê Tông Tasago <${user}>` : '');
 
     // SMTP Nodemailer (Gmail STARTTLS 587 or SSL 465)
     if (host && user && pass) {

@@ -269,6 +269,12 @@ export function recalculateSampleStatuses(samples: ConcreteSample[]): ConcreteSa
   return samples.map(refreshSampleStatus);
 }
 
+function sanitizeClientNotificationConfig(config: NotificationConfig): NotificationConfig {
+  const cleaned = { ...config } as NotificationConfig & { smtpPass?: string };
+  delete cleaned.smtpPass;
+  return cleaned;
+}
+
 export function getStoredNotificationConfig(): NotificationConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.NOTIFICATION_CONFIG);
@@ -276,7 +282,7 @@ export function getStoredNotificationConfig(): NotificationConfig {
       localStorage.setItem(STORAGE_KEYS.NOTIFICATION_CONFIG, JSON.stringify(INITIAL_NOTIFICATION_CONFIG));
       return INITIAL_NOTIFICATION_CONFIG;
     }
-    return JSON.parse(raw);
+    return sanitizeClientNotificationConfig(JSON.parse(raw));
   } catch {
     return INITIAL_NOTIFICATION_CONFIG;
   }
@@ -285,7 +291,7 @@ export function getStoredNotificationConfig(): NotificationConfig {
 export const loadNotificationConfig = getStoredNotificationConfig;
 
 export function saveStoredNotificationConfig(config: NotificationConfig): void {
-  localStorage.setItem(STORAGE_KEYS.NOTIFICATION_CONFIG, JSON.stringify(config));
+  localStorage.setItem(STORAGE_KEYS.NOTIFICATION_CONFIG, JSON.stringify(sanitizeClientNotificationConfig(config)));
 }
 
 export const saveNotificationConfig = saveStoredNotificationConfig;

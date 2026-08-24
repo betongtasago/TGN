@@ -115,12 +115,70 @@ git push -u origin main
 Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
 
 
-### Cấu hình gửi Email tự động
+### Cấu hình gửi Email tự động qua Gmail SMTP
 
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua SMTP; với Gmail phải dùng **App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Nhập SMTP host/port/user/password và danh sách người nhận trong Trung tâm thông báo, bấm **Kiểm tra SMTP**, sau đó bấm **Lưu cấu hình**. Bản backend mới ưu tiên IPv4 và có timeout rõ ràng để tránh lỗi `ENETUNREACH` khi Render chọn IPv6 không khả dụng.
+Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Email được gửi thật qua Gmail SMTP. Bạn phải dùng **Gmail App Password**, không dùng mật khẩu đăng nhập Gmail thông thường. Backend đã bật ưu tiên IPv4 và timeout kết nối để giảm lỗi `ENETUNREACH` trên Render.
 
-Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng `07:00` giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email. Vì Render Free có thể sleep, cron production không phụ thuộc vào timer của trình duyệt hoặc tiến trình Render. Nút **Chạy thử cron** trong trung tâm admin gọi cron thủ công qua backend Render.
+#### Bước 1: Tạo Gmail App Password
 
-Khai báo trong **Vercel → Project Settings → Environment Variables** (Production): `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` và `VITE_API_URL` (URL backend Render, không phải URL Supabase). Trong **Render → Environment** khai báo `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`, `FRONTEND_ORIGIN`, cùng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`, `CRON_SECRET` nếu muốn cấu hình SMTP bằng biến môi trường. Không đưa service-role key, SMTP password hay Cron Secret vào GitHub/frontend.
+Đăng nhập tài khoản Gmail sẽ dùng để gửi báo cáo. Vào [Google Account Security](https://myaccount.google.com/security), bật **2-Step Verification**, sau đó mở [App Passwords](https://myaccount.google.com/apppasswords). Tạo một App Password mới với tên `nenmauv2`.
 
-Nếu thiếu SMTP user/password hoặc người nhận, hệ thống trả lỗi cấu hình rõ ràng và không báo thành công giả. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
+Google sẽ hiển thị một mật khẩu 16 ký tự, thường có khoảng trắng khi hiển thị. Đây là mật khẩu dành riêng cho ứng dụng. Không dùng mật khẩu Gmail chính và không đưa App Password vào GitHub hoặc cuộc trò chuyện.
+
+#### Bước 2: Cấu hình Render
+
+Trong **Render → Service → Environment**, thêm các biến sau:
+
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=dia-chi-gmail-gui@example.com
+SMTP_PASS=app-password-16-ky-tu
+SMTP_FROM=Bê Tông Tasago <dia-chi-gmail-gui@example.com>
+CRON_SECRET=mot-chuoi-bi-mat-dai
+```
+
+Giữ nguyên các biến Supabase và xác thực hiện có: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` và `FRONTEND_ORIGIN`. `SMTP_PASS` không cần nhập khoảng trắng; backend tự loại khoảng trắng khi kết nối. Sau khi lưu biến, chọn **Manual Deploy → Deploy latest commit**.
+
+#### Bước 3: Cấu hình Vercel Cron
+
+Trong **Vercel → Project Settings → Environment Variables → Production**, thêm:
+
+```env
+SUPABASE_URL=https://mqzampgzppxeppyuqvxm.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=service-role-key-cua-Supabase
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=dia-chi-gmail-gui@example.com
+SMTP_PASS=app-password-16-ky-tu
+SMTP_FROM=Bê Tông Tasago <dia-chi-gmail-gui@example.com>
+CRON_SECRET=mot-chuoi-bi-mat-dai
+VITE_API_URL=https://nenmauv2-u9xx.onrender.com
+```
+
+`CRON_SECRET` trên Vercel phải giống hệt `CRON_SECRET` trên Render. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng khoảng 07:00 giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gửi email. Sau khi thêm biến Vercel, chọn **Redeploy**.
+
+#### Bước 4: Cấu hình trong website
+
+Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, mở **Trung tâm thông báo Email** và nhập:
+
+| Trường | Giá trị |
+|---|---|
+| SMTP Host | `smtp.gmail.com` |
+| SMTP Port | `587` |
+| SMTP User | Địa chỉ Gmail gửi thư |
+| App Password | App Password 16 ký tự của Google |
+| SSL trực tiếp | Tắt khi dùng port 587 |
+| Tên người gửi | `Bê Tông Tasago <địa-chi-gmail-gửi-thư>` |
+
+Thêm danh sách người nhận báo cáo, bấm **Kiểm tra SMTP**, rồi bấm **Lưu cấu hình**. Website lưu cấu hình phục vụ backend; App Password không được hiển thị lại ra giao diện.
+
+#### Bước 5: Gửi thử và bật tự động
+
+Trong Trung tâm Email, chuyển sang **Gửi Email**, chọn một mẫu nhỏ và bấm **Gửi email ngay**. Nếu email đến hộp thư, kiểm tra tiếp tab **Lịch sử** và bật **Email tự động hằng ngày**. Nút **Chạy thử cron** giúp kiểm tra luồng đọc dữ liệu Supabase và gửi báo cáo trước khi chờ lịch 07:00.
+
+Nếu Render báo `ENETUNREACH`, hãy kiểm tra service đã deploy commit mới nhất, `SMTP_HOST` là `smtp.gmail.com`, `SMTP_PORT` là `587`, `SMTP_SECURE=false`, rồi thử lại. Nếu Gmail báo lỗi xác thực, tạo App Password mới; không dùng mật khẩu Gmail thông thường.
+
+Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_PASS` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
