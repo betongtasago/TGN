@@ -1,8 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import dns from 'node:dns';
-import nodemailer from 'nodemailer';
-
-dns.setDefaultResultOrder('ipv4first');
+import { createIpv4SmtpTransporter } from '../smtpIpv4';
 
 const TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -55,11 +52,12 @@ async function sendEmail(config: any, recipients: string[], report: { text: stri
   const host = String(config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = Number(config.smtpPort || process.env.SMTP_PORT || 587);
   const secure = config.smtpSecure !== undefined ? Boolean(config.smtpSecure) : String(process.env.SMTP_SECURE).toLowerCase() === 'true' || port === 465;
-  const transporter = nodemailer.createTransport({
-    host, port, secure, requireTLS: !secure,
-    auth: { user: smtpUser, pass: smtpPass },
-    connectionTimeout: 15000, greetingTimeout: 15000, socketTimeout: 30000,
-    tls: { rejectUnauthorized: false, minVersion: 'TLSv1.2' },
+  const { transporter, connectHost } = await createIpv4SmtpTransporter({
+    host,
+    port,
+    secure,
+    user: smtpUser,
+    pass: smtpPass,
   });
   const info = await transporter.sendMail({
     from: config.emailSender || process.env.SMTP_FROM || `Bê Tông Tasago <${smtpUser}>`,
@@ -68,7 +66,7 @@ async function sendEmail(config: any, recipients: string[], report: { text: stri
     text: report.text,
     html: report.html,
   });
-  return `Email thành công (${info.messageId || 'accepted'}) tới ${recipients.length} địa chỉ qua SMTP ${host}:${port}.`;
+  return `Email thành công (${info.messageId || 'accepted'}) tới ${recipients.length} địa chỉ qua SMTP ${host}:${port} (IPv4 ${connectHost}).`;
 }
 
 export default async function handler(req: any, res: any) {

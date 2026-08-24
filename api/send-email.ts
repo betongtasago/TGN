@@ -1,7 +1,4 @@
-import nodemailer from 'nodemailer';
-import dns from 'node:dns';
-
-dns.setDefaultResultOrder('ipv4first');
+import { createIpv4SmtpTransporter } from '../smtpIpv4';
 
 export const config = {
   api: {
@@ -62,19 +59,12 @@ export default async function handler(req: any, res: any) {
 
     // SMTP Nodemailer (Gmail STARTTLS 587 or SSL 465)
     if (host && user && pass) {
-      const transporter = nodemailer.createTransport({
+      const { transporter, connectHost } = await createIpv4SmtpTransporter({
         host,
         port,
         secure: isSecure,
-        requireTLS: !isSecure,
-        auth: { user, pass },
-        connectionTimeout: 15000,
-        greetingTimeout: 15000,
-        socketTimeout: 30000,
-        tls: {
-          rejectUnauthorized: false,
-          minVersion: 'TLSv1.2'
-        }
+        user,
+        pass,
       });
 
       const info = await transporter.sendMail({
@@ -88,7 +78,7 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({
         success: true,
         channel: 'smtp_transport',
-        message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ (${validRecipients.join(', ')}) qua SMTP ${host}:${port}!`,
+        message: `Đã gửi email thành công tới ${validRecipients.length} địa chỉ (${validRecipients.join(', ')}) qua SMTP ${host}:${port} (IPv4 ${connectHost})!`,
         messageId: info.messageId,
         recipients: validRecipients
       });

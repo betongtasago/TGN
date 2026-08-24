@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import dns from 'node:dns';
+import net from 'node:net';
 import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { INITIAL_USERS, INITIAL_STATIONS, INITIAL_SAMPLES, INITIAL_NOTIFICATION_CONFIG } from './src/data/initialData';
@@ -357,9 +358,20 @@ function getCurrentSamples(): any[] {
   return (serverState.samples || []).map(refreshServerSampleStatus);
 }
 
+// Resolve the SMTP hostname to an IPv4 address before Nodemailer opens a socket.
+// Some hosting environments still choose an unreachable Gmail IPv6 address even
+// when the process-level DNS order is set to IPv4-first.
+async function resolveSmtpIpv4(host: string): Promise<{ connectHost: string; tlsServerName?: string }> {
+  if (net.isIPv4(host)) return { connectHost: host };
+  const addresses = await dns.promises.resolve4(host);
+  const connectHost = addresses[0];
+  if (!connectHost) throw new Error(`Không tìm thấy địa chỉ IPv4 cho máy chủ SMTP ${host}.`);
+  return { connectHost, tlsServerName: host };
+}
+
 // Helper: Create Nodemailer Transporter with STARTTLS
-function createSmtpTransporter(smtpConfig?: any) {
-  const host = smtpConfig?.smtpHost || serverState.config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com';
+async function createSmtpTransporter(smtpConfig?: any) {
+  const host = String(smtpConfig?.smtpHost || serverState.config.smtpHost || process.env.SMTP_HOST || 'smtp.gmail.com').trim();
   const port = Number(smtpConfig?.smtpPort || serverState.config.smtpPort || process.env.SMTP_PORT || 587);
   const user = (smtpConfig?.smtpUser || serverState.config.smtpUser || process.env.SMTP_USER || 'tasagotnt@gmail.com').trim();
   const requestPass = smtpConfig?.smtpPass && smtpConfig.smtpPass !== '[PROTECTED]' ? smtpConfig.smtpPass : '';
@@ -367,9 +379,10 @@ function createSmtpTransporter(smtpConfig?: any) {
   // Clean password: strip all spaces that are commonly added when copying Gmail App Passwords (e.g. "abcd efgh ijkl mnop")
   const pass = rawPass.replace(/\s+/g, '');
   const isSecure = smtpConfig?.smtpSecure !== undefined ? Boolean(smtpConfig.smtpSecure) : (port === 465);
+  const { connectHost, tlsServerName } = await resolveSmtpIpv4(host);
 
   const transporter = nodemailer.createTransport({
-    host,
+    host: connectHost,
     port,
     secure: isSecure, // false for 587 (STARTTLS), true for 465 (SSL)
     requireTLS: !isSecure, // Enforce STARTTLS on port 587
@@ -381,12 +394,13 @@ function createSmtpTransporter(smtpConfig?: any) {
     greetingTimeout: 15000,
     socketTimeout: 30000,
     tls: {
+      ...(tlsServerName ? { servername: tlsServerName } : {}),
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2'
     }
   });
 
-  return { transporter, host, port, user, pass, isSecure };
+  return { transporter, host, connectHost, port, user, pass, isSecure };
 }
 
 // Helper: Generate Rich HTML Email Template
@@ -562,7 +576,7 @@ async function sendConfiguredEmail(samples: any[], config: any, targetDate = get
     return { success: false, message: 'Chưa cấu hình địa chỉ email người nhận hợp lệ.' };
   }
 
-  const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(config);
+  const { transporter, host, port, user, pass, isSecure } = await createSmtpTransporter(config);
   if (!user || !pass) {
     return { success: false, message: 'Chưa cấu hình SMTP_USER và SMTP_PASS hoặc Mật khẩu ứng dụng Gmail.' };
   }
@@ -1297,7 +1311,7 @@ async function startServer() {
   app.post('/api/notifications/verify-smtp', requireAuth, requireAdmin, async (req, res) => {
     try {
       const { smtpConfig } = req.body;
-      const { transporter, host, port, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
+      const { transporter, host, port, user, pass, isSecure } = await createSmtpTransporter(smtpConfig);
 
       if (!user) {
         return res.status(400).json({
@@ -1375,7 +1389,7 @@ async function startServer() {
       const senderName = smtpConfig?.smtpFrom || serverState.config.emailSender || process.env.SMTP_FROM || 'Bê Tông Tasago <tasagotnt@gmail.com>';
 
       // Nodemailer SMTP Server (Gmail STARTTLS Port 587 / SSL Port 465)
-      const { transporter, host, user, pass, isSecure } = createSmtpTransporter(smtpConfig);
+      const { transporter, host, user, pass, isSecure } = await createSmtpTransporter(smtpConfig);
 
       if (host && user && pass) {
         const info = await transporter.sendMail({

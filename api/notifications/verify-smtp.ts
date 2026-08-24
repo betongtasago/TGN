@@ -1,7 +1,4 @@
-import nodemailer from 'nodemailer';
-import dns from 'node:dns';
-
-dns.setDefaultResultOrder('ipv4first');
+import { createIpv4SmtpTransporter } from '../../smtpIpv4';
 
 export const config = {
   api: {
@@ -25,6 +22,9 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ success: false, message: 'Method Not Allowed' });
   }
+  const cronSecret = process.env.CRON_SECRET?.trim();
+  const authorization = req.headers?.authorization || req.headers?.Authorization || '';
+  if (!cronSecret || authorization !== `Bearer ${cronSecret}`) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
   try {
     const { smtpConfig } = req.body || {};
@@ -51,19 +51,12 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    const transporter = nodemailer.createTransport({
+    const { transporter } = await createIpv4SmtpTransporter({
       host,
       port,
       secure: isSecure,
-      requireTLS: !isSecure,
-      auth: { user, pass },
-      connectionTimeout: 15000,
-      greetingTimeout: 15000,
-      socketTimeout: 30000,
-      tls: {
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-      }
+      user,
+      pass,
     });
 
     await transporter.verify();
