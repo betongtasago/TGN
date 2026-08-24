@@ -118,7 +118,7 @@ export default function App() {
   const [sseConnected, setSseConnected] = useState<boolean>(true);
   const [newScheduleToast, setNewScheduleToast] = useState<{
     id: string;
-    sampleCode: string;
+    sampleCode?: string;
     projectName: string;
     scheduledTestDate: string;
     createdByName: string;
@@ -280,7 +280,7 @@ export default function App() {
                   const sender = data.actionBy || s.createdByName || s.samplerName || 'Thành viên trạm';
                   setNewScheduleToast({
                     id: s.id,
-                    sampleCode: s.sampleCode,
+                    sampleCode: s.sampleCode || '',
                     projectName: s.projectName,
                     scheduledTestDate: s.scheduledTestDate,
                     createdByName: sender,
@@ -476,7 +476,7 @@ export default function App() {
 
       savedSample = {
         id: `TSG-${Date.now().toString().slice(-6)}`,
-        sampleCode: sampleData.sampleCode || `M-${Date.now().toString().slice(-4)}`,
+        lasRoomName: sampleData.lasRoomName || '',
         category: sampleData.category || 'commercial',
         stationId: sampleData.stationId || primaryStation,
         projectName: sampleData.projectName || '',
@@ -862,6 +862,19 @@ export default function App() {
     setIsDetailModalOpen(true);
   };
 
+  // Open a sample directly when the user arrives from an email link.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !samples.length) return;
+    const sampleId = new URLSearchParams(window.location.search).get('sampleId');
+    if (!sampleId) return;
+    const matchedSample = samples.find((sample) => sample.id === sampleId);
+    if (!matchedSample) return;
+    setActiveTab('calendar');
+    setDetailSample(matchedSample);
+    setIsDetailModalOpen(true);
+    window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
+  }, [samples]);
+
   // Quick Action: Open Notification Modal
   const handleOpenNotificationModal = (sample?: ConcreteSample) => {
     setNotificationPreselectedSample(sample || null);
@@ -1089,7 +1102,7 @@ export default function App() {
             onAddNewSampleForDate={(dateStr) => {
               setEditingSample({
                 id: '',
-                sampleCode: '',
+                lasRoomName: '',
                 category: 'commercial',
                 stationId: selectedStationId !== 'all' ? selectedStationId : (stations[0]?.id || ''),
                 projectName: '',

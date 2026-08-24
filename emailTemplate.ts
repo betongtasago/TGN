@@ -13,6 +13,7 @@ export interface ProfessionalEmailOptions {
   subtitle?: string;
   intro?: string;
   generatedAt?: Date;
+  appUrl?: string;
 }
 
 const shapeMap: Record<string, string> = {
@@ -55,6 +56,26 @@ function displayValue(value: unknown, fallback = '---'): string {
   return text || fallback;
 }
 
+function resolveAppUrl(explicitUrl?: string): string {
+  const explicit = String(explicitUrl || '').trim();
+  if (explicit) return explicit.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location?.origin) return window.location.origin;
+  if (typeof process !== 'undefined' && process.env?.APP_URL) return String(process.env.APP_URL).trim().replace(/\/$/, '');
+  if (typeof process !== 'undefined' && process.env?.VERCEL_URL) return `https://${String(process.env.VERCEL_URL).trim().replace(/\/$/, '')}`;
+  return '';
+}
+
+function sampleUrl(sample: any, appUrl: string): string {
+  if (!appUrl || !sample?.id) return '';
+  try {
+    const url = new URL(appUrl);
+    url.searchParams.set('sampleId', String(sample.id));
+    return url.toString();
+  } catch {
+    return '';
+  }
+}
+
 function statusFor(sample: any) {
   if (sample.status === 'overdue') {
     return { label: 'QUÁ HẠN CHƯA NÉN', bg: '#FEE2E2', color: '#991B1B', border: '#EF4444' };
@@ -65,12 +86,13 @@ function statusFor(sample: any) {
   return { label: 'SẮP ĐẾN HẠN', bg: '#DBEAFE', color: '#1D4ED8', border: '#3B82F6' };
 }
 
-function sampleText(sample: any, stationName: string, index: number): string {
+function sampleText(sample: any, stationName: string, index: number, appUrl: string): string {
   const status = statusFor(sample);
   const shape = shapeMap[sample.sampleShape] || displayValue(sample.sampleShape);
   return [
     `${index + 1}. ${status.label}: ${displayValue(sample.projectName || sample.sampleCode || sample.id)}`,
     `   Trạm trộn: ${stationName}`,
+    `   Phòng LAS nén mẫu: ${displayValue(sample.lasRoomName)}`,
     `   Hạng mục: ${displayValue(sample.component)} | Khối lượng: ${displayValue(sample.volumeM3, '0')} m³`,
     `   Mác bê tông: ${displayValue(sample.concreteGrade)} | Độ sụt: ${displayValue(sample.slumpCm)} cm`,
     `   Tuổi nén: ${displayValue(sample.ageType)} (${displayValue(sample.ageDays)} ngày) | Quy cách: ${shape}`,
@@ -80,6 +102,7 @@ function sampleText(sample: any, stationName: string, index: number): string {
     `   Liên hệ: ${displayValue(sample.contactPerson)} - ${displayValue(sample.contactPhone)}`,
     `   KTV lấy mẫu: ${displayValue(sample.samplerName)}`,
     sample.notes ? `   Ghi chú: ${sample.notes}` : '',
+    sampleUrl(sample, appUrl) ? `   Mở lịch mẫu: ${sampleUrl(sample, appUrl)}` : '',
   ].filter(Boolean).join('\n');
 }
 
@@ -87,11 +110,13 @@ function infoRow(label: string, value: string, accent = '#0F172A') {
   return `<tr><td style="width:38%;padding:5px 0;color:#64748B;font-size:12px;line-height:18px;vertical-align:top;">${label}</td><td style="padding:5px 0;color:${accent};font-size:13px;font-weight:600;line-height:18px;vertical-align:top;">${value}</td></tr>`;
 }
 
-function sampleHtml(sample: any, stationName: string, index: number): string {
+function sampleHtml(sample: any, stationName: string, index: number, appUrl: string): string {
   const status = statusFor(sample);
   const shape = shapeMap[sample.sampleShape] || displayValue(sample.sampleShape);
   const project = escapeHtml(displayValue(sample.projectName || sample.sampleCode || sample.id));
   const notes = sample.notes ? infoRow('Ghi chú', escapeHtml(sample.notes), '#475569') : '';
+  const link = sampleUrl(sample, appUrl);
+  const linkRow = link ? infoRow('Lịch mẫu trên website', `<a href="${escapeHtml(link)}" style="color:#047857;font-weight:800;text-decoration:underline;">Mở đúng lịch mẫu này</a>`, '#047857') : '';
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;margin:0 0 14px;background:#FFFFFF;border:1px solid #E2E8F0;border-left:4px solid ${status.border};border-radius:10px;">
       <tr><td style="padding:16px 18px 15px;">
@@ -104,6 +129,7 @@ function sampleHtml(sample: any, stationName: string, index: number): string {
         <div style="height:1px;background:#F1F5F9;font-size:1px;line-height:1px;">&nbsp;</div>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin-top:7px;">
           ${infoRow('Trạm trộn', escapeHtml(stationName), '#0F766E')}
+          ${infoRow('Phòng LAS nén mẫu', escapeHtml(displayValue(sample.lasRoomName)), '#7C3AED')}
           ${infoRow('Hạng mục / khối lượng', `${escapeHtml(displayValue(sample.component))} &nbsp;·&nbsp; <span style="color:#047857;">${escapeHtml(displayValue(sample.volumeM3, '0'))} m³</span>`)}
           ${infoRow('Mác / độ sụt', `<span style="color:#0F766E;">${escapeHtml(displayValue(sample.concreteGrade))}</span> &nbsp;·&nbsp; ${escapeHtml(displayValue(sample.slumpCm))} cm`)}
           ${infoRow('Tuổi nén / quy cách', `<span style="color:#B45309;">${escapeHtml(displayValue(sample.ageType))} (${escapeHtml(displayValue(sample.ageDays))} ngày)</span> &nbsp;·&nbsp; ${escapeHtml(shape)} · ${escapeHtml(displayValue(sample.groupCount))} tổ / ${escapeHtml(displayValue(sample.pieceCount))} viên`)}
@@ -112,6 +138,7 @@ function sampleHtml(sample: any, stationName: string, index: number): string {
           ${infoRow('Liên hệ công trình', `${escapeHtml(displayValue(sample.contactPerson))} &nbsp;·&nbsp; ${escapeHtml(displayValue(sample.contactPhone))}`)}
           ${infoRow('KTV lấy mẫu', escapeHtml(displayValue(sample.samplerName)))}
           ${notes}
+          ${linkRow}
         </table>
       </td></tr>
     </table>`;
@@ -128,6 +155,7 @@ export function buildProfessionalEmail(
   const dueTodayCount = samples.filter(sample => sample.status === 'due_today').length;
   const urgentCount = overdueCount + dueTodayCount;
   const targetDate = options.targetDate || vietnamDateIso();
+  const appUrl = resolveAppUrl(options.appUrl);
   const generatedAt = options.generatedAt || new Date();
   const title = options.title || 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG';
   const subtitle = options.subtitle || 'Tự động nhắc nhở lịch kiểm định chất lượng bê tông';
@@ -135,7 +163,7 @@ export function buildProfessionalEmail(
     ? 'Vui lòng ưu tiên chuẩn bị máy nén và cập nhật kết quả cho các mẫu đang đến hạn.'
     : 'Danh sách dưới đây là các mẫu cần theo dõi và thực hiện theo kế hoạch.');
   const preheader = `${totalCount} mẫu cần theo dõi · ${urgentCount} mẫu đến hạn hoặc quá hạn`;
-  const sampleTexts = samples.map((sample, index) => sampleText(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index));
+  const sampleTexts = samples.map((sample, index) => sampleText(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index, appUrl));
   const text = [
     'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
     title,
@@ -151,7 +179,7 @@ export function buildProfessionalEmail(
     'Email được gửi tự động từ Cổng Quản Lý Tasago.',
   ].join('\n');
 
-  const cards = samples.map((sample, index) => sampleHtml(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index)).join('');
+  const cards = samples.map((sample, index) => sampleHtml(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index, appUrl)).join('');
   const html = `<!doctype html>
 <html lang="vi">
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${escapeHtml(title)}</title></head>

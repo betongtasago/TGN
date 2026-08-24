@@ -85,6 +85,12 @@ Lấy **Project URL** cùng **service-role/secret key** trong phần API của p
 
 Ở lần khởi động đầu tiên, backend tạo bản ghi mặc định từ dữ liệu mẫu hoặc nhập `data/server-state.json` hiện có nếu bản ghi Supabase chưa tồn tại. Sau đó mọi thao tác CRUD, cấu hình và nhật ký thông báo đều được ghi qua Supabase; LocalStorage chỉ là cache offline.
 
+## Lịch nén mẫu và link trong Email
+
+Khi thêm hoặc chỉnh sửa lịch nén mẫu, biểu mẫu không còn yêu cầu nhập **Mã Số Mẫu Hiện Trường**. Dữ liệu cũ có trường này vẫn được giữ để tương thích, nhưng lịch mới có thể nhập **Tên Phòng LAS Nén Mẫu**.
+
+Email lịch nén mẫu có nút **Mở đúng lịch mẫu này**. Link sử dụng tham số `sampleId`; khi người nhận mở link và đăng nhập, website sẽ chuyển tới tab lịch nén và mở chi tiết đúng mẫu. Để link trong email gửi từ server hoặc Vercel Cron đúng domain production, đặt biến `APP_URL` bằng URL website, ví dụ `https://nenmauv2.vercel.app`. Email gửi từ Trung tâm Email trên trình duyệt sẽ tự dùng domain hiện tại.
+
 ## 📦 Hướng Dẫn Đẩy Lên GitHub
 
 ```bash

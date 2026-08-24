@@ -77,7 +77,7 @@ export interface TestResultData {
 
 export interface ConcreteSample {
   id: string;                 // Mã mẫu (e.g. TSG-2026-001)
-  sampleCode: string;         // Mã số mẫu tại hiện trường
+  sampleCode?: string;        // Trường cũ, giữ tùy chọn để đọc dữ liệu đã lưu
   category: ConcreteCategory; // Bê tông đã cấp / Trialmix
   stationId: string;          // Trạm trộn
   projectName: string;        // Tên công trình
@@ -94,6 +94,7 @@ export interface ConcreteSample {
   ageType: ConcreteAgeType;   // Tuổi nén
   ageDays: number;            // Số ngày tuổi (3, 7, 14, 28, 60, 90...)
   scheduledTestDate: string;  // Ngày nén mẫu dự kiến (YYYY-MM-DD)
+  lasRoomName?: string;        // Tên phòng LAS thực hiện nén mẫu
   sampleShape: SampleShape;   // Loại mẫu (Vuông, Trụ, Chống thấm...)
   groupCount: number;         // Số tổ mẫu (thường 1 tổ)
   pieceCount: number;         // Số viên mẫu (thường 3 viên/tổ)

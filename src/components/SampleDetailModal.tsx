@@ -96,7 +96,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-emerald-200">
-                {station?.name} • Công Ty CP Đầu Tư Tasago
+                {station?.name} • Phòng LAS: {sample.lasRoomName || 'Chưa cập nhật'} • Công Ty CP Đầu Tư Tasago
               </p>
             </div>
           </div>

@@ -29,6 +29,7 @@ export function generateSingleSampleEmailText(sample: ConcreteSample, station?: 
     '[TASAGO - NHẮC LỊCH NÉN MẪU BÊ TÔNG]',
     `Công trình: ${sample.projectName}`,
     `Trạm trộn: ${stationName}`,
+    `Phòng LAS nén mẫu: ${sample.lasRoomName || '---'}`,
     `Hạng mục: ${sample.component} (${sample.volumeM3} m³)`,
     `Mác/tuổi nén: ${sample.concreteGrade} / ${sample.ageType} (${sample.ageDays} ngày)`,
     `Ngày đúc: ${formatDateVN(sample.castDate)} - Ngày nén: ${formatDateVN(sample.scheduledTestDate)}`,

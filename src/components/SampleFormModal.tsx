@@ -60,7 +60,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
   const [pieceCount, setPieceCount] = useState<number>(3);
   const [samplerName, setSamplerName] = useState(currentUser?.fullName || 'KTV Tasago');
   const [witnessPerson, setWitnessPerson] = useState('Tư Vấn Giám Sát Hiện Trường');
-  const [sampleCode, setSampleCode] = useState('');
+  const [lasRoomName, setLasRoomName] = useState('');
   const [notes, setNotes] = useState('');
 
   // Auto calculate scheduled test date
@@ -89,7 +89,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
       setPieceCount(editingSample.pieceCount);
       setSamplerName(editingSample.samplerName);
       setWitnessPerson(editingSample.witnessPerson || '');
-      setSampleCode(editingSample.sampleCode || '');
+      setLasRoomName(editingSample.lasRoomName || '');
       setNotes(editingSample.notes || '');
     } else {
       // Reset form to defaults
@@ -117,7 +117,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
       setPieceCount(3);
       setSamplerName(currentUser?.fullName || 'Nguyễn Văn Thành');
       setWitnessPerson('');
-      setSampleCode(`TSG-${Date.now().toString().slice(-4)}`);
+      setLasRoomName('');
       setNotes('');
     }
   }, [editingSample, isOpen, stations, currentUser]);
@@ -170,7 +170,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
       pieceCount: Number(pieceCount) || 3,
       samplerName: samplerName.trim() || currentUser?.fullName || 'KTV Tasago',
       witnessPerson: witnessPerson.trim(),
-      sampleCode: sampleCode.trim() || `TSG-SAMPLE-${Date.now().toString().slice(-4)}`,
+      lasRoomName: lasRoomName.trim(),
       notes: notes.trim(),
     };
 
@@ -263,17 +263,17 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                 </select>
               </div>
 
-              {/* Sample Field Code */}
+              {/* LAS room name */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Mã Số Mẫu Hiện Trường
+                  Tên Phòng LAS Nén Mẫu
                 </label>
                 <input
                   type="text"
-                  value={sampleCode}
-                  onChange={(e) => setSampleCode(e.target.value)}
-                  placeholder="Vd: HP-M350-01"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-mono text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  value={lasRoomName}
+                  onChange={(e) => setLasRoomName(e.target.value)}
+                  placeholder="Vd: Phòng LAS 01 - Khu A"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-emerald-500"
                 />
               </div>
 
