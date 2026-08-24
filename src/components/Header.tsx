@@ -165,11 +165,11 @@ export const Header: React.FC<HeaderProps> = ({
           onClick={() => onChangeTab('samples')}
           title="Bê Tông Xanh Sài Gòn"
         >
-          <div className="w-[118px] h-11 sm:w-[166px] sm:h-12 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 px-1.5 sm:px-2 overflow-hidden">
+          <div className="w-[132px] sm:w-[210px] bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0 px-1.5 sm:px-2 py-1 overflow-hidden">
             <img
               src="/brand-logo.png"
               alt="Bê Tông Xanh Sài Gòn"
-              className="w-full h-full object-contain"
+              className="block w-full h-auto object-contain"
             />
           </div>
           <div className="hidden sm:block">

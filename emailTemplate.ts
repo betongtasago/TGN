@@ -192,7 +192,7 @@ export function buildProfessionalEmail(
         <tr><td bgcolor="#08783D" style="padding:20px 28px;background:#08783D;color:#FFFFFF;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;"><tr>
             <td style="vertical-align:top;">
-              ${logoUrl ? `<div style="display:inline-block;padding:7px 10px;background:#FFFFFF;border-radius:10px;margin-bottom:10px;"><img src="${escapeHtml(logoUrl)}" width="250" alt="Bê Tông Xanh Sài Gòn" style="display:block;width:250px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;"></div>` : '<div style="font-size:16px;font-weight:900;letter-spacing:.5px;color:#FFFFFF;line-height:22px;">BÊ TÔNG XANH SAIGON</div>'}
+              ${logoUrl ? `<div style="display:block;width:220px;max-width:100%;padding:6px 8px;background:#FFFFFF;border-radius:10px;margin-bottom:10px;box-sizing:border-box;"><img src="${escapeHtml(logoUrl)}" width="204" alt="Bê Tông Xanh Sài Gòn" style="display:block;width:204px;max-width:100%;height:auto;max-height:82px;object-fit:contain;border:0;outline:none;text-decoration:none;"></div>` : '<div style="font-size:16px;font-weight:900;letter-spacing:.5px;color:#FFFFFF;line-height:22px;">BÊ TÔNG XANH SAIGON</div>'}
               <div style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:#D1FAE5;line-height:16px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
               <div style="margin-top:7px;font-size:22px;font-weight:800;line-height:28px;color:#FFFFFF;">${escapeHtml(title)}</div>
               <div style="margin-top:7px;font-size:13px;line-height:20px;color:#D1FAE5;">${escapeHtml(subtitle)}</div>
@@ -200,11 +200,11 @@ export function buildProfessionalEmail(
             <td align="right" style="width:86px;padding-left:10px;vertical-align:top;"><div style="display:inline-block;padding:9px 10px;border:1px solid #B7E4C7;border-radius:9px;color:#F0FDF4;font-size:10px;font-weight:900;line-height:13px;">TASAGO<br><span style="font-size:9px;font-weight:600;color:#D1FAE5;">QA / QC</span></div></td>
           </tr></table>
         </td></tr>
-        <tr><td style="padding:24px 28px 8px;">
+        <tr><td style="padding:20px 28px 8px;">
           <div style="font-size:13px;color:#64748B;line-height:20px;">Báo cáo ngày <strong style="color:#0F172A;">${escapeHtml(formatDateVN(targetDate))}</strong> &nbsp;·&nbsp; Phát lúc ${escapeHtml(vietnamDateTime(generatedAt))}</div>
           <div style="margin-top:14px;padding:14px 16px;background:${urgentCount ? '#FFF7ED' : '#F0FDF4'};border:1px solid ${urgentCount ? '#FED7AA' : '#BBF7D0'};border-left:4px solid ${urgentCount ? '#F59E0B' : '#10B981'};border-radius:9px;color:${urgentCount ? '#9A3412' : '#166534'};font-size:13px;line-height:20px;">${escapeHtml(intro)}</div>
         </td></tr>
-        <tr><td style="padding:12px 28px 20px;">
+        <tr><td style="padding:12px 28px 18px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;"><tr>
             <td width="33.33%" style="padding:0 5px 0 0;"><div style="padding:13px 10px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:9px;text-align:center;"><div style="font-size:22px;font-weight:800;color:#0F172A;line-height:26px;">${totalCount}</div><div style="margin-top:3px;font-size:10px;font-weight:700;letter-spacing:.4px;color:#64748B;">TỔNG SỐ MẪU</div></div></td>
             <td width="33.33%" style="padding:0 3px;"><div style="padding:13px 10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:9px;text-align:center;"><div style="font-size:22px;font-weight:800;color:#B45309;line-height:26px;">${dueTodayCount}</div><div style="margin-top:3px;font-size:10px;font-weight:700;letter-spacing:.4px;color:#92400E;">ĐẾN HẠN HÔM NAY</div></div></td>
