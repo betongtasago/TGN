@@ -21,7 +21,7 @@ export function ScrollNavigation() {
         onClick={scrollTop}
         aria-label="Lên đầu trang"
         title="Lên đầu trang"
-        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-emerald-700 text-white shadow-lg shadow-emerald-900/25 hover:bg-emerald-800 active:scale-95 transition-all flex items-center justify-center border border-white/20"
+        className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-orange-700 text-white shadow-lg shadow-orange-900/25 hover:bg-orange-800 active:scale-95 transition-all flex items-center justify-center border border-white/20"
       >
         <ArrowUp className="w-5 h-5" />
       </button>

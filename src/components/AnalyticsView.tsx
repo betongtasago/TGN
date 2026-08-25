@@ -59,7 +59,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       const testedCount = stationSamples.filter(s => s.status === 'tested_passed' || s.status === 'tested_failed').length;
 
       return {
-        name: station.name.replace('Trạm Tasago ', '').replace(' (TP.HCM)', '').replace(' (Long An)', '').replace(' (Bình Dương)', '').replace(' (Đồng Nai)', ''),
+        name: station.name.replace('Trạm TGN ', '').replace(' (TP.HCM)', '').replace(' (Long An)', '').replace(' (Bình Dương)', '').replace(' (Đồng Nai)', ''),
         'Khối Lượng Bê Tông (m³)': volume,
         'Số Lượng Mẫu': stationSamples.length,
         'Đã Nén Mẫu': testedCount,
@@ -128,7 +128,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       {/* Header Banner */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm">
         <div className="flex items-center space-x-2.5">
-          <div className="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800">
+          <div className="w-9 h-9 rounded-xl bg-orange-100 flex items-center justify-center text-orange-800">
             <BarChart3 className="w-5 h-5" />
           </div>
           <div>
@@ -149,7 +149,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-              <Layers className="w-4 h-4 text-emerald-700" />
+              <Layers className="w-4 h-4 text-orange-700" />
               <span>Sản Lượng Bê Tông (m³) Theo Từng Trạm</span>
             </h3>
             <span className="text-xs text-slate-400 font-mono">Đơn vị: m³</span>
@@ -176,7 +176,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-              <PieIcon className="w-4 h-4 text-emerald-700" />
+              <PieIcon className="w-4 h-4 text-orange-700" />
               <span>Cơ Cấu Mác Bê Tông Đã Cung Cấp</span>
             </h3>
             <span className="text-xs text-slate-400">Tỷ lệ %</span>
@@ -211,7 +211,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+              <CheckCircle2 className="w-4 h-4 text-orange-700" />
               <span>Tỷ Lệ Kiểm Soát & Tình Trạng Lịch Nén</span>
             </h3>
             <span className="text-xs text-slate-400">Số lượng mẫu</span>
@@ -240,7 +240,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 flex items-center space-x-1.5">
-              <Activity className="w-4 h-4 text-emerald-700" />
+              <Activity className="w-4 h-4 text-orange-700" />
               <span>Biểu Đồ Kiểm Soát Cường Độ Nén Thực Tế (MPa)</span>
             </h3>
             <span className="text-xs text-slate-400">Đơn vị: MPa</span>

@@ -42,13 +42,13 @@ const PasswordField: React.FC<PasswordFieldProps> = ({
         autoComplete={autoComplete}
         required
         minLength={id === 'new-password' || id === 'confirm-password' ? 8 : undefined}
-        className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-10 text-sm text-slate-900 outline-none transition focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
       />
       <button
         type="button"
         onClick={onToggle}
         aria-label={visible ? `Ẩn ${label.toLowerCase()}` : `Hiện ${label.toLowerCase()}`}
-        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-emerald-700"
+        className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-1 text-slate-400 hover:text-orange-700"
       >
         {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
       </button>
@@ -140,21 +140,21 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
       }}
     >
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-between bg-gradient-to-r from-emerald-800 to-teal-900 px-5 py-4 text-white">
+        <div className="flex items-center justify-between bg-gradient-to-r from-orange-800 to-orange-900 px-5 py-4 text-white">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
-              <KeyRound className="h-5 w-5 text-emerald-200" />
+              <KeyRound className="h-5 w-5 text-orange-200" />
             </div>
             <div>
               <h2 className="text-base font-black">Đổi mật khẩu</h2>
-              <p className="mt-0.5 text-[11px] text-emerald-100">Bảo vệ tài khoản Tasago của bạn</p>
+              <p className="mt-0.5 text-[11px] text-orange-100">Bảo vệ tài khoản TGN của bạn</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="rounded-lg p-1.5 text-emerald-100 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
+            className="rounded-lg p-1.5 text-orange-100 transition hover:bg-white/10 hover:text-white disabled:opacity-50"
             aria-label="Đóng cửa sổ đổi mật khẩu"
           >
             <X className="h-5 w-5" />
@@ -174,8 +174,8 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
           )}
 
           {successMessage && (
-            <div className="flex items-start gap-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-xs font-bold text-emerald-800">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+            <div className="flex items-start gap-2 rounded-lg border border-orange-200 bg-orange-50 p-3 text-xs font-bold text-orange-800">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
               <span>{successMessage} Bạn có thể đóng cửa sổ này.</span>
             </div>
           )}
@@ -220,7 +220,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || Boolean(successMessage)}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg bg-orange-600 px-4 py-2.5 text-xs font-black text-white shadow-sm transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSubmitting ? 'Đang lưu...' : 'Lưu mật khẩu mới'}
             </button>

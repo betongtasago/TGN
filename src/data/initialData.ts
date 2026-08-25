@@ -10,7 +10,7 @@ export const INITIAL_USERS: User[] = [
     id: 'usr_admin',
     username: 'admin',
     password: 'CHANGE_ME_NOW',
-    fullName: 'Ban Giám Đốc / QL Kỹ Thuật Tasago',
+    fullName: 'Ban Giám Đốc / QL Kỹ Thuật TGN',
     role: 'admin',
     stationIds: ['all'],
     phone: '0942320923',
@@ -24,7 +24,7 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_hocmon',
     code: 'TSG-HM',
-    name: 'Trạm Tasago Hóc Môn',
+    name: 'Trạm TGN Hóc Môn',
     address: 'Huyện Hóc Môn, TP. Hồ Chí Minh',
     hotline: '0942.320.923',
     managerName: 'Ks. Nguyễn Văn Thành',
@@ -34,7 +34,7 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_xuyena',
     code: 'TSG-XA',
-    name: 'Trạm Tasago Xuyên Á',
+    name: 'Trạm TGN Xuyên Á',
     address: 'KCN Xuyên Á, Tỉnh Tây Ninh',
     hotline: '0942.320.923',
     managerName: 'Ks. Trần Minh Quang',
@@ -44,7 +44,7 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_hoaan',
     code: 'TSG-HA',
-    name: 'Trạm Tasago Hóa An',
+    name: 'Trạm TGN Hóa An',
     address: 'Phường Hóa An, Tỉnh Đồng Nai',
     hotline: '0942.320.923',
     managerName: 'Ks. Võ Minh Trí',
@@ -54,7 +54,7 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_tnt1',
     code: 'TSG-TNT1',
-    name: 'Trạm Tasago-TNT1 Tây Ninh',
+    name: 'Trạm TGN-TNT1 Tây Ninh',
     address: 'KCN Thành Thành Công, TX. Trảng Bàng, Tỉnh Tây Ninh',
     hotline: '0942.320.923',
     managerName: 'Ks. Lê Hoàng Phong',
@@ -64,7 +64,7 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_tnt2',
     code: 'TSG-TNT2',
-    name: 'Trạm Tasago-TNT2 Tây Ninh',
+    name: 'Trạm TGN-TNT2 Tây Ninh',
     address: 'KCN Phước Đông, Huyện Gò Dầu, Tỉnh Tây Ninh',
     hotline: '0942.320.923',
     managerName: 'Ks. Đặng Tuấn Vũ',
@@ -74,8 +74,8 @@ export const INITIAL_STATIONS: Station[] = [
   {
     id: 'sta_lab',
     code: 'TSG-LAB',
-    name: 'Phòng Lab Thí Nghiệm & R&D Tasago',
-    address: 'Trung Tâm Thí Nghiệm & Kiểm Định Tasago',
+    name: 'Phòng Lab Thí Nghiệm & R&D TGN',
+    address: 'Trung Tâm Thí Nghiệm & Kiểm Định TGN',
     hotline: '0942.320.923',
     managerName: 'ThS. Đặng Tuấn Vũ',
     managerPhone: '0942320923',
@@ -164,10 +164,10 @@ export const INITIAL_SAMPLES: ConcreteSample[] = [
     category: 'trialmix',
     stationId: 'sta_lab',
     projectName: 'Nghiên Cứu Cấp Phối Bê Tông Chống Thấm B8 Vách Hầm Sâu',
-    contractor: 'Phòng R&D - Thí Nghiệm Tasago',
+    contractor: 'Phòng R&D - Thí Nghiệm TGN',
     contactPerson: 'ThS. Đặng Tuấn Vũ (Trưởng Lab)',
     contactPhone: '0942320923',
-    location: 'Phòng Lab Thí Nghiệm Trung Tâm Tasago',
+    location: 'Phòng Lab Thí Nghiệm Trung Tâm TGN',
     component: 'Cấp Phối Thử Nghiệm Xi Măng Nghi Sơn + Phụ Gia Chống Thấm Sika',
     volumeM3: 0.5,
     castDate: getRelativeDateStr(-28),
@@ -407,8 +407,8 @@ export const INITIAL_SAMPLES: ConcreteSample[] = [
 
 export const INITIAL_NOTIFICATION_CONFIG: NotificationConfig = {
   autoEmailEnabled: true,
-  emailRecipients: ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'],
-  emailSender: 'Bê Tông Tasago <tasagotnt@gmail.com>',
+  emailRecipients: [],
+  emailSender: 'CÔNG TY CP VLXD THẾ GIỚI NHÀ',
   reminderDaysBefore: 0,
   autoSendHour: 7,
   autoSendMinute: 0,

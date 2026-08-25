@@ -1,6 +1,6 @@
 {
   "appId": "com.tasago.concrete",
-  "appName": "Bê Tông Tasago",
+  "appName": "TGN Nén Mẫu",
   "webDir": "dist",
   "bundledWebRuntime": false,
   "server": {
@@ -11,7 +11,7 @@
     "SplashScreen": {
       "launchShowDuration": 2000,
       "launchAutoHide": true,
-      "backgroundColor": "#064e3b",
+      "backgroundColor": "#D97706",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false,
@@ -20,7 +20,7 @@
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#064e3b"
+      "backgroundColor": "#D97706"
     },
     "Keyboard": {
       "resize": "body",
@@ -29,7 +29,7 @@
     },
     "LocalNotifications": {
       "smallIcon": "ic_stat_icon_config_sample",
-      "iconColor": "#10b981",
+      "iconColor": "#D97706",
       "sound": "beep.wav"
     }
   },
@@ -41,6 +41,6 @@
   "ios": {
     "contentInset": "always",
     "preferredContentMode": "mobile",
-    "scheme": "TasagoConcrete"
+    "scheme": "TGNConcrete"
   }
 }

@@ -24,9 +24,9 @@ function vietnamDateTime(): string {
 }
 
 export function generateSingleSampleEmailText(sample: ConcreteSample, station?: Station): string {
-  const stationName = station?.name || 'Trạm Bê Tông Tasago';
+  const stationName = station?.name || 'Trạm VLXD Thế Giới Nhà';
   return [
-    '[TASAGO - NHẮC LỊCH NÉN MẪU BÊ TÔNG]',
+    '[TGN - NHẮC LỊCH NÉN MẪU BÊ TÔNG]',
     `Công trình: ${sample.projectName}`,
     `Trạm trộn: ${stationName}`,
     `Phòng LAS nén mẫu: ${sample.lasRoomName || '---'}`,
@@ -46,11 +46,11 @@ export function generateSampleNotification(
   const count = samples.length;
   const report = buildProfessionalEmail(samples, stations, {
     title: 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG',
-    subtitle: 'Thông báo từ Trung tâm Email Tasago',
+    subtitle: 'Thông báo từ Trung tâm Email TGN',
     intro: 'Vui lòng kiểm tra thông tin từng mẫu trước khi bố trí nén và cập nhật kết quả.',
   });
   return {
-    title: `[TASAGO] THÔNG BÁO LỊCH NÉN MẪU BÊ TÔNG - ${count} MẪU`,
+    title: `[TGN] THÔNG BÁO LỊCH NÉN MẪU BÊ TÔNG - ${count} MẪU`,
     bodyText: report.text,
     htmlContent: report.html,
     sampleSummary: `${count} mẫu (${report.urgentCount} mẫu cần nén gấp)`,
@@ -85,7 +85,7 @@ export async function requestBrowserNotificationPermission(): Promise<boolean> {
   return false;
 }
 
-export function showSystemPushNotification(title: string, body: string, tag = 'tasago-sample-alert'): void {
+export function showSystemPushNotification(title: string, body: string, tag = 'tgn-sample-alert'): void {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   try {
     new Notification(title, { body, icon: '/favicon.ico', tag, requireInteraction: true });
@@ -142,9 +142,10 @@ export async function dispatchNotification(
   if (channel !== 'email') return { success: false, message: 'Chỉ hỗ trợ gửi email trong phiên bản hiện tại.', logIds: [] };
 
   const notification = generateSampleNotification(samples, stations);
-  const recipients = (config.emailRecipients || []).map(email => email.trim()).filter(Boolean);
-  const fallbackRecipients = ['kythuat@tasago.vn', 'thanhtgndt@gmail.com'];
-  const actualRecipients = recipients.length ? recipients : fallbackRecipients;
+  const actualRecipients = (config.emailRecipients || []).map(email => email.trim()).filter(Boolean);
+  if (!actualRecipients.length) {
+    return { success: false, message: 'Chưa cấu hình địa chỉ email người nhận hợp lệ.', logIds: [] };
+  }
   let status: 'success' | 'failed' | 'simulated' = 'failed';
   let errorDetails: string | undefined;
   let resultMessage = '';

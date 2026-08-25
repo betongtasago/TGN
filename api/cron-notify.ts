@@ -25,10 +25,10 @@ function escapeHtml(value: unknown): string {
 
 async function sendEmail(config: any, recipients: string[], report: { text: string; html: string }, today: string) {
   if (!recipients.length) return 'Email lỗi: chưa cấu hình địa chỉ email người nhận hợp lệ.';
-  const senderName = String(config.emailSender || 'Bê Tông Tasago').split('<')[0].trim() || 'Bê Tông Tasago';
+  const senderName = String(config.emailSender || 'CÔNG TY CP VLXD THẾ GIỚI NHÀ').split('<')[0].trim() || 'CÔNG TY CP VLXD THẾ GIỚI NHÀ';
   const result = await sendViaGmailRelay({
     recipients,
-    subject: `[TASAGO] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`,
+    subject: `[TGN] Báo cáo lịch nén mẫu - ${formatDateVN(today)}`,
     text: report.text,
     html: report.html,
     senderName,

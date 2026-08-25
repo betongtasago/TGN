@@ -296,15 +296,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           {/* Header Title & Monthly Stats */}
           <div className="space-y-1">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-800 text-white flex items-center justify-center shadow-xs">
-                <CalendarDays className="w-5 h-5 text-emerald-200" />
+              <div className="w-10 h-10 rounded-xl bg-orange-800 text-white flex items-center justify-center shadow-xs">
+                <CalendarDays className="w-5 h-5 text-orange-200" />
               </div>
               <div>
                 <h2 className="text-lg font-black text-slate-900 tracking-tight flex items-center gap-2">
                   <span>Lịch Nén Mẫu Bê Tông Toàn Hệ Thống</span>
                 </h2>
                 <p className="text-xs text-slate-500 font-medium">
-                  Đồng bộ tức thời giữa Quản Trị Viên & Kỹ Thuật Viên các trạm trộn Tasago
+                  Đồng bộ tức thời giữa Quản Trị Viên & Kỹ Thuật Viên các trạm trộn TGN
                 </p>
               </div>
             </div>
@@ -314,7 +314,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
                 Toàn hệ thống: <strong>{activeSamples.length} mẫu nén</strong>
               </span>
-              <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-orange-50 text-orange-800 border border-orange-200">
                 Lịch tháng {month + 1}: <strong>{totalInMonth} mẫu</strong> ({testedCountInMonth} đã nén)
               </span>
               {urgentInMonth > 0 && (
@@ -335,7 +335,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => setViewMode('calendar_grid')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'calendar_grid'
-                    ? 'bg-emerald-800 text-white shadow-xs'
+                    ? 'bg-orange-800 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -348,7 +348,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 onClick={() => setViewMode('timeline_list')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 ${
                   viewMode === 'timeline_list'
-                    ? 'bg-emerald-800 text-white shadow-xs'
+                    ? 'bg-orange-800 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -359,16 +359,16 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
             {/* Station Filter for Calendar */}
             <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200">
-              <Building2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+              <Building2 className="w-3.5 h-3.5 text-orange-700 shrink-0" />
               <select
                 value={filterStationLocal}
                 onChange={(e) => setFilterStationLocal(e.target.value)}
-                className="bg-white border border-slate-200 font-bold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-xs max-w-[180px] truncate"
+                className="bg-white border border-slate-200 font-bold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer shadow-xs max-w-[180px] truncate"
               >
                 <option value="all">🏢 Tất cả các trạm ({stations.length})</option>
                 {stations.map(st => (
                   <option key={st.id} value={st.id}>
-                    {st.name.replace('Trạm Tasago ', '')}
+                    {st.name.replace('Trạm TGN ', '')}
                   </option>
                 ))}
               </select>
@@ -383,7 +383,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           <div className="pt-3 border-t border-slate-100">
             <div className="flex items-center gap-2 overflow-x-auto pb-1.5 text-xs no-scrollbar">
               <span className="font-bold text-slate-500 text-[11px] uppercase shrink-0 flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-emerald-700" />
+                <Clock className="w-3.5 h-3.5 text-orange-700" />
                 <span>Các ngày có lịch nén:</span>
               </span>
 
@@ -403,7 +403,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     }}
                     className={`px-2.5 py-1 rounded-xl text-xs font-bold shrink-0 transition-all cursor-pointer flex items-center gap-1.5 border ${
                       isSelected
-                        ? 'bg-emerald-800 text-white border-emerald-900 shadow-xs'
+                        ? 'bg-orange-800 text-white border-orange-900 shadow-xs'
                         : isToday
                         ? 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100 animate-pulse'
                         : item.urgent > 0
@@ -434,7 +434,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               {upcomingDistinctDates.length > 10 && (
                 <button
                   onClick={() => setViewMode('timeline_list')}
-                  className="text-xs font-bold text-emerald-700 hover:underline shrink-0 px-2"
+                  className="text-xs font-bold text-orange-700 hover:underline shrink-0 px-2"
                 >
                   +{upcomingDistinctDates.length - 10} ngày khác 👉
                 </button>
@@ -454,7 +454,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             <div>
               <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
                 <span>Toàn Bộ Danh Sách Lịch Nén Mẫu</span>
-                <span className="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+                <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
                   {timelineFilteredSamples.length} mẫu
                 </span>
               </h3>
@@ -472,14 +472,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   placeholder="Tìm công trình, mác, người tạo..."
                   value={timelineSearch}
                   onChange={(e) => setTimelineSearch(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs font-medium outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
               <select
                 value={timelineStatusFilter}
                 onChange={(e) => setTimelineStatusFilter(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                className="bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
               >
                 <option value="all">Tất cả trạng thái</option>
                 <option value="due_today">🔴 Đến hạn hôm nay</option>
@@ -513,7 +513,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     key={sample.id}
                     className={`p-4 rounded-2xl border transition-all space-y-3 relative flex flex-col justify-between ${
                       isTested
-                        ? 'bg-emerald-50/30 border-emerald-200'
+                        ? 'bg-orange-50/30 border-orange-200'
                         : isDueToday
                         ? 'bg-red-50/40 border-red-300 shadow-sm ring-1 ring-red-400'
                         : isOverdue
@@ -525,7 +525,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-1.5">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-700" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-orange-700" />
                           <span className="font-black text-sm text-slate-900">
                             {sample.scheduledTestDate.split('-').reverse().join('/')}
                           </span>
@@ -537,7 +537,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             : isOverdue
                             ? 'bg-amber-500 text-white'
                             : isTested
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-orange-100 text-orange-800'
                             : 'bg-blue-100 text-blue-800'
                         }`}>
                           {diffText}
@@ -546,9 +546,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                       {/* Station & Creator Info */}
                       <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-100 pb-2">
-                        <span className="font-bold text-emerald-800 flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{station ? station.name.replace('Trạm Tasago ', '') : 'Tasago'}</span>
+                        <span className="font-bold text-orange-800 flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-orange-600" />
+                          <span>{station ? station.name.replace('Trạm TGN ', '') : 'TGN'}</span>
                         </span>
                         <span className="flex items-center gap-1 text-[11px] text-slate-600">
                           <UserCheck className="w-3 h-3 text-slate-400" />
@@ -570,7 +570,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs space-y-1 text-slate-700">
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Mác & Độ sụt:</span>
-                          <span className="font-extrabold text-emerald-800">{sample.concreteGrade} (Sụt {sample.slumpCm}cm)</span>
+                          <span className="font-extrabold text-orange-800">{sample.concreteGrade} (Sụt {sample.slumpCm}cm)</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Tuổi nén:</span>
@@ -583,7 +583,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         {sample.contactPerson && (
                           <div className="flex items-center justify-between pt-1 border-t border-slate-200">
                             <span className="text-slate-500">Liên hệ:</span>
-                            <a href={`tel:${sample.contactPhone}`} className="font-bold text-emerald-700 hover:underline">
+                            <a href={`tel:${sample.contactPhone}`} className="font-bold text-orange-700 hover:underline">
                               {sample.contactPerson} ({sample.contactPhone})
                             </a>
                           </div>
@@ -598,7 +598,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           setViewMode('calendar_grid');
                           handleJumpToDate(sample.scheduledTestDate);
                         }}
-                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 flex items-center gap-1 cursor-pointer"
+                        className="text-xs font-bold text-orange-700 hover:text-orange-900 flex items-center gap-1 cursor-pointer"
                         title="Xem trên lịch tháng"
                       >
                         <span>Mở Lịch Tháng</span>
@@ -615,7 +615,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 onSelectSampleForTest(sample);
                               }
                             }}
-                            className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
+                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer shadow-xs"
                             title="Đánh dấu đã nén mẫu xong"
                           >
                             <Check className="w-3 h-3" />
@@ -624,7 +624,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         ) : (
                           <button
                             onClick={() => onSelectSampleForTest(sample)}
-                            className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer"
+                            className="bg-orange-100 hover:bg-orange-200 text-orange-900 font-bold text-xs px-2.5 py-1 rounded-lg flex items-center gap-1 cursor-pointer"
                             title="Sửa kết quả MPa"
                           >
                             <Edit3 className="w-3 h-3" />
@@ -671,7 +671,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <div className="flex items-center gap-2">
                 <span className="w-3 h-3 rounded-full bg-red-500 inline-block shadow-xs" />
                 <span className="w-3 h-3 rounded-full bg-amber-500 inline-block shadow-xs" />
-                <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block shadow-xs" />
+                <span className="w-3 h-3 rounded-full bg-orange-500 inline-block shadow-xs" />
                 <span className="ml-2 font-black text-sm uppercase tracking-wider text-slate-100">
                   THÁNG {month + 1} / {year}
                 </span>
@@ -691,7 +691,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   <select
                     value={month}
                     onChange={(e) => handleMonthSelect(Number(e.target.value))}
-                    className="bg-white border border-slate-200 font-extrabold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-xs"
+                    className="bg-white border border-slate-200 font-extrabold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer shadow-xs"
                   >
                     {Array.from({ length: 12 }).map((_, i) => (
                       <option key={i} value={i}>Tháng {i + 1}</option>
@@ -701,7 +701,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   <select
                     value={year}
                     onChange={(e) => handleYearSelect(Number(e.target.value))}
-                    className="bg-white border border-slate-200 font-extrabold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-xs"
+                    className="bg-white border border-slate-200 font-extrabold text-xs text-slate-800 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer shadow-xs"
                   >
                     {[year - 2, year - 1, year, year + 1, year + 2].map((y) => (
                       <option key={y} value={y}>Năm {y}</option>
@@ -715,7 +715,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   title={`Tháng sau${nextMonthCount > 0 ? ` (+${nextMonthCount} mẫu)` : ''}`}
                 >
                   {nextMonthCount > 0 && (
-                    <span className="text-[10px] bg-emerald-600 text-white font-bold px-1.5 py-0.2 rounded-full">
+                    <span className="text-[10px] bg-orange-600 text-white font-bold px-1.5 py-0.2 rounded-full">
                       +{nextMonthCount}
                     </span>
                   )}
@@ -724,7 +724,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                 <button
                   onClick={handleToday}
-                  className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg shadow-xs transition-colors cursor-pointer ml-1"
+                  className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xs px-2.5 py-1 rounded-lg shadow-xs transition-colors cursor-pointer ml-1"
                 >
                   Hôm Nay
                 </button>
@@ -738,7 +738,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               <div className="text-slate-700">T4 <span className="hidden sm:inline font-normal text-[10px] text-slate-400">(Tư)</span></div>
               <div className="text-slate-700">T5 <span className="hidden sm:inline font-normal text-[10px] text-slate-400">(Năm)</span></div>
               <div className="text-slate-700">T6 <span className="hidden sm:inline font-normal text-[10px] text-slate-400">(Sáu)</span></div>
-              <div className="text-emerald-800">T7 <span className="hidden sm:inline font-normal text-[10px] text-emerald-600">(Bảy)</span></div>
+              <div className="text-orange-800">T7 <span className="hidden sm:inline font-normal text-[10px] text-orange-600">(Bảy)</span></div>
               <div className="text-red-700">CN <span className="hidden sm:inline font-normal text-[10px] text-red-500">(Chủ Nhật)</span></div>
             </div>
 
@@ -781,9 +781,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     onClick={() => setSelectedDateStr(dateKey)}
                     className={`min-h-[90px] sm:min-h-[105px] p-1.5 sm:p-2 transition-all cursor-pointer flex flex-col justify-between relative group ${
                       isSelected
-                        ? 'bg-emerald-900 text-white ring-2 ring-emerald-400 z-10 shadow-md'
+                        ? 'bg-orange-900 text-white ring-2 ring-orange-400 z-10 shadow-md'
                         : isToday
-                        ? 'bg-emerald-50/90 hover:bg-emerald-100/80 text-emerald-950 font-bold'
+                        ? 'bg-orange-50/90 hover:bg-orange-100/80 text-orange-950 font-bold'
                         : isWeekend
                         ? 'bg-[#fcfdfd] hover:bg-slate-50 text-slate-800'
                         : 'bg-white hover:bg-slate-50 text-slate-800'
@@ -794,11 +794,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       <span 
                         className={`text-xs sm:text-sm font-black flex items-center justify-center rounded-lg ${
                           isSelected
-                            ? 'bg-emerald-800 text-white px-2 py-0.5'
+                            ? 'bg-orange-800 text-white px-2 py-0.5'
                             : isToday
-                            ? 'bg-emerald-700 text-white w-6 h-6 rounded-full shadow-xs'
+                            ? 'bg-orange-700 text-white w-6 h-6 rounded-full shadow-xs'
                             : isWeekend
-                            ? dayOfWeek === 6 ? 'text-red-600' : 'text-emerald-700'
+                            ? dayOfWeek === 6 ? 'text-red-600' : 'text-orange-700'
                             : 'text-slate-800'
                         }`}
                       >
@@ -809,11 +809,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       {daySamples.length > 0 && (
                         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shadow-2xs ${
                           isSelected
-                            ? 'bg-emerald-700 text-emerald-100'
+                            ? 'bg-orange-700 text-orange-100'
                             : dueTodayOrOverdueCount > 0
                             ? 'bg-red-500 text-white animate-pulse'
                             : isAllTested
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                            ? 'bg-orange-100 text-orange-800 border border-orange-200'
                             : 'bg-slate-200 text-slate-700'
                         }`}>
                           {isAllTested && <Check className="w-2.5 h-2.5" />}
@@ -834,9 +834,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             key={s.id}
                             className={`text-[9px] px-1.5 py-0.5 rounded font-bold truncate leading-tight flex items-center justify-between gap-1 ${
                               isSelected
-                                ? 'bg-emerald-800/90 text-emerald-100 border border-emerald-700'
+                                ? 'bg-orange-800/90 text-orange-100 border border-orange-700'
                                 : isTested
-                                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                ? 'bg-orange-50 text-orange-800 border border-orange-200'
                                 : isDue
                                 ? 'bg-red-100 text-red-900 border border-red-200'
                                 : isOver
@@ -853,7 +853,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                       {daySamples.length > 2 && (
                         <span className={`text-[9px] font-bold block text-center ${
-                          isSelected ? 'text-emerald-300' : 'text-slate-500'
+                          isSelected ? 'text-orange-300' : 'text-slate-500'
                         }`}>
                           +{daySamples.length - 2} mẫu khác
                         </span>
@@ -862,7 +862,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                     {/* Bottom indicator for today or empty */}
                     {isToday && !isSelected && (
-                      <div className="text-[9px] font-black text-emerald-700 uppercase tracking-widest text-center">
+                      <div className="text-[9px] font-black text-orange-700 uppercase tracking-widest text-center">
                         Hôm Nay
                       </div>
                     )}
@@ -879,13 +879,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   <span className="w-2.5 h-2.5 rounded-full bg-red-500" /> Đến hạn nén
                 </span>
                 <span className="flex items-center gap-1 text-[11px]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Đã nén xong
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500" /> Đã nén xong
                 </span>
                 <span className="flex items-center gap-1 text-[11px]">
                   <span className="w-2.5 h-2.5 rounded-full bg-slate-400" /> Chưa đến hạn
                 </span>
                 <span className="flex items-center gap-1 text-[11px]">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-800" /> Ngày đang chọn
+                  <span className="w-2.5 h-2.5 rounded-full bg-orange-800" /> Ngày đang chọn
                 </span>
               </div>
 
@@ -926,9 +926,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               {onAddNewSampleForDate && (
                 <button
                   onClick={() => onAddNewSampleForDate(selectedDateStr)}
-                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs w-full justify-center"
+                  className="bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-200 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs w-full justify-center"
                 >
-                  <Plus className="w-3.5 h-3.5 text-emerald-700" />
+                  <Plus className="w-3.5 h-3.5 text-orange-700" />
                   <span>+ Thêm Mẫu Cho Ngày Này</span>
                 </button>
               )}
@@ -949,7 +949,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                   <div className="pt-2 border-t border-slate-200/60">
                     <button
                       onClick={() => handleJumpToDate(nearestDateWithSamples)}
-                      className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer shadow-xs w-full flex items-center justify-center gap-1.5"
+                      className="bg-orange-700 hover:bg-orange-600 text-white text-xs font-bold px-3 py-2 rounded-xl transition-colors cursor-pointer shadow-xs w-full flex items-center justify-center gap-1.5"
                     >
                       <span>👉 Mở ngày có lịch nén gần nhất ({nearestDateWithSamples.split('-').reverse().join('/')})</span>
                     </button>
@@ -970,7 +970,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                       key={sample.id}
                       className={`p-3.5 rounded-2xl border transition-all space-y-2.5 ${
                         isTested
-                          ? 'bg-emerald-50/40 border-emerald-200'
+                          ? 'bg-orange-50/40 border-orange-200'
                           : isDueToday
                           ? 'bg-red-50/40 border-red-200 shadow-xs'
                           : isOverdue
@@ -980,14 +980,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     >
                       {/* Top Row: Station + Status Badge */}
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-xs text-emerald-800 flex items-center gap-1">
-                          <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>{station ? station.name.replace('Trạm Tasago ', '') : 'Trạm Tasago'}</span>
+                        <span className="font-bold text-xs text-orange-800 flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5 text-orange-600" />
+                          <span>{station ? station.name.replace('Trạm TGN ', '') : 'Trạm TGN'}</span>
                         </span>
 
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1 ${
                           isTested
-                            ? 'bg-emerald-100 text-emerald-800'
+                            ? 'bg-orange-100 text-orange-800'
                             : isDueToday
                             ? 'bg-red-500 text-white animate-pulse'
                             : isOverdue
@@ -996,7 +996,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         }`}>
                           {isTested ? (
                             <>
-                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <CheckCircle2 className="w-3 h-3 text-orange-600" />
                               <span>Đã Nén Xong</span>
                             </>
                           ) : isDueToday ? (
@@ -1039,7 +1039,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Mác bê tông:</span>
-                          <span className="font-bold text-emerald-800">{sample.concreteGrade} (Sụt {sample.slumpCm}cm)</span>
+                          <span className="font-bold text-orange-800">{sample.concreteGrade} (Sụt {sample.slumpCm}cm)</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Tuổi nén:</span>
@@ -1049,7 +1049,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                           <span className="text-slate-500">Liên hệ:</span>
                           <a 
                             href={`tel:${sample.contactPhone}`} 
-                            className="font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                            className="font-bold text-orange-700 hover:underline flex items-center gap-1"
                           >
                             <Phone className="w-3 h-3" />
                             <span>{sample.contactPerson} ({sample.contactPhone})</span>
@@ -1059,17 +1059,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
                       {/* Tested Result Summary if Tested */}
                       {isTested && sample.testResult && (
-                        <div className="bg-emerald-100/70 p-2.5 rounded-xl border border-emerald-200 text-xs flex items-center justify-between">
+                        <div className="bg-orange-100/70 p-2.5 rounded-xl border border-orange-200 text-xs flex items-center justify-between">
                           <div>
-                            <span className="text-[10px] font-bold uppercase text-emerald-900 block">KẾT QUẢ NÉN:</span>
-                            <span className="text-sm font-black text-emerald-900">
+                            <span className="text-[10px] font-bold uppercase text-orange-900 block">KẾT QUẢ NÉN:</span>
+                            <span className="text-sm font-black text-orange-900">
                               {sample.testResult.avgStrengthMpa.toFixed(1)} MPa
                             </span>
-                            <span className="text-xs text-emerald-700 font-bold ml-1.5">
+                            <span className="text-xs text-orange-700 font-bold ml-1.5">
                               ({sample.testResult.percentageOfDesign.toFixed(0)}% Thiết Kế)
                             </span>
                           </div>
-                          <span className="bg-emerald-700 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-2xs">
+                          <span className="bg-orange-700 text-white text-[10px] font-black px-2.5 py-1 rounded-lg shadow-2xs">
                             {sample.status === 'tested_passed' ? 'ĐẠT CHUẨN' : 'KHÔNG ĐẠT'}
                           </span>
                         </div>
@@ -1088,7 +1088,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                                 onSelectSampleForTest(sample);
                               }
                             }}
-                            className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
+                            className="bg-orange-700 hover:bg-orange-600 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 shadow-xs cursor-pointer"
                             title="Đánh dấu đã nén mẫu xong"
                           >
                             <Check className="w-3.5 h-3.5" />
@@ -1097,7 +1097,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                         ) : (
                           <button
                             onClick={() => onSelectSampleForTest(sample)}
-                            className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer"
+                            className="bg-orange-100 hover:bg-orange-200 text-orange-900 font-bold text-xs px-2.5 py-1.5 rounded-xl flex items-center gap-1 cursor-pointer"
                             title="Sửa lại chỉ số nén MPa"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -1112,7 +1112,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                             className="bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs px-2.5 py-1.5 rounded-xl border border-slate-200 flex items-center gap-1 cursor-pointer"
                             title="Nhập lực nén KN & cường độ MPa chi tiết"
                           >
-                            <FlaskConical className="w-3.5 h-3.5 text-emerald-700" />
+                            <FlaskConical className="w-3.5 h-3.5 text-orange-700" />
                             <span>Nhập MPa</span>
                           </button>
                         )}

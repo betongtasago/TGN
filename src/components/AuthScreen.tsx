@@ -74,24 +74,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
   return (
     <div className="min-h-screen bg-slate-900 text-slate-100 flex flex-col justify-center items-center px-4 py-8 relative overflow-hidden font-sans">
       {/* Background Decorative Gradient Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-emerald-600/20 blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-teal-600/20 blur-[120px] pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[450px] h-[450px] rounded-full bg-orange-600/20 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-orange-600/20 blur-[120px] pointer-events-none" />
 
       {/* Main Container */}
       <div className="w-full max-w-md z-10">
         
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-700 shadow-xl ring-4 ring-emerald-500/20 mb-3">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 via-orange-500 to-orange-700 shadow-xl ring-4 ring-orange-500/20 mb-3">
             <span className="font-black text-2xl text-white tracking-widest">TSG</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">
-            CÔNG TY CP ĐẦU TƯ TASAGO
+            CÔNG TY CP VLXD THẾ GIỚI NHÀ
           </h1>
-          <p className="text-xs sm:text-sm text-emerald-400 font-semibold mt-1">
+          <p className="text-xs sm:text-sm text-orange-400 font-semibold mt-1">
             HỆ THỐNG THEO DÕI TIẾN ĐỘ NÉN MẪU BÊ TÔNG & TRIALMIX
           </p>
-          <div className="inline-flex items-center space-x-1.5 bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 text-xs px-3 py-1 rounded-full mt-2">
+          <div className="inline-flex items-center space-x-1.5 bg-orange-950/80 border border-orange-700/60 text-orange-300 text-xs px-3 py-1 rounded-full mt-2">
             <FlaskConical className="w-3.5 h-3.5" />
             <span>Tự Động Nhắc Nhở Email Hàng Ngày</span>
           </div>
@@ -101,15 +101,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         <div className="bg-slate-800/95 backdrop-blur-md rounded-2xl border border-slate-700 p-6 sm:p-8 shadow-2xl">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-base sm:text-lg font-bold text-white flex items-center space-x-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" />
+              <ShieldCheck className="w-5 h-5 text-orange-400" />
               <span>Đăng Nhập Hệ Thống</span>
             </h2>
-            <span className="text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-bold">
+            <span className="text-xs bg-orange-500/20 text-orange-300 border border-orange-500/30 px-2 py-0.5 rounded font-mono font-bold">
               2026
             </span>
           </div>
           <p className="text-xs text-slate-400 mb-5">
-            Dành cho Ban Giám Đốc, Kỹ Sư & KTV các trạm trộn Tasago
+            Dành cho Ban Giám Đốc, Kỹ Sư & KTV các trạm trộn TGN
           </p>
 
           {errorMsg && (
@@ -135,7 +135,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder="Nhập tên tài khoản (ví dụ: admin)"
-                  className="w-full bg-slate-900/90 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-500 transition-colors"
+                  className="w-full bg-slate-900/90 border border-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-lg pl-9 pr-3 py-2.5 text-sm text-white placeholder-slate-500 transition-colors"
                 />
               </div>
             </div>
@@ -155,7 +155,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Nhập mật khẩu"
-                  className="w-full bg-slate-900/90 border border-slate-700 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-500 transition-colors"
+                  className="w-full bg-slate-900/90 border border-slate-700 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 rounded-lg pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-500 transition-colors"
                 />
                 <button
                   type="button"
@@ -164,7 +164,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
                   tabIndex={-1}
                   aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-emerald-400" />}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4 text-orange-400" />}
                 </button>
               </div>
             </div>
@@ -173,7 +173,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               id="btn-submit-login"
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer disabled:opacity-50 mt-2"
+              className="w-full bg-orange-500 hover:bg-orange-400 active:scale-[0.99] text-slate-950 font-bold py-2.5 px-4 rounded-lg text-sm flex items-center justify-center space-x-2 shadow-lg shadow-orange-500/20 transition-all cursor-pointer disabled:opacity-50 mt-2"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
@@ -189,8 +189,8 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
 
         {/* Footer info with Support Phone 0942320923 */}
         <div className="text-center mt-6 text-xs text-slate-400 space-y-1">
-          <p>© {new Date().getFullYear()} Công Ty Cổ Phần Đầu Tư Tasago</p>
-          <p className="text-xs text-emerald-400 font-bold">
+          <p>© {new Date().getFullYear()} CÔNG TY CP VLXD THẾ GIỚI NHÀ</p>
+          <p className="text-xs text-orange-400 font-bold">
             <a href="tel:0942320923" className="hover:underline inline-flex items-center gap-1">
               <Phone className="w-3.5 h-3.5" />
               <span>Hỗ trợ kỹ thuật: 0942320923 (0942.320.923)</span>

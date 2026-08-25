@@ -94,7 +94,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
           projectKey: key,
           projectName: sample.projectName,
           stationId: sample.stationId,
-          stationName: st ? st.name : 'Trạm Tasago',
+          stationName: st ? st.name : 'Trạm TGN',
           contractor: sample.contractor,
           location: sample.location,
           contactPerson: sample.contactPerson,
@@ -190,7 +190,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
       statusFilter === 'untested' ? 'ChuaNen' :
       statusFilter === 'overdue' ? 'QuaHan' : 'TongHop';
 
-    const fileNamePrefix = `Tasago_BaoCao_NenMau_${stationPrefix}_${statusPrefix}`;
+    const fileNamePrefix = `TGN_BaoCao_NenMau_${stationPrefix}_${statusPrefix}`;
     exportSamplesToExcel(filteredSamples, stations, fileNamePrefix);
   };
 
@@ -208,7 +208,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
       {/* Top Banner */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-800 shrink-0">
+          <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center text-orange-800 shrink-0">
             <FileSpreadsheet className="w-6 h-6" />
           </div>
           <div>
@@ -216,12 +216,12 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
               <h2 className="text-lg font-black text-slate-900">
                 Xuất Báo Cáo & Bảng Theo Dõi Nén Mẫu Excel
               </h2>
-              <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-orange-100 text-orange-800 text-[11px] font-bold px-2 py-0.5 rounded-full">
                 TCVN 3118 / 3116
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Đơn vị cung cấp: <strong>Công Ty Cổ Phần Đầu Tư Tasago</strong> — Bê Tông Xanh Sài Gòn
+              Đơn vị cung cấp: <strong>CÔNG TY CP VLXD THẾ GIỚI NHÀ</strong> — CÔNG TY CP VLXD THẾ GIỚI NHÀ
             </p>
           </div>
         </div>
@@ -237,7 +237,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
 
           <button
             onClick={handleExportGeneralExcel}
-            className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-md shadow-emerald-700/20 transition-all active:scale-95 cursor-pointer"
+            className="bg-orange-700 hover:bg-orange-800 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-md shadow-orange-700/20 transition-all active:scale-95 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>Xuất Excel Tổng Hợp ({filteredSamples.length})</span>
@@ -251,7 +251,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
           onClick={() => setActiveTab('by_project')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
             activeTab === 'by_project'
-              ? 'bg-emerald-700 text-white shadow-sm'
+              ? 'bg-orange-700 text-white shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
@@ -263,7 +263,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
           onClick={() => setActiveTab('general_filter')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 cursor-pointer ${
             activeTab === 'general_filter'
-              ? 'bg-emerald-700 text-white shadow-sm'
+              ? 'bg-orange-700 text-white shadow-sm'
               : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
           }`}
         >
@@ -287,7 +287,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                   onChange={(e) => setSelectedStationFilter(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-xs font-semibold text-slate-800"
                 >
-                  <option value="all">🏢 Tất Cả Các Trạm Tasago ({stations.length} trạm)</option>
+                  <option value="all">🏢 Tất Cả Các Trạm TGN ({stations.length} trạm)</option>
                   {stations.map(s => (
                     <option key={s.id} value={s.id}>{s.name} ({s.code})</option>
                   ))}
@@ -313,7 +313,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
 
             <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs text-slate-600 flex items-center justify-between">
               <span>
-                💡 File Excel xuất ra có đầy đủ: <strong>Tên đơn vị cung cấp (Tasago)</strong>, <strong>Tên khách hàng</strong>, <strong>Tên dự án công trình</strong>, cùng bảng chi tiết <strong>các hạng mục, mác bê tông, khối lượng (m³), số tổ mẫu</strong> và kết quả nén.
+                💡 File Excel xuất ra có đầy đủ: <strong>Tên đơn vị cung cấp (TGN)</strong>, <strong>Tên khách hàng</strong>, <strong>Tên dự án công trình</strong>, cùng bảng chi tiết <strong>các hạng mục, mác bê tông, khối lượng (m³), số tổ mẫu</strong> và kết quả nén.
               </span>
             </div>
           </div>
@@ -334,7 +334,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                     {/* Header */}
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <span className="bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
+                        <span className="bg-orange-100 text-orange-800 font-mono text-[10px] font-bold px-2 py-0.5 rounded">
                           {group.stationName}
                         </span>
                         <h3 className="text-sm font-black text-slate-900 mt-1 leading-snug">
@@ -347,7 +347,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                       
                       <button
                         onClick={() => handleExportProjectExcel(group)}
-                        className="bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer shrink-0"
+                        className="bg-orange-700 hover:bg-orange-800 active:scale-95 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer shrink-0"
                         title="Tải xuống bảng theo dõi Excel cho công trình này"
                       >
                         <Download className="w-3.5 h-3.5" />
@@ -371,7 +371,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block">Số Phiếu Mẫu</span>
-                        <span className="font-bold text-emerald-700 text-xs">
+                        <span className="font-bold text-orange-700 text-xs">
                           {group.samples.length} mẫu
                         </span>
                       </div>
@@ -400,7 +400,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                           <MapPin className="w-3 h-3 text-slate-400" />
                           <span className="truncate max-w-[180px]">{group.location}</span>
                         </div>
-                        <div className="flex items-center gap-1 font-mono text-emerald-700 font-medium">
+                        <div className="flex items-center gap-1 font-mono text-orange-700 font-medium">
                           <Phone className="w-3 h-3" />
                           <span>{group.contactPhone}</span>
                         </div>
@@ -412,7 +412,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                   <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                     <div className="flex items-center space-x-1.5">
                       {group.testedCount > 0 && (
-                        <span className="bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded">
+                        <span className="bg-orange-50 text-orange-700 font-bold px-2 py-0.5 rounded">
                           Đã nén: {group.testedCount}/{group.samples.length}
                         </span>
                       )}
@@ -430,7 +430,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
 
                     <button
                       onClick={() => handleExportProjectExcel(group)}
-                      className="text-emerald-700 hover:text-emerald-900 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
+                      className="text-orange-700 hover:text-orange-900 font-bold hover:underline flex items-center gap-0.5 cursor-pointer"
                     >
                       <span>Tải file Excel đầy đủ</span>
                       <ChevronRight className="w-3.5 h-3.5" />
@@ -449,7 +449,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
           {/* Filter Parameters Card */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
-              <Filter className="w-4 h-4 text-emerald-700" />
+              <Filter className="w-4 h-4 text-orange-700" />
               <span>Thông Số Lọc Báo Cáo</span>
             </div>
 
@@ -465,7 +465,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                   onChange={(e) => setStationId(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-semibold text-slate-800"
                 >
-                  <option value="all">🏢 Tất Cả Các Trạm Tasago</option>
+                  <option value="all">🏢 Tất Cả Các Trạm TGN</option>
                   {stations.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
@@ -552,15 +552,15 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
             </div>
 
             {/* Quick Summary Strip */}
-            <div className="bg-emerald-50/70 border border-emerald-200 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-950 font-semibold">
+            <div className="bg-orange-50/70 border border-orange-200 p-3 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs text-orange-950 font-semibold">
               <div className="flex items-center space-x-3">
-                <span>Tổng số mẫu trong báo cáo: <strong className="text-sm font-black text-emerald-900">{filteredSamples.length}</strong></span>
+                <span>Tổng số mẫu trong báo cáo: <strong className="text-sm font-black text-orange-900">{filteredSamples.length}</strong></span>
                 <span>•</span>
-                <span>Tổng khối lượng bê tông: <strong className="text-sm font-black text-emerald-900">{totalVolume.toLocaleString('vi-VN')} m³</strong></span>
+                <span>Tổng khối lượng bê tông: <strong className="text-sm font-black text-orange-900">{totalVolume.toLocaleString('vi-VN')} m³</strong></span>
               </div>
               <div className="flex items-center space-x-3">
                 <span>Đã nén: <strong>{testedCount}</strong></span>
-                <span>Đạt mác: <strong className="text-emerald-700">{passedCount}</strong></span>
+                <span>Đạt mác: <strong className="text-orange-700">{passedCount}</strong></span>
               </div>
             </div>
           </div>
@@ -569,13 +569,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-4">
             
             {/* Printable Letterhead */}
-            <div className="border-b-2 border-emerald-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="border-b-2 border-orange-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="font-black text-lg text-emerald-900 uppercase">
-                  CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
+                <h1 className="font-black text-lg text-orange-900 uppercase">
+                  CÔNG TY CP VLXD THẾ GIỚI NHÀ
                 </h1>
-                <p className="text-xs font-semibold text-emerald-700">
-                  BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH
+                <p className="text-xs font-semibold text-orange-700">
+                  CÔNG TY CP VLXD THẾ GIỚI NHÀ - VẬT LIỆU XÂY DỰNG CHO MỌI CÔNG TRÌNH
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">
                   PHÒNG QUẢN LÝ KỸ THUẬT & KIỂM ĐỊNH CHẤT LƯỢNG BÊ TÔNG (QC/QA)
@@ -620,8 +620,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                           <td className="py-2 px-2 text-center font-bold text-slate-400">{idx + 1}</td>
                           <td className="py-2 px-3">
                             <div className="font-bold text-slate-900">{sample.id}</div>
-                            <div className="text-[11px] text-emerald-800 font-semibold">
-                              {station ? station.name.replace('Trạm Tasago ', '') : ''}
+                            <div className="text-[11px] text-orange-800 font-semibold">
+                              {station ? station.name.replace('Trạm TGN ', '') : ''}
                             </div>
                           </td>
                           <td className="py-2 px-3 font-semibold text-slate-900 max-w-[200px]">
@@ -630,7 +630,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                           </td>
                           <td className="py-2 px-3 text-slate-700">{sample.component}</td>
                           <td className="py-2 px-2 font-bold">{sample.volumeM3}</td>
-                          <td className="py-2 px-2 font-black text-emerald-800">{sample.concreteGrade}</td>
+                          <td className="py-2 px-2 font-black text-orange-800">{sample.concreteGrade}</td>
                           <td className="py-2 px-2 font-bold">{sample.ageType}</td>
                           <td className="py-2 px-2 text-[11px]">{formatDateVN(sample.castDate)}</td>
                           <td className="py-2 px-2 text-[11px] font-bold text-slate-900">{formatDateVN(sample.scheduledTestDate)}</td>
@@ -638,7 +638,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                               sample.status === 'due_today' ? 'bg-red-100 text-red-800' :
                               sample.status === 'overdue' ? 'bg-amber-100 text-amber-800' :
-                              sample.status === 'tested_passed' ? 'bg-emerald-100 text-emerald-800' :
+                              sample.status === 'tested_passed' ? 'bg-orange-100 text-orange-800' :
                               sample.status === 'tested_failed' ? 'bg-rose-100 text-rose-800' :
                               'bg-slate-100 text-slate-700'
                             }`}>
@@ -650,7 +650,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ samples, stations }) =
                           </td>
                           <td className="py-2 px-2 font-bold">
                             {isTested && sample.testResult ? (
-                              <span className={sample.testResult.isPassed ? 'text-emerald-700' : 'text-red-600'}>
+                              <span className={sample.testResult.isPassed ? 'text-orange-700' : 'text-red-600'}>
                                 {sample.testResult.avgStrengthMpa.toFixed(1)} MPa ({sample.testResult.percentageOfDesign.toFixed(0)}%)
                               </span>
                             ) : '---'}

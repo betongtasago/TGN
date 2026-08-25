@@ -276,7 +276,7 @@ export default function App() {
               if (data.sample) {
                 const s = data.sample;
                 if (currentUser && s.createdBy !== currentUser.username) {
-                  const targetStation = stations.find(st => st.id === s.stationId)?.name || 'Trạm Tasago';
+                  const targetStation = stations.find(st => st.id === s.stationId)?.name || 'Trạm TGN';
                   const sender = data.actionBy || s.createdByName || s.samplerName || 'Thành viên trạm';
                   setNewScheduleToast({
                     id: s.id,
@@ -284,14 +284,14 @@ export default function App() {
                     projectName: s.projectName,
                     scheduledTestDate: s.scheduledTestDate,
                     createdByName: sender,
-                    stationName: targetStation.replace('Trạm Tasago ', ''),
+                    stationName: targetStation.replace('Trạm TGN ', ''),
                   });
                   playAlertChime();
 
                   // Web Push notification
                   if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
                     try {
-                      new Notification(`[TASAGO] Lịch Nén Mẫu Mới - ${targetStation}`, {
+                      new Notification(`[TGN] Lịch Nén Mẫu Mới - ${targetStation}`, {
                         body: `KTV ${sender} vừa tạo lịch nén ngày ${s.scheduledTestDate?.split('-').reverse().join('/')} cho "${s.projectName}"`,
                         icon: '/favicon.ico'
                       });
@@ -496,14 +496,14 @@ export default function App() {
         sampleShape: sampleData.sampleShape || 'cube_150',
         contactPerson: sampleData.contactPerson || '',
         contactPhone: sampleData.contactPhone || '',
-        samplerName: sampleData.samplerName || currentUser?.fullName || 'KTV Tasago',
+        samplerName: sampleData.samplerName || currentUser?.fullName || 'KTV TGN',
         witnessPerson: sampleData.witnessPerson || '',
         status: 'pending',
         notes: sampleData.notes || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         createdBy: currentUser?.username || 'system',
-        createdByName: currentUser?.fullName || 'Hệ Thống Tasago',
+        createdByName: currentUser?.fullName || 'Hệ Thống TGN',
       };
 
       updatedSamples = [savedSample, ...samples];
@@ -522,7 +522,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           sample: savedSample,
-          actionBy: currentUser?.fullName || currentUser?.username || 'KTV Tasago'
+          actionBy: currentUser?.fullName || currentUser?.username || 'KTV TGN'
         })
       });
       if (res.ok) {
@@ -617,7 +617,7 @@ export default function App() {
 
     const quickResult: TestResultData = {
       testDate: new Date().toISOString().split('T')[0],
-      testedBy: currentUser?.fullName || 'KTV Tasago',
+      testedBy: currentUser?.fullName || 'KTV TGN',
       machineCode: 'MN-2000KN-01',
       avgStrengthMpa: autoMpa,
       designStrengthMpa: designMpa,
@@ -892,7 +892,7 @@ export default function App() {
   const isMobileLayout = viewMode === 'mobile';
 
   return (
-    <div className={`min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans selection:bg-emerald-600 selection:text-white ${isMobileLayout ? 'pb-20' : ''}`}>
+    <div className={`min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col font-sans selection:bg-orange-600 selection:text-white ${isMobileLayout ? 'pb-20' : ''}`}>
       {/* Header */}
       <Header
         currentUser={currentUser}
@@ -921,14 +921,14 @@ export default function App() {
 
       {/* Real-time Toast Notification when a member creates a new schedule */}
       {newScheduleToast && (
-        <div className="fixed bottom-24 right-4 sm:right-8 z-50 max-w-md bg-white border-2 border-emerald-500 rounded-2xl shadow-2xl p-4 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-24 right-4 sm:right-8 z-50 max-w-md bg-white border-2 border-orange-500 rounded-2xl shadow-2xl p-4 animate-in slide-in-from-bottom-5 duration-300">
           <div className="flex items-start justify-between gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-800 font-bold">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0 text-orange-800 font-bold">
               <Calendar className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="bg-emerald-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full animate-pulse">
+                <span className="bg-orange-600 text-white text-[10px] font-black uppercase px-2 py-0.5 rounded-full animate-pulse">
                   Mới Tạo Trực Tiếp
                 </span>
                 <span className="text-[11px] font-semibold text-slate-500">
@@ -949,7 +949,7 @@ export default function App() {
                     setActiveTab('calendar');
                     setNewScheduleToast(null);
                   }}
-                  className="bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors cursor-pointer shadow-xs"
+                  className="bg-orange-700 hover:bg-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl transition-colors cursor-pointer shadow-xs"
                 >
                   Xem Trên Lịch Nén
                 </button>
@@ -967,7 +967,7 @@ export default function App() {
                     }
                     setNewScheduleToast(null);
                   }}
-                  className="bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
+                  className="bg-orange-100 hover:bg-orange-200 text-orange-900 text-xs font-bold px-3 py-1.5 rounded-xl transition-colors cursor-pointer"
                 >
                   Chi Tiết Mẫu
                 </button>
@@ -1158,7 +1158,7 @@ export default function App() {
         <button
           type="button"
           onClick={handleOpenAddForm}
-          className="group relative flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full font-extrabold shadow-2xl border-2 border-white/60 animate-pulse-glow transition-all active:scale-95 cursor-pointer select-none"
+          className="group relative flex items-center gap-2.5 px-4 sm:px-5 py-3 sm:py-3.5 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full font-extrabold shadow-2xl border-2 border-white/60 animate-pulse-glow transition-all active:scale-95 cursor-pointer select-none"
           title="Nhập mẫu mới / Tạo lịch nén bê tông"
         >
           <span className="relative flex h-3.5 w-3.5">
@@ -1184,7 +1184,7 @@ export default function App() {
             type="button"
             onClick={() => setActiveTab('samples')}
             className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
-              activeTab === 'samples' ? 'text-emerald-400 bg-slate-800' : 'hover:text-slate-100'
+              activeTab === 'samples' ? 'text-orange-400 bg-slate-800' : 'hover:text-slate-100'
             }`}
           >
             <LayoutGrid className="w-5 h-5 mb-0.5" />
@@ -1195,7 +1195,7 @@ export default function App() {
             type="button"
             onClick={() => setActiveTab('calendar')}
             className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
-              activeTab === 'calendar' ? 'text-emerald-400 bg-slate-800' : 'hover:text-slate-100'
+              activeTab === 'calendar' ? 'text-orange-400 bg-slate-800' : 'hover:text-slate-100'
             }`}
           >
             <CalendarDays className="w-5 h-5 mb-0.5" />
@@ -1206,7 +1206,7 @@ export default function App() {
           <button
             type="button"
             onClick={handleOpenAddForm}
-            className="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black shadow-lg shadow-emerald-500/30 border-2 border-slate-900 transition-transform active:scale-90 cursor-pointer"
+            className="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-orange-500 hover:bg-orange-400 text-slate-950 font-black shadow-lg shadow-orange-500/30 border-2 border-slate-900 transition-transform active:scale-90 cursor-pointer"
             title="Thêm mẫu mới"
           >
             <Plus className="w-6 h-6 stroke-[3]" />
@@ -1216,7 +1216,7 @@ export default function App() {
             type="button"
             onClick={() => setActiveTab('analytics')}
             className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
-              activeTab === 'analytics' ? 'text-emerald-400 bg-slate-800' : 'hover:text-slate-100'
+              activeTab === 'analytics' ? 'text-orange-400 bg-slate-800' : 'hover:text-slate-100'
             }`}
           >
             <BarChart3 className="w-5 h-5 mb-0.5" />
@@ -1227,7 +1227,7 @@ export default function App() {
             type="button"
             onClick={() => setActiveTab('reports')}
             className={`flex flex-col items-center py-1 px-2 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
-              activeTab === 'reports' ? 'text-emerald-400 bg-slate-800' : 'hover:text-slate-100'
+              activeTab === 'reports' ? 'text-orange-400 bg-slate-800' : 'hover:text-slate-100'
             }`}
           >
             <FileText className="w-5 h-5 mb-0.5" />
@@ -1244,7 +1244,7 @@ export default function App() {
           <span>•</span>
           <a 
             href="tel:0942320923" 
-            className="text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 hover:underline"
+            className="text-orange-700 hover:text-orange-900 font-bold flex items-center gap-1 hover:underline"
           >
             <Phone className="w-3 h-3" />
             <span>Hỗ trợ kỹ thuật: 0942320923 (0942.320.923)</span>
@@ -1254,7 +1254,7 @@ export default function App() {
               <span>•</span>
               <button
                 onClick={() => setIsGitHubExportModalOpen(true)}
-                className="text-emerald-700 hover:text-emerald-900 font-semibold cursor-pointer underline"
+                className="text-orange-700 hover:text-orange-900 font-semibold cursor-pointer underline"
               >
                 Sao Lưu & GitHub
               </button>
@@ -1262,7 +1262,7 @@ export default function App() {
           )}
         </div>
         <div className="font-bold text-slate-700 tracking-tight text-center sm:text-right">
-          &copy; {new Date().getFullYear()} CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO - BÊ TÔNG XANH SÀI GÒN
+          &copy; {new Date().getFullYear()} CÔNG TY CP VLXD THẾ GIỚI NHÀ - THẾ GIỚI NHÀ
         </div>
       </footer>
 

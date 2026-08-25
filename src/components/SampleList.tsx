@@ -204,7 +204,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             onClick={() => setActiveCategory('all')}
             className={`pb-2 px-3 sm:px-4 transition-all cursor-pointer whitespace-nowrap ${
               activeCategory === 'all'
-                ? 'text-emerald-800 border-b-2 border-emerald-700 font-bold'
+                ? 'text-orange-800 border-b-2 border-orange-700 font-bold'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -215,7 +215,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             onClick={() => setActiveCategory('commercial')}
             className={`pb-2 px-3 sm:px-4 transition-all cursor-pointer whitespace-nowrap ${
               activeCategory === 'commercial'
-                ? 'text-emerald-800 border-b-2 border-emerald-700 font-bold'
+                ? 'text-orange-800 border-b-2 border-orange-700 font-bold'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -226,7 +226,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             onClick={() => setActiveCategory('trialmix')}
             className={`pb-2 px-3 sm:px-4 transition-all cursor-pointer whitespace-nowrap ${
               activeCategory === 'trialmix'
-                ? 'text-emerald-800 border-b-2 border-emerald-700 font-bold'
+                ? 'text-orange-800 border-b-2 border-orange-700 font-bold'
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
@@ -245,7 +245,7 @@ export const SampleList: React.FC<SampleListProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Tìm theo công trình, nhà thầu, mã mẫu, KTV..."
-              className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 text-slate-800"
+              className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-orange-500 focus:border-orange-500 text-slate-800"
             />
             {searchQuery && (
               <button 
@@ -262,7 +262,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-orange-500 cursor-pointer"
             >
               <option value="all">🔍 Tất Cả Tình Trạng</option>
               <option value="due_today">🔴 Đến Hạn Hôm Nay</option>
@@ -278,7 +278,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             <select
               value={ageFilter}
               onChange={(e) => setAgeFilter(e.target.value)}
-              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-orange-500 cursor-pointer"
             >
               <option value="all">⏱️ Tất Cả Tuổi Nén</option>
               <option value="R3">Tuổi R3 (3 ngày)</option>
@@ -295,7 +295,7 @@ export const SampleList: React.FC<SampleListProps> = ({
             <select
               value={gradeFilter}
               onChange={(e) => setGradeFilter(e.target.value)}
-              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="w-full py-2 px-2.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 focus:ring-1 focus:ring-orange-500 cursor-pointer"
             >
               <option value="all">🧪 Mác Bê Tông (Tất Cả)</option>
               {availableGrades.map(g => (
@@ -313,7 +313,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                 setSortField(f as any);
                 setSortAsc(d === 'asc');
               }}
-              className="w-full py-2 px-2.5 bg-emerald-50/70 border border-emerald-300 rounded-lg text-xs font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+              className="w-full py-2 px-2.5 bg-orange-50/70 border border-orange-300 rounded-lg text-xs font-bold text-orange-900 focus:ring-1 focus:ring-orange-500 cursor-pointer"
             >
               <option value="createdAt_desc">✨ Mới tạo gần đây</option>
               <option value="scheduledTestDate_asc">🗓️ Ngày nén (Sớm nhất)</option>
@@ -329,12 +329,12 @@ export const SampleList: React.FC<SampleListProps> = ({
 
       {/* Station Filter Active Notice */}
       {selectedStationId !== 'all' && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 text-xs flex items-center justify-between text-emerald-900">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 text-xs flex items-center justify-between text-orange-900">
           <div className="flex items-center gap-1.5 font-medium">
-            <Building2 className="w-4 h-4 text-emerald-700" />
+            <Building2 className="w-4 h-4 text-orange-700" />
             <span>Đang xem danh sách mẫu của <strong>{stationMap.get(selectedStationId)?.name || selectedStationId}</strong></span>
           </div>
-          <span className="text-[11px] text-emerald-700">
+          <span className="text-[11px] text-orange-700">
             Có <strong>{filteredSamples.length}</strong> / {samples.length} mẫu toàn hệ thống
           </span>
         </div>
@@ -348,7 +348,7 @@ export const SampleList: React.FC<SampleListProps> = ({
           <p className="text-xs text-slate-400">Thử thay đổi từ khóa tìm kiếm hoặc lọc theo trạm khác</p>
           <button
             onClick={handleAddNew}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs inline-flex items-center gap-1.5 mt-2 cursor-pointer shadow-xs"
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold px-4 py-2 rounded-lg text-xs inline-flex items-center gap-1.5 mt-2 cursor-pointer shadow-xs"
           >
             <PlusCircle className="w-4 h-4" />
             <span>+ Thêm Mẫu Mới Ngay</span>
@@ -380,7 +380,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase font-mono">
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-orange-100 text-orange-800 uppercase font-mono">
                         {sample.sampleCode}
                       </span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
@@ -391,12 +391,12 @@ export const SampleList: React.FC<SampleListProps> = ({
                     </div>
                     <button
                       onClick={() => handleDetail(sample)}
-                      className="font-bold text-slate-900 text-sm mt-1 text-left line-clamp-1 hover:text-emerald-700 cursor-pointer"
+                      className="font-bold text-slate-900 text-sm mt-1 text-left line-clamp-1 hover:text-orange-700 cursor-pointer"
                     >
                       {sample.projectName}
                     </button>
                     <p className="text-xs text-slate-500 line-clamp-1">
-                      {station?.name || 'Trạm Tasago'} • {sample.contractor}
+                      {station?.name || 'Trạm TGN'} • {sample.contractor}
                     </p>
                   </div>
 
@@ -405,11 +405,11 @@ export const SampleList: React.FC<SampleListProps> = ({
                     {isTested && sample.testResult ? (
                       <div className="text-right">
                         <span className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded ${
-                          sample.status === 'tested_passed' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                          sample.status === 'tested_passed' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
                         }`}>
                           {sample.status === 'tested_passed' ? '✅ ĐẠT' : '❌ K.ĐẠT'}
                         </span>
-                        <div className="text-xs font-bold text-emerald-700 mt-0.5">
+                        <div className="text-xs font-bold text-orange-700 mt-0.5">
                           {sample.testResult.avgStrengthMpa.toFixed(1)} MPa
                         </div>
                       </div>
@@ -428,7 +428,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                 <div className="grid grid-cols-2 gap-2 mt-2.5 pt-2.5 border-t border-slate-100 text-xs text-slate-600">
                   <div className="bg-slate-50 p-2 rounded-lg">
                     <span className="text-[10px] text-slate-400 block font-medium">Ngày Nén Dự Kiến</span>
-                    <span className="font-bold text-emerald-800 font-mono text-xs">
+                    <span className="font-bold text-orange-800 font-mono text-xs">
                       {formatDateVN(sample.scheduledTestDate)}
                     </span>
                     <span className="text-[10px] text-slate-400 block">Đúc: {formatDateVN(sample.castDate)}</span>
@@ -438,7 +438,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                     <span className="text-[10px] text-slate-400 block font-medium">Mác & Tuổi</span>
                     <div className="flex items-center gap-1 font-bold text-slate-800 text-xs">
                       <span>{sample.concreteGrade}</span>
-                      <span className="text-emerald-700">({sample.ageType})</span>
+                      <span className="text-orange-700">({sample.ageType})</span>
                     </div>
                     <span className="text-[10px] text-slate-400 block">{sample.volumeM3} m³ • {sample.groupCount} tổ ({sample.pieceCount}v)</span>
                   </div>
@@ -454,16 +454,16 @@ export const SampleList: React.FC<SampleListProps> = ({
                 <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
                   <a
                     href={`tel:${sample.contactPhone || '0942320923'}`}
-                    className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg font-bold flex items-center justify-center gap-1 transition-colors"
+                    className="flex-1 py-1.5 px-2 bg-orange-50 hover:bg-orange-100 text-orange-800 rounded-lg font-bold flex items-center justify-center gap-1 transition-colors"
                   >
-                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                    <Phone className="w-3.5 h-3.5 text-orange-600" />
                     <span>Gọi</span>
                   </a>
 
                   {!isTested && canEnterTestResult(sample) && (
                     <button
                       onClick={() => handleGuardedTest(sample)}
-                      className="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs"
+                      className="flex-1 py-1.5 px-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold flex items-center justify-center gap-1 transition-colors cursor-pointer shadow-xs"
                     >
                       <FlaskConical className="w-3.5 h-3.5" />
                       <span>Nhập KQ</span>
@@ -552,7 +552,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                       }`}
                     >
                       {/* Ngày nén */}
-                      <td className="px-5 py-3.5 font-mono font-bold text-emerald-700 whitespace-nowrap">
+                      <td className="px-5 py-3.5 font-mono font-bold text-orange-700 whitespace-nowrap">
                         <div className="text-xs">{formatDateVN(sample.scheduledTestDate)}</div>
                         <div className="text-[10px] text-slate-400 font-normal">
                           Đúc: {formatDateVN(sample.castDate)}
@@ -563,12 +563,12 @@ export const SampleList: React.FC<SampleListProps> = ({
                       <td className="px-5 py-3.5">
                         <button
                           onClick={() => handleDetail(sample)}
-                          className="font-bold text-slate-900 hover:text-emerald-700 text-left line-clamp-1 block cursor-pointer text-xs sm:text-sm"
+                          className="font-bold text-slate-900 hover:text-orange-700 text-left line-clamp-1 block cursor-pointer text-xs sm:text-sm"
                         >
                           {sample.projectName}
                         </button>
                         <div className="text-xs text-slate-400 line-clamp-1">
-                          {station ? station.name : 'Trạm Tasago'} • {sample.contractor}
+                          {station ? station.name : 'Trạm TGN'} • {sample.contractor}
                         </div>
                       </td>
 
@@ -586,7 +586,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                         <span className={`font-bold ml-1 text-xs ${
                           sample.ageType === 'R7' ? 'text-orange-600' :
                           sample.ageType === 'R28' ? 'text-blue-600' :
-                          sample.ageType.includes('WATERPROOF') ? 'text-purple-600' : 'text-emerald-700'
+                          sample.ageType.includes('WATERPROOF') ? 'text-purple-600' : 'text-orange-700'
                         }`}>
                           {sample.ageType}
                         </span>
@@ -604,13 +604,13 @@ export const SampleList: React.FC<SampleListProps> = ({
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         {isTested && sample.testResult ? (
                           <div>
-                            <span className="font-bold text-emerald-700 text-xs">
+                            <span className="font-bold text-orange-700 text-xs">
                               {sample.testResult.avgStrengthMpa.toFixed(1)} MPa
                             </span>
                             <span className="text-[10px] text-slate-400 ml-1">
                               ({sample.testResult.percentageOfDesign.toFixed(0)}%)
                             </span>
-                            <span className={`block text-[10px] font-bold ${sample.status === 'tested_passed' ? 'text-emerald-600' : 'text-red-600'}`}>
+                            <span className={`block text-[10px] font-bold ${sample.status === 'tested_passed' ? 'text-orange-600' : 'text-red-600'}`}>
                               {sample.status === 'tested_passed' ? '✅ Đạt' : '❌ Không Đạt'}
                             </span>
                           </div>
@@ -625,7 +625,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                             {canEnterTestResult(sample) && (
                               <button
                                 onClick={() => handleGuardedTest(sample)}
-                                className="block text-emerald-700 hover:text-emerald-900 font-bold text-[11px] hover:underline cursor-pointer"
+                                className="block text-orange-700 hover:text-orange-900 font-bold text-[11px] hover:underline cursor-pointer"
                               >
                                 + Nhập KQ
                               </button>
@@ -639,7 +639,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                         <div className="font-medium text-slate-800">{sample.contactPerson}</div>
                         <a 
                           href={`tel:${sample.contactPhone || '0942320923'}`} 
-                          className="text-emerald-700 font-mono font-bold hover:underline flex items-center gap-1"
+                          className="text-orange-700 font-mono font-bold hover:underline flex items-center gap-1"
                         >
                           <Phone className="w-3 h-3" />
                           <span>{sample.contactPhone || '0942320923'}</span>
@@ -650,7 +650,7 @@ export const SampleList: React.FC<SampleListProps> = ({
                       <td className="px-5 py-3.5 text-right whitespace-nowrap space-x-1">
                         <button
                           onClick={() => handleNotify(sample)}
-                          className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 rounded transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-500 hover:text-orange-700 hover:bg-orange-50 rounded transition-colors cursor-pointer"
                           title="Gửi Email"
                         >
                           <Send className="w-4 h-4 text-blue-600" />

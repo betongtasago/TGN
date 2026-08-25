@@ -59,17 +59,17 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
         {/* Card 1: Tổng mẫu */}
         <div 
           onClick={() => onFilterStatus && onFilterStatus('all')}
-          className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs hover:border-emerald-400 transition-all cursor-pointer"
+          className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-xs hover:border-orange-400 transition-all cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <p className="text-[11px] sm:text-xs text-slate-500 font-semibold uppercase tracking-wider">
               Tổng Mẫu Đang Theo Dõi
             </p>
-            <FlaskConical className="w-4 h-4 text-emerald-600" />
+            <FlaskConical className="w-4 h-4 text-orange-600" />
           </div>
           <h3 className="text-xl sm:text-2xl font-black text-slate-800 mt-1">
             {totalCount}{' '}
-            <span className="text-xs sm:text-sm font-semibold text-emerald-600 ml-0.5 sm:ml-1">
+            <span className="text-xs sm:text-sm font-semibold text-orange-600 ml-0.5 sm:ml-1">
               tổ ({totalVolumeM3.toLocaleString('vi-VN')} m³)
             </span>
           </h3>
@@ -140,14 +140,14 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({
 
       {/* Selected Station Banner Info */}
       {selectedStationObj && selectedStationId !== 'all' && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2 flex items-center justify-between text-xs text-emerald-900">
+        <div className="bg-orange-50 border border-orange-200 rounded-xl px-4 py-2 flex items-center justify-between text-xs text-orange-900">
           <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-emerald-700 shrink-0" />
+            <Building2 className="w-4 h-4 text-orange-700 shrink-0" />
             <span>
               Đang lọc theo: <strong>{selectedStationObj.name}</strong> ({selectedStationObj.code}) • {selectedStationObj.address}
             </span>
           </div>
-          <span className="font-mono font-bold text-emerald-800 hidden sm:inline">
+          <span className="font-mono font-bold text-orange-800 hidden sm:inline">
             Hotline trạm: {selectedStationObj.hotline || '0942.320.923'}
           </span>
         </div>

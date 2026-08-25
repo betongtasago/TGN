@@ -368,8 +368,8 @@ async function sendConfiguredEmail(samples: any[], config: any, targetDate = get
     title: 'BÁO CÁO LỊCH NÉN MẪU BÊ TÔNG',
     subtitle: 'Tự động nhắc nhở lịch kiểm định chất lượng bê tông',
   });
-  const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(targetDate)}`;
-  const sender = String(config?.emailSender || 'Bê Tông Tasago').split('<')[0].trim() || 'Bê Tông Tasago';
+  const emailSubject = subject || `[TGN] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${formatDateVN(targetDate)}`;
+  const sender = String(config?.emailSender || 'VLXD Thế Giới Nhà').split('<')[0].trim() || 'VLXD Thế Giới Nhà';
   const result = await sendViaGmailRelay({
     recipients,
     subject: emailSubject,
@@ -409,7 +409,7 @@ async function startServer() {
   }
 
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT || 3000);
 
   // JSON & URL-encoded parsers
   app.use(express.json({ limit: '10mb' }));
@@ -611,7 +611,7 @@ async function startServer() {
     const vnTime = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
     res.json({ 
       status: 'ok', 
-      service: 'Tasago Concrete Testing Portal Backend',
+      service: 'TGN Concrete Testing Portal Backend',
       vietnamTime: vnTime,
       nodeVersion: process.version,
       connectedClients: sseClients.size,
@@ -1141,8 +1141,8 @@ async function startServer() {
       }
 
       const todayStr = new Date().toLocaleDateString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
-      const emailSubject = subject || `[TASAGO] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${todayStr}`;
-      const senderName = String(serverState.config.emailSender || 'Bê Tông Tasago').split('<')[0].trim() || 'Bê Tông Tasago';
+      const emailSubject = subject || `[TGN] Báo Cáo Lịch Nén Mẫu Bê Tông 07:00 Sáng - ${todayStr}`;
+      const senderName = String(serverState.config.emailSender || 'VLXD Thế Giới Nhà').split('<')[0].trim() || 'VLXD Thế Giới Nhà';
       const result = await sendViaGmailRelay({
         recipients: validRecipients,
         subject: emailSubject,
@@ -1177,7 +1177,7 @@ async function startServer() {
       );
 
       const targetSamples = urgentSamples.length > 0 ? urgentSamples : getCurrentSamples().slice(0, 5);
-      const emailRecipients = serverState.config.emailRecipients || ['thanhtgndt@gmail.com', 'kythuat@tasago.vn'];
+      const emailRecipients = serverState.config.emailRecipients || [];
 
       if (targetSamples.length === 0) {
         return res.json({
@@ -1233,7 +1233,7 @@ async function startServer() {
 
       // Trigger at the configured Vietnam time once per day.
       if (hour === targetHour && minute === targetMinute && serverState.lastCronDate !== vnDate) {
-        console.log(`[TASAGO CRON] Kích hoạt kiểm tra lịch nén mẫu ngày ${vnDate}...`);
+        console.log(`[TGN CRON] Kích hoạt kiểm tra lịch nén mẫu ngày ${vnDate}...`);
         const urgentSamples = getCurrentSamples().filter(
           s => s.status === 'due_today' || s.status === 'overdue'
         );
@@ -1280,7 +1280,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server Tasago running on http://0.0.0.0:${PORT}`);
+    console.log(`🚀 Server TGN running on http://0.0.0.0:${PORT}`);
   });
 }
 

@@ -83,26 +83,26 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-emerald-900 text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-orange-900 text-white px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-700 flex items-center justify-center text-white">
+            <div className="w-9 h-9 rounded-xl bg-orange-700 flex items-center justify-center text-white">
               <FlaskConical className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-black text-base sm:text-lg">{sample.id}</span>
-                <span className="bg-emerald-700 text-emerald-200 text-xs px-2 py-0.5 rounded font-mono">
+                <span className="bg-orange-700 text-orange-200 text-xs px-2 py-0.5 rounded font-mono">
                   {sample.sampleCode}
                 </span>
               </div>
-              <p className="text-xs text-emerald-200">
-                {station?.name} • Phòng LAS: {sample.lasRoomName || 'Chưa cập nhật'} • Công Ty CP Đầu Tư Tasago
+              <p className="text-xs text-orange-200">
+                {station?.name} • Phòng LAS: {sample.lasRoomName || 'Chưa cập nhật'} • CÔNG TY CP VLXD THẾ GIỚI NHÀ
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-emerald-800 transition-colors"
+            className="text-orange-200 hover:text-white p-1 rounded-lg hover:bg-orange-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -115,7 +115,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
           <div className={`p-4 rounded-xl flex items-center justify-between border ${
             sample.status === 'due_today' ? 'bg-red-50 border-red-300 text-red-950' :
             sample.status === 'overdue' ? 'bg-amber-50 border-amber-300 text-amber-950' :
-            sample.status === 'tested_passed' ? 'bg-emerald-50 border-emerald-300 text-emerald-950' :
+            sample.status === 'tested_passed' ? 'bg-orange-50 border-orange-300 text-orange-950' :
             sample.status === 'tested_failed' ? 'bg-rose-50 border-rose-300 text-rose-950' :
             'bg-slate-50 border-slate-300 text-slate-800'
           }`}>
@@ -123,7 +123,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
               <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white shadow-sm shrink-0">
                 {sample.status === 'due_today' ? <AlertTriangle className="w-4 h-4 text-red-600 animate-bounce" /> :
                  sample.status === 'overdue' ? <Clock className="w-4 h-4 text-amber-600" /> :
-                 sample.status === 'tested_passed' ? <CheckCircle2 className="w-4 h-4 text-emerald-600" /> :
+                 sample.status === 'tested_passed' ? <CheckCircle2 className="w-4 h-4 text-orange-600" /> :
                  sample.status === 'tested_failed' ? <AlertCircle className="w-4 h-4 text-rose-600" /> :
                  <Calendar className="w-4 h-4 text-slate-600" />}
               </div>
@@ -146,7 +146,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                 onClick={() => onSendNotification(sample)}
                 className="bg-white hover:bg-slate-50 text-slate-800 font-bold px-3 py-1.5 rounded-lg text-xs shadow-sm border border-slate-200 flex items-center space-x-1"
               >
-                <Send className="w-3.5 h-3.5 text-emerald-600" />
+                <Send className="w-3.5 h-3.5 text-orange-600" />
                 <span className="hidden sm:inline">Gửi Email</span>
               </button>
             </div>
@@ -176,7 +176,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                   <span className="font-bold text-slate-900">{sample.contactPerson}</span>
                   <a 
                     href={`tel:${sample.contactPhone}`}
-                    className="text-emerald-700 font-bold bg-emerald-100 px-2 py-0.5 rounded flex items-center space-x-1"
+                    className="text-orange-700 font-bold bg-orange-100 px-2 py-0.5 rounded flex items-center space-x-1"
                   >
                     <Phone className="w-3 h-3" />
                     <span>{sample.contactPhone}</span>
@@ -195,7 +195,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
               </div>
               <div>
                 <span className="text-slate-500 block">Khối Lượng & Mác Bê Tông:</span>
-                <span className="font-black text-emerald-800 text-sm">
+                <span className="font-black text-orange-800 text-sm">
                   {sample.concreteGrade} — {sample.volumeM3} m³
                 </span>
                 <span className="text-slate-500 text-[11px] block">Độ sụt: {sample.slumpCm} cm</span>
@@ -220,7 +220,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-                  <Award className="w-4 h-4 text-emerald-700" />
+                  <Award className="w-4 h-4 text-orange-700" />
                   <span>KẾT QUẢ THÍ NGHIỆM NÉN MẪU PHÒNG LAB</span>
                 </h4>
                 <span className="text-xs font-mono font-bold text-slate-600">
@@ -245,7 +245,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                         <td className="py-2 px-3 text-center font-bold">#{p.pieceNumber}</td>
                         <td className="py-2 px-3">{p.weightKg ? `${p.weightKg} kg` : '---'}</td>
                         <td className="py-2 px-3 font-bold">{p.failureLoadKn ? `${p.failureLoadKn} kN` : '---'}</td>
-                        <td className="py-2 px-3 font-black text-emerald-800">{p.measuredStrengthMpa.toFixed(1)} MPa</td>
+                        <td className="py-2 px-3 font-black text-orange-800">{p.measuredStrengthMpa.toFixed(1)} MPa</td>
                       </tr>
                     ))}
                   </tbody>
@@ -254,7 +254,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
 
               {/* Summary stats */}
               <div className={`p-3 rounded-lg border flex items-center justify-between ${
-                result.isPassed ? 'bg-emerald-100/70 border-emerald-300' : 'bg-rose-100/70 border-rose-300'
+                result.isPassed ? 'bg-orange-100/70 border-orange-300' : 'bg-rose-100/70 border-rose-300'
               }`}>
                 <div>
                   <span className="text-xs font-bold text-slate-700 block">Cường Độ Nén Trung Bình:</span>
@@ -266,7 +266,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                   </span>
                 </div>
                 <div className={`font-black text-xs px-3 py-1.5 rounded-lg uppercase ${
-                  result.isPassed ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                  result.isPassed ? 'bg-orange-600 text-white' : 'bg-red-600 text-white'
                 }`}>
                   {result.isPassed ? 'ĐẠT YÊU CẦU' : 'KHÔNG ĐẠT'}
                 </div>
@@ -298,10 +298,10 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
 
               <button
                 onClick={handleExportProjectExcel}
-                className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
+                className="bg-orange-50 hover:bg-orange-100 text-orange-800 border border-orange-300 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer"
                 title="Xuất bảng theo dõi nén mẫu định dạng Excel cho công trình này"
               >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+                <FileSpreadsheet className="w-4 h-4 text-orange-700" />
                 <span>Xuất Excel Công Trình</span>
               </button>
             </div>
@@ -325,7 +325,7 @@ export const SampleDetailModal: React.FC<SampleDetailModalProps> = ({
                       onClose();
                       onOpenTestModal(sample);
                     }}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow transition-all cursor-pointer"
+                    className="bg-orange-600 hover:bg-orange-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center space-x-1.5 shadow transition-all cursor-pointer"
                   >
                     <FlaskConical className="w-4 h-4" />
                     <span>{isTested ? 'Cập Nhật Kết Quả Nén' : 'Nhập Kết Quả Nén Mẫu'}</span>

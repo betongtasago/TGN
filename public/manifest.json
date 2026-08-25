@@ -1,7 +1,7 @@
 {
-  "short_name": "Tasago Concrete",
-  "name": "Bê Tông Tasago - Quản Lý Nén Mẫu & Trialmix",
-  "description": "Hệ thống quản lý, theo dõi lịch nén mẫu bê tông thương phẩm & trialmix, nhắc nhở nén mẫu tự động - Công Ty Cổ Phần Đầu Tư Tasago",
+  "short_name": "TGN Nén Mẫu",
+  "name": "TGN - Quản Lý Lịch Nén Mẫu Bê Tông",
+  "description": "Hệ thống quản lý, theo dõi lịch nén mẫu bê tông thương phẩm và trialmix, nhắc nhở nén mẫu tự động - CÔNG TY CP VLXD THẾ GIỚI NHÀ",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -17,8 +17,8 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#064e3b",
-  "theme_color": "#064e3b",
+  "background_color": "#FFF8F0",
+  "theme_color": "#D97706",
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",

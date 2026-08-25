@@ -345,7 +345,7 @@ export function resetAllDataToDefault(): void {
 
 export function exportAllDataAsJsonString(): string {
   const data = {
-    app: 'Tasago Concrete Compression Testing Management System',
+    app: 'TGN Concrete Compression Testing Management System',
     exportedAt: new Date().toISOString(),
     version: '2.0.0',
     users: getStoredUsers().map(u => ({ ...u, password: '[PROTECTED]' })),

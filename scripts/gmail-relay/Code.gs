@@ -27,7 +27,7 @@ function doPost(request) {
     const subject = String(body.subject || '').trim();
     const textBody = String(body.textBody || '').trim();
     const htmlBody = String(body.htmlBody || '').trim();
-    const senderName = String(body.name || 'Bê Tông Tasago').trim();
+    const senderName = String(body.name || 'CÔNG TY CP VLXD THẾ GIỚI NHÀ').trim();
 
     if (!recipients || !subject || (!textBody && !htmlBody)) {
       return jsonResponse({ success: false, message: 'Thiếu to, subject hoặc nội dung email.' });

@@ -58,7 +58,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
   const [sampleShape, setSampleShape] = useState<SampleShape>('cube_150');
   const [groupCount, setGroupCount] = useState<number>(1);
   const [pieceCount, setPieceCount] = useState<number>(3);
-  const [samplerName, setSamplerName] = useState(currentUser?.fullName || 'KTV Tasago');
+  const [samplerName, setSamplerName] = useState(currentUser?.fullName || 'KTV TGN');
   const [witnessPerson, setWitnessPerson] = useState('Tư Vấn Giám Sát Hiện Trường');
   const [lasRoomName, setLasRoomName] = useState('');
   const [notes, setNotes] = useState('');
@@ -168,7 +168,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
       sampleShape,
       groupCount: Number(groupCount) || 1,
       pieceCount: Number(pieceCount) || 3,
-      samplerName: samplerName.trim() || currentUser?.fullName || 'KTV Tasago',
+      samplerName: samplerName.trim() || currentUser?.fullName || 'KTV TGN',
       witnessPerson: witnessPerson.trim(),
       lasRoomName: lasRoomName.trim(),
       notes: notes.trim(),
@@ -185,23 +185,23 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-orange-800 text-white px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-700 flex items-center justify-center text-white">
+            <div className="w-9 h-9 rounded-xl bg-orange-700 flex items-center justify-center text-white">
               <FlaskConical className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-extrabold text-base sm:text-lg">
                 {editingSample ? 'Chỉnh Sửa Thông Tin Mẫu Bê Tông' : 'Nhập Mới Dữ Liệu Nén Mẫu Bê Tông'}
               </h3>
-              <p className="text-xs text-emerald-200">
-                Công Ty CP Đầu Tư Tasago • Hệ Thống Kiểm Định Chất Lượng
+              <p className="text-xs text-orange-200">
+                CÔNG TY CP VLXD THẾ GIỚI NHÀ • Hệ Thống Kiểm Định Chất Lượng
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-emerald-700/80 transition-colors"
+            className="text-orange-200 hover:text-white p-1 rounded-lg hover:bg-orange-700/80 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -217,7 +217,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
               onClick={() => setCategory('commercial')}
               className={`flex-1 py-2 px-3 rounded-lg transition-all flex items-center justify-center space-x-1.5 ${
                 category === 'commercial'
-                  ? 'bg-emerald-600 text-white shadow'
+                  ? 'bg-orange-600 text-white shadow'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -239,7 +239,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
           {/* Section 1: Station & Project Details */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
             <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-              <Building2 className="w-4 h-4 text-emerald-700" />
+              <Building2 className="w-4 h-4 text-orange-700" />
               <span>1. Thông Tin Trạm & Công Trình</span>
             </h4>
 
@@ -253,7 +253,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   required
                   value={stationId}
                   onChange={(e) => setStationId(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-orange-500"
                 >
                   {stations.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -273,7 +273,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={lasRoomName}
                   onChange={(e) => setLasRoomName(e.target.value)}
                   placeholder="Vd: Phòng LAS 01 - Khu A"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -287,8 +287,8 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   required
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  placeholder="Vd: Tòa Nhà Cao Tầng Tasago Green Tower..."
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-semibold text-slate-900 focus:ring-1 focus:ring-emerald-500"
+                  placeholder="Vd: Tòa Nhà Cao Tầng Thế Giới Nhà Tower..."
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-semibold text-slate-900 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -302,7 +302,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={contractor}
                   onChange={(e) => setContractor(e.target.value)}
                   placeholder="Vd: Công Ty CP Xây Dựng Coteccons"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -316,7 +316,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   placeholder="Vd: KCN Hiệp Phước, Nhà Bè, TP.HCM"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -331,7 +331,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={contactPerson}
                   onChange={(e) => setContactPerson(e.target.value)}
                   placeholder="Vd: Anh Hoàng (Chỉ huy trưởng)"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -346,7 +346,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
                   placeholder="Vd: 0908123456"
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 font-bold focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 text-slate-800 font-bold focus:ring-1 focus:ring-orange-500"
                 />
               </div>
             </div>
@@ -355,7 +355,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
           {/* Section 2: Concrete Technical Specifications */}
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-3">
             <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-              <FlaskConical className="w-4 h-4 text-emerald-700" />
+              <FlaskConical className="w-4 h-4 text-orange-700" />
               <span>2. Quy Cách Kỹ Thuật Bê Tông & Hạng Mục</span>
             </h4>
 
@@ -371,7 +371,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   value={component}
                   onChange={(e) => setComponent(e.target.value)}
                   placeholder="Vd: Đổ Dầm Sàn Tầng 5 / Móng Trục A-D / Cột..."
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-medium text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -386,7 +386,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   required
                   value={volumeM3}
                   onChange={(e) => setVolumeM3(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-emerald-900 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-orange-900 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -398,7 +398,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                 <select
                   value={concreteGrade}
                   onChange={(e) => setConcreteGrade(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-emerald-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-orange-800 focus:ring-1 focus:ring-orange-500"
                 >
                   <option value="M150 (B10)">M150 (B10)</option>
                   <option value="M200 (B15)">M200 (B15)</option>
@@ -458,13 +458,13 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
           </div>
 
           {/* Section 3: Casting Date, Age & Scheduled Test Date */}
-          <div className="bg-emerald-50/80 p-4 rounded-xl border border-emerald-300 space-y-3">
+          <div className="bg-orange-50/80 p-4 rounded-xl border border-orange-300 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-extrabold text-xs text-emerald-950 uppercase tracking-wider flex items-center space-x-1.5">
-                <Calendar className="w-4 h-4 text-emerald-700" />
+              <h4 className="font-extrabold text-xs text-orange-950 uppercase tracking-wider flex items-center space-x-1.5">
+                <Calendar className="w-4 h-4 text-orange-700" />
                 <span>3. Tuổi Nén & Tự Động Tính Ngày Nén</span>
               </h4>
-              <span className="text-[11px] bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded">
+              <span className="text-[11px] bg-orange-200 text-orange-900 font-bold px-2 py-0.5 rounded">
                 Tự động tính ngày chuẩn TCVN
               </span>
             </div>
@@ -480,7 +480,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                   required
                   value={castDate}
                   onChange={(e) => setCastDate(e.target.value)}
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-slate-800 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-bold text-slate-800 focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
@@ -505,7 +505,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
                 <select
                   value={ageType}
                   onChange={(e) => handleAgeTypeChange(e.target.value as ConcreteAgeType)}
-                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-black text-emerald-900 focus:ring-1 focus:ring-emerald-500"
+                  className="w-full bg-white border border-slate-300 rounded-lg p-2 font-black text-orange-900 focus:ring-1 focus:ring-orange-500"
                 >
                   <option value="R3">R3 (3 ngày - Đông kết sớm)</option>
                   <option value="R7">R7 (7 ngày - Cốt pha móng/dầm)</option>
@@ -520,14 +520,14 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
               </div>
 
               {/* Computed Scheduled Test Date (Highlighted) */}
-              <div className="bg-white p-2 rounded-lg border-2 border-emerald-500 shadow-sm flex flex-col justify-center">
+              <div className="bg-white p-2 rounded-lg border-2 border-orange-500 shadow-sm flex flex-col justify-center">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">
                   Ngày Nén Dự Kiến
                 </span>
                 <span className="text-sm font-black text-red-600">
                   {formatDateVN(scheduledTestDate)}
                 </span>
-                <span className="text-[10px] text-emerald-800 font-semibold">
+                <span className="text-[10px] text-orange-800 font-semibold">
                   (Sau {ageDays} ngày kể từ ngày đúc)
                 </span>
               </div>
@@ -635,7 +635,7 @@ export const SampleFormModal: React.FC<SampleFormModalProps> = ({
 
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-emerald-600/30 transition-all active:scale-95 cursor-pointer"
+              className="bg-orange-600 hover:bg-orange-500 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-lg shadow-orange-600/30 transition-all active:scale-95 cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>{editingSample ? 'Cập Nhật Mẫu' : 'Lưu & Đặt Lịch Nhắc Tự Động'}</span>

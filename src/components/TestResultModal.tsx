@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  FlaskConical, 
-  CheckCircle2, 
-  AlertCircle, 
-  Calculator, 
-  Save, 
-  Sparkles, 
-  Scale, 
-  FileText 
+import {
+  X,
+  FlaskConical,
+  CheckCircle2,
+  AlertCircle,
+  Calculator,
+  Save,
+  Sparkles,
+  Scale,
+  FileText
 } from 'lucide-react';
 import { ConcreteSample, PieceResult, TestResultData } from '../types';
 import { parseDesignStrengthMpa, formatDateVN } from '../utils/storage';
@@ -26,11 +26,11 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
   onClose,
   sample,
   onSaveResult,
-  currentUserName = 'KTV Thí Nghiệm Tasago',
+  currentUserName = 'KTV Thí Nghiệm TGN',
 }) => {
   const [testDate, setTestDate] = useState(new Date().toISOString().split('T')[0]);
   const [testedBy, setTestedBy] = useState(currentUserName);
-  const [machineCode, setMachineCode] = useState('MATEST-3000KN (LAS-XD TASAGO)');
+  const [machineCode, setMachineCode] = useState('MATEST-3000KN (LAS-XD TGN)');
   const [certificateNumber, setCertificateNumber] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -73,7 +73,7 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
         setPieces(initialPieces);
         setTestDate(sample.scheduledTestDate || new Date().toISOString().split('T')[0]);
         setTestedBy(currentUserName);
-        setMachineCode('MATEST-3000KN (LAS-XD TASAGO)');
+        setMachineCode('MATEST-3000KN (LAS-XD TGN)');
         setCertificateNumber(`BBTN-TSG/${new Date().getFullYear()}/${Math.floor(100 + Math.random() * 900)}`);
         setNotes('Mẫu phá hủy đều hình chóp kim tự tháp theo TCVN 3118:2022.');
       }
@@ -162,28 +162,28 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 my-8"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="bg-emerald-900 text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-orange-900 text-white px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-emerald-700 flex items-center justify-center text-white">
+            <div className="w-9 h-9 rounded-xl bg-orange-700 flex items-center justify-center text-white">
               <FlaskConical className="w-5 h-5" />
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg">
                 Nhập & Tính Toán Kết Quả Nén Mẫu Bê Tông
               </h3>
-              <p className="text-xs text-emerald-200 font-mono">
+              <p className="text-xs text-orange-200 font-mono">
                 {sample.id} • {sample.projectName}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-emerald-200 hover:text-white p-1 rounded-lg hover:bg-emerald-800 transition-colors"
+            className="text-orange-200 hover:text-white p-1 rounded-lg hover:bg-orange-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -191,12 +191,12 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
 
         {/* Modal Body */}
         <form onSubmit={handleSave} className="p-5 sm:p-6 space-y-5 max-h-[80vh] overflow-y-auto">
-          
+
           {/* Sample Brief Info Card */}
           <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
             <div>
               <span className="text-slate-500 font-medium block">Mác Bê Tông:</span>
-              <span className="font-extrabold text-emerald-800 text-sm">{sample.concreteGrade}</span>
+              <span className="font-extrabold text-orange-800 text-sm">{sample.concreteGrade}</span>
             </div>
             <div>
               <span className="text-slate-500 font-medium block">Tuổi Nén:</span>
@@ -259,13 +259,13 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
           <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-xs text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
-                <Calculator className="w-4 h-4 text-emerald-700" />
+                <Calculator className="w-4 h-4 text-orange-700" />
                 <span>Số Liệu Nén Từng Viên Trong Tổ Mẫu</span>
               </h4>
               <button
                 type="button"
                 onClick={handleAddPiece}
-                className="text-xs font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-100 hover:bg-emerald-200 px-2 py-0.5 rounded transition-colors"
+                className="text-xs font-bold text-orange-700 hover:text-orange-900 bg-orange-100 hover:bg-orange-200 px-2 py-0.5 rounded transition-colors"
               >
                 + Thêm Viên Mẫu
               </button>
@@ -312,7 +312,7 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
                           step="0.1"
                           value={piece.measuredStrengthMpa || ''}
                           onChange={(e) => handlePieceChange(idx, 'measuredStrengthMpa', parseFloat(e.target.value) || 0)}
-                          className="w-28 bg-emerald-50 border border-emerald-300 font-bold rounded p-1.5 text-xs text-emerald-950"
+                          className="w-28 bg-orange-50 border border-orange-300 font-bold rounded p-1.5 text-xs text-orange-950"
                         />
                       </td>
                       <td className="py-2 px-2.5 text-center">
@@ -335,8 +335,8 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
 
           {/* Automatic Results & Evaluation Box */}
           <div className={`p-4 rounded-xl border-2 transition-all ${
-            isPassed 
-              ? 'bg-emerald-50 border-emerald-500 text-emerald-950' 
+            isPassed
+              ? 'bg-orange-50 border-orange-500 text-orange-950'
               : 'bg-rose-50 border-rose-500 text-rose-950'
           }`}>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -357,7 +357,7 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
 
               <div className="text-right sm:text-center">
                 <div className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-sm font-black uppercase shadow-sm ${
-                  isPassed ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'
+                  isPassed ? 'bg-orange-600 text-white' : 'bg-red-600 text-white'
                 }`}>
                   {isPassed ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                   <span>{isPassed ? 'KẾT LUẬN: ĐẠT YÊU CẦU' : 'KẾT LUẬN: KHÔNG ĐẠT'}</span>
@@ -395,7 +395,7 @@ export const TestResultModal: React.FC<TestResultModalProps> = ({
 
             <button
               type="submit"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-md transition-all active:scale-95 cursor-pointer"
+              className="bg-orange-600 hover:bg-orange-500 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm flex items-center space-x-2 shadow-md transition-all active:scale-95 cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>Lưu Kết Quả Nén Mẫu</span>

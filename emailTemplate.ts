@@ -116,7 +116,7 @@ function sampleHtml(sample: any, stationName: string, index: number, appUrl: str
   const project = escapeHtml(displayValue(sample.projectName || sample.sampleCode || sample.id));
   const notes = sample.notes ? infoRow('Ghi chú', escapeHtml(sample.notes), '#475569') : '';
   const link = sampleUrl(sample, appUrl);
-  const linkRow = link ? infoRow('Lịch mẫu trên website', `<a href="${escapeHtml(link)}" style="color:#047857;font-weight:800;text-decoration:underline;">Mở đúng lịch mẫu này</a>`, '#047857') : '';
+  const linkRow = link ? infoRow('Lịch mẫu trên website', `<a href="${escapeHtml(link)}" style="color:#C2410C;font-weight:800;text-decoration:underline;">Mở đúng lịch mẫu này</a>`, '#C2410C') : '';
   return `
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;margin:0 0 14px;background:#FFFFFF;border:1px solid #E2E8F0;border-left:4px solid ${status.border};border-radius:10px;">
       <tr><td style="padding:16px 18px 15px;">
@@ -128,10 +128,10 @@ function sampleHtml(sample: any, stationName: string, index: number, appUrl: str
         </table>
         <div style="height:1px;background:#F1F5F9;font-size:1px;line-height:1px;">&nbsp;</div>
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin-top:7px;">
-          ${infoRow('Trạm trộn', escapeHtml(stationName), '#0F766E')}
-          ${infoRow('Phòng LAS nén mẫu', escapeHtml(displayValue(sample.lasRoomName)), '#7C3AED')}
-          ${infoRow('Hạng mục / khối lượng', `${escapeHtml(displayValue(sample.component))} &nbsp;·&nbsp; <span style="color:#047857;">${escapeHtml(displayValue(sample.volumeM3, '0'))} m³</span>`)}
-          ${infoRow('Mác / độ sụt', `<span style="color:#0F766E;">${escapeHtml(displayValue(sample.concreteGrade))}</span> &nbsp;·&nbsp; ${escapeHtml(displayValue(sample.slumpCm))} cm`)}
+          ${infoRow('Trạm trộn', escapeHtml(stationName), '#C2410C')}
+          ${infoRow('Phòng LAS nén mẫu', escapeHtml(displayValue(sample.lasRoomName)), '#C2410C')}
+          ${infoRow('Hạng mục / khối lượng', `${escapeHtml(displayValue(sample.component))} &nbsp;·&nbsp; <span style="color:#C2410C;">${escapeHtml(displayValue(sample.volumeM3, '0'))} m³</span>`)}
+          ${infoRow('Mác / độ sụt', `<span style="color:#C2410C;">${escapeHtml(displayValue(sample.concreteGrade))}</span> &nbsp;·&nbsp; ${escapeHtml(displayValue(sample.slumpCm))} cm`)}
           ${infoRow('Tuổi nén / quy cách', `<span style="color:#B45309;">${escapeHtml(displayValue(sample.ageType))} (${escapeHtml(displayValue(sample.ageDays))} ngày)</span> &nbsp;·&nbsp; ${escapeHtml(shape)} · ${escapeHtml(displayValue(sample.groupCount))} tổ / ${escapeHtml(displayValue(sample.pieceCount))} viên`)}
           ${infoRow('Ngày đúc / ngày nén', `${escapeHtml(formatDateVN(sample.castDate))} &nbsp;→&nbsp; <span style="color:#B91C1C;">${escapeHtml(formatDateVN(sample.scheduledTestDate))}</span>`)}
           ${infoRow('Đơn vị thi công', escapeHtml(displayValue(sample.contractor)))}
@@ -164,9 +164,9 @@ export function buildProfessionalEmail(
     ? 'Vui lòng ưu tiên chuẩn bị máy nén và cập nhật kết quả cho các mẫu đang đến hạn.'
     : 'Danh sách dưới đây là các mẫu cần theo dõi và thực hiện theo kế hoạch.');
   const preheader = `${totalCount} mẫu cần theo dõi · ${urgentCount} mẫu đến hạn hoặc quá hạn`;
-  const sampleTexts = samples.map((sample, index) => sampleText(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index, appUrl));
+  const sampleTexts = samples.map((sample, index) => sampleText(sample, displayValue(stationMap.get(sample.stationId), 'Trạm TGN'), index, appUrl));
   const text = [
-    'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO',
+    'CÔNG TY CP VLXD THẾ GIỚI NHÀ',
     title,
     `Ngày báo cáo: ${formatDateVN(targetDate)}`,
     `Phát lúc: ${vietnamDateTime(generatedAt)}`,
@@ -176,33 +176,33 @@ export function buildProfessionalEmail(
     '',
     ...sampleTexts,
     '',
-    'Đề nghị Ban Chỉ Huy Trạm, Kỹ thuật viên và Phòng Thí nghiệm chuẩn bị máy nén, sau đó cập nhật kết quả lên Cổng Quản Lý Tasago.',
-    'Email được gửi tự động từ Cổng Quản Lý Tasago.',
+    'Đề nghị Ban Chỉ Huy Trạm, Kỹ thuật viên và Phòng Thí nghiệm chuẩn bị máy nén, sau đó cập nhật kết quả lên Cổng Quản Lý TGN.',
+    'Email được gửi tự động từ Cổng Quản Lý TGN.',
   ].join('\n');
 
-  const cards = samples.map((sample, index) => sampleHtml(sample, displayValue(stationMap.get(sample.stationId), 'Trạm Tasago'), index, appUrl)).join('');
+  const cards = samples.map((sample, index) => sampleHtml(sample, displayValue(stationMap.get(sample.stationId), 'Trạm TGN'), index, appUrl)).join('');
   const html = `<!doctype html>
 <html lang="vi">
 <head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${escapeHtml(title)}</title></head>
-<body style="margin:0;padding:0;background:#F4FAF6;color:#173A28;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background:#FFF8F0;color:#431407;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:#F4FAF6;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;background:#FFF8F0;">
     <tr><td align="center" style="padding:24px 10px;">
       <table role="presentation" width="680" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:680px;border-collapse:separate;background:#FFFFFF;border:1px solid #D7E1E8;border-radius:14px;overflow:hidden;">
-        <tr><td bgcolor="#08783D" style="padding:20px 28px;background:#08783D;color:#FFFFFF;">
+        <tr><td bgcolor="#D97706" style="padding:20px 28px;background:#D97706;color:#FFFFFF;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;"><tr>
             <td style="vertical-align:top;">
-              ${logoUrl ? `<div style="display:block;width:220px;max-width:100%;padding:6px 8px;background:#FFFFFF;border-radius:10px;margin-bottom:10px;box-sizing:border-box;"><img src="${escapeHtml(logoUrl)}" width="204" height="73" alt="Bê Tông Xanh Sài Gòn" style="display:block;width:204px;max-width:100%;height:auto;aspect-ratio:921/331;object-fit:contain;border:0;outline:none;text-decoration:none;"></div>` : '<div style="font-size:16px;font-weight:900;letter-spacing:.5px;color:#FFFFFF;line-height:22px;">BÊ TÔNG XANH SAIGON</div>'}
-              <div style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:#D1FAE5;line-height:16px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
+              ${logoUrl ? `<div style="display:block;width:166px;max-width:100%;padding:6px 8px;background:#FFFFFF;border-radius:10px;margin-bottom:10px;box-sizing:border-box;"><img src="${escapeHtml(logoUrl)}" width="150" height="96" alt="TGN - CÔNG TY CP VLXD THẾ GIỚI NHÀ" style="display:block;width:150px;max-width:100%;height:auto;aspect-ratio:586/374;object-fit:contain;border:0;outline:none;text-decoration:none;"></div>` : '<div style="font-size:16px;font-weight:900;letter-spacing:.5px;color:#FFFFFF;line-height:22px;">THẾ GIỚI NHÀ</div>'}
+              <div style="font-size:11px;font-weight:800;letter-spacing:1.2px;color:#FFEDD5;line-height:16px;">CÔNG TY CP VLXD THẾ GIỚI NHÀ</div>
               <div style="margin-top:7px;font-size:22px;font-weight:800;line-height:28px;color:#FFFFFF;">${escapeHtml(title)}</div>
-              <div style="margin-top:7px;font-size:13px;line-height:20px;color:#D1FAE5;">${escapeHtml(subtitle)}</div>
+              <div style="margin-top:7px;font-size:13px;line-height:20px;color:#FFEDD5;">${escapeHtml(subtitle)}</div>
             </td>
-            <td align="right" style="width:86px;padding-left:10px;vertical-align:top;"><div style="display:inline-block;padding:9px 10px;border:1px solid #B7E4C7;border-radius:9px;color:#F0FDF4;font-size:10px;font-weight:900;line-height:13px;">TASAGO<br><span style="font-size:9px;font-weight:600;color:#D1FAE5;">QA / QC</span></div></td>
+            <td align="right" style="width:86px;padding-left:10px;vertical-align:top;"><div style="display:inline-block;padding:9px 10px;border:1px solid #FED7AA;border-radius:9px;color:#FFF7ED;font-size:10px;font-weight:900;line-height:13px;">TGN<br><span style="font-size:9px;font-weight:600;color:#FFEDD5;">QA / QC</span></div></td>
           </tr></table>
         </td></tr>
         <tr><td style="padding:20px 28px 8px;">
           <div style="font-size:13px;color:#64748B;line-height:20px;">Báo cáo ngày <strong style="color:#0F172A;">${escapeHtml(formatDateVN(targetDate))}</strong> &nbsp;·&nbsp; Phát lúc ${escapeHtml(vietnamDateTime(generatedAt))}</div>
-          <div style="margin-top:14px;padding:14px 16px;background:${urgentCount ? '#FFF7ED' : '#F0FDF4'};border:1px solid ${urgentCount ? '#FED7AA' : '#BBF7D0'};border-left:4px solid ${urgentCount ? '#F59E0B' : '#10B981'};border-radius:9px;color:${urgentCount ? '#9A3412' : '#166534'};font-size:13px;line-height:20px;">${escapeHtml(intro)}</div>
+          <div style="margin-top:14px;padding:14px 16px;background:${urgentCount ? '#FFF7ED' : '#FFFBEB'};border:1px solid ${urgentCount ? '#FED7AA' : '#FED7AA'};border-left:4px solid ${urgentCount ? '#F59E0B' : '#F59E0B'};border-radius:9px;color:${urgentCount ? '#9A3412' : '#9A3412'};font-size:13px;line-height:20px;">${escapeHtml(intro)}</div>
         </td></tr>
         <tr><td style="padding:12px 28px 18px;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;"><tr>
@@ -213,10 +213,10 @@ export function buildProfessionalEmail(
         </td></tr>
         <tr><td style="padding:0 28px 10px;"><div style="font-size:14px;font-weight:800;letter-spacing:.2px;color:#0F172A;">Danh sách cần thực hiện</div><div style="margin-top:5px;font-size:12px;color:#64748B;line-height:18px;">Vui lòng kiểm tra thông tin từng mẫu trước khi bố trí nén.</div></td></tr>
         <tr><td style="padding:8px 28px 18px;">${cards || '<div style="padding:18px;background:#F8FAFC;border-radius:9px;color:#64748B;font-size:13px;">Không có mẫu cần thông báo.</div>'}</td></tr>
-        <tr><td bgcolor="#075E38" style="padding:20px 28px;background:#075E38;color:#D1FAE5;">
-          <div style="font-size:12px;font-weight:700;line-height:18px;">CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO</div>
-          <div style="margin-top:4px;font-size:11px;line-height:17px;color:#B7E4C7;">BÊ TÔNG XANH SÀI GÒN · BÊ TÔNG CỦA MỌI CÔNG TRÌNH</div>
-          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #2E8B57;font-size:10px;line-height:16px;color:#A7F3D0;">Email tự động từ Cổng Quản Lý Tasago. Vui lòng không trả lời trực tiếp email này.</div>
+        <tr><td bgcolor="#9A3412" style="padding:20px 28px;background:#9A3412;color:#FFEDD5;">
+          <div style="font-size:12px;font-weight:700;line-height:18px;">CÔNG TY CP VLXD THẾ GIỚI NHÀ</div>
+          <div style="margin-top:4px;font-size:11px;line-height:17px;color:#FED7AA;">CÔNG TY CP VLXD THẾ GIỚI NHÀ · VẬT LIỆU XÂY DỰNG CHO MỌI CÔNG TRÌNH</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid #EA580C;font-size:10px;line-height:16px;color:#FED7AA;">Email tự động từ Cổng Quản Lý TGN. Vui lòng không trả lời trực tiếp email này.</div>
         </td></tr>
       </table>
     </td></tr>

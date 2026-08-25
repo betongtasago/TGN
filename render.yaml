@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tasago-nenmau-api
+    name: tgn-nenmau-api
     runtime: node
     plan: free
     buildCommand: npm install --include=dev --legacy-peer-deps && npm run build
@@ -12,7 +12,7 @@ services:
       - key: AUTH_SECRET
         sync: false
       - key: SUPABASE_URL
-        value: https://mqzampgzppxeppyuqvxm.supabase.co
+        sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: GMAIL_RELAY_URL
@@ -20,6 +20,8 @@ services:
       - key: GMAIL_RELAY_SECRET
         sync: false
       - key: FRONTEND_ORIGIN
+        sync: false
+      - key: APP_URL
         sync: false
       - key: CRON_SECRET
         sync: false

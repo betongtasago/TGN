@@ -1,5 +1,5 @@
 # HƯỚNG DẪN ĐÓNG GÓI & XUẤT BẢN APP LÊN CH PLAY & APPLE APP STORE
-**Hệ Thống Quản Lý Tiến Độ Nén Mẫu Bê Tông - Công Ty Cổ Phần Đầu Tư Tasago**
+**Hệ Thống Quản Lý Tiến Độ Nén Mẫu Bê Tông - CÔNG TY CP VLXD THẾ GIỚI NHÀ**
 
 ---
 
@@ -8,7 +8,7 @@
 Ứng dụng đã được tích hợp chuẩn **Progressive Web App (PWA)**:
 1. **Trên Android (Chrome/Cốc Cốc)**: Mở đường link web -> Bấm vào biểu tượng `⋮` (Menu) góc trên cùng -> Chọn **"Cài đặt ứng dụng"** hoặc **"Thêm vào màn hình chính"**.
 2. **Trên iPhone / iPad (Safari)**: Mở link trên Safari -> Bấm nút **Chia sẻ** (biểu tượng hình vuông có mũi tên hướng lên) -> Chọn **"Thêm vào MH chính (Add to Home Screen)"**.
-3. **Kết quả**: Ứng dụng xuất hiện ngay trên màn hình điện thoại với biểu tượng logo Tasago, mở full màn hình không có thanh địa chỉ duyệt web.
+3. **Kết quả**: Ứng dụng xuất hiện ngay trên màn hình điện thoại với biểu tượng logo TGN, mở full màn hình không có thanh địa chỉ duyệt web.
 
 ---
 
@@ -69,12 +69,12 @@ Thêm các quyền cần thiết:
 ### Bước 5: Đăng tải lên Google Play Console
 1. Đăng nhập [Google Play Console](https://play.google.com/console).
 2. Bấm **Tạo ứng dụng**:
-   - Tên ứng dụng: **Bê Tông Tasago**
+   - Tên ứng dụng: **Bê Tông TGN**
    - Ngôn ngữ mặc định: **Tiếng Việt - vi**
    - Loại ứng dụng: **Ứng dụng** (App) / **Miễn phí** (Free)
 3. Điền thông tin danh mục:
    - Danh mục: **Doanh nghiệp / Năng suất (Productivity)**
-   - Email liên hệ: `hotro@tasago.vn` hoặc `thanh.hocmon@tasago.vn`
+   - Email liên hệ: Cần cấu hình địa chỉ hỗ trợ chính thức của TGN trước khi phát hành
    - Số điện thoại hỗ trợ: `0942.320.923`
 4. Tải lên hình ảnh:
    - Icon ứng dụng: 512x512 px (PNG 32-bit)
@@ -109,7 +109,7 @@ npx cap open ios
 
 ### Bước 3: Cấu hình trong Xcode
 1. Chọn target **App** -> tab **Signing & Capabilities**.
-2. Chọn Team của công ty Tasago (`Công Ty Cổ Phần Đầu Tư Tasago`).
+2. Chọn Team của công ty TGN (`CÔNG TY CP VLXD THẾ GIỚI NHÀ`).
 3. Cấu hình Bundle Identifier: `com.tasago.concrete`.
 4. Trong file `Info.plist`, bổ sung mô tả quyền:
    - `NSCameraUsageDescription`: *"Ứng dụng cần sử dụng camera để chụp ảnh mẫu nén bê tông và chứng chỉ thí nghiệm."*
@@ -127,10 +127,10 @@ npx cap open ios
 
 ---
 
-## 📋 THÔNG TIN CHUẨN ĐĂNG KÝ CỦA TASAGO
-- **Tên app hiển thị**: Bê Tông Tasago
-- **Tên đầy đủ**: Bê Tông Tasago - Quản Lý Nén Mẫu Bê Tông & Trialmix
+## 📋 THÔNG TIN CHUẨN ĐĂNG KÝ CỦA TGN
+- **Tên app hiển thị**: TGN Nén Mẫu
+- **Tên đầy đủ**: TGN - Quản Lý Lịch Nén Mẫu Bê Tông & Trialmix
 - **Mã gói (Package / Bundle ID)**: `com.tasago.concrete`
 - **Số điện thoại hỗ trợ kỹ thuật**: 0942320923 (0942.320.923)
-- **Đơn vị chủ quản**: Công Ty Cổ Phần Đầu Tư Tasago
-- **Chính sách bảo mật**: `https://tasago.vn/privacy-policy`
+- **Đơn vị chủ quản**: CÔNG TY CP VLXD THẾ GIỚI NHÀ
+- **Chính sách bảo mật**: Cần công bố URL chính thức của TGN trước khi phát hành

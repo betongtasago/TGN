@@ -1,4 +1,4 @@
--- Tasago Concrete Testing Portal
+-- TGN Concrete Testing Portal
 -- One durable state row keeps the existing application model compatible while
 -- moving the source of truth from ephemeral server files to Supabase Postgres.
 create table if not exists public.app_state (

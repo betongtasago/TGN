@@ -2,8 +2,8 @@ import * as XLSX from 'xlsx';
 import { ConcreteSample, Station } from '../types';
 import { formatDateVN } from './storage';
 
-const COMPANY_NAME = 'CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO';
-const COMPANY_SLOGAN = 'BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH';
+const COMPANY_NAME = 'CÔNG TY CP VLXD THẾ GIỚI NHÀ';
+const COMPANY_SLOGAN = 'CÔNG TY CP VLXD THẾ GIỚI NHÀ - BÊ TÔNG CỦA MỌI CÔNG TRÌNH';
 const STANDARD_NOTE = 'Tiêu chuẩn áp dụng: TCVN 3118:2022 (Xác định cường độ nén), TCVN 3116:2022 (Độ chống thấm nước)';
 
 const statusTextMap: Record<string, string> = {
@@ -26,8 +26,8 @@ const shapeTextMap: Record<string, string> = {
 /**
  * 1. Xuất file Excel theo dõi nén mẫu chuyên sâu theo từng công trình của từng trạm
  * Bao gồm đầy đủ:
- * - Tên đơn vị cung cấp: CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
- * - Slogan: BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH
+ * - Tên đơn vị cung cấp: CÔNG TY CP VLXD THẾ GIỚI NHÀ
+ * - Slogan: CÔNG TY CP VLXD THẾ GIỚI NHÀ - BÊ TÔNG CỦA MỌI CÔNG TRÌNH
  * - Tên Trạm Trộn
  * - Tên Khách Hàng / Nhà Thầu
  * - Tên Dự Án Công Trình
@@ -40,7 +40,7 @@ export function exportProjectTrackingExcel(
   projectName: string,
   contractorName?: string
 ): void {
-  const stationName = station ? station.name : 'Trạm Bê Tông Tasago';
+  const stationName = station ? station.name : 'Trạm VLXD Thế Giới Nhà';
   const stationAddress = station ? station.address : 'TP. Hồ Chí Minh';
   const customer = contractorName || (samples[0]?.contractor || 'Khách Hàng / Đơn Vị Thi Công');
   const location = samples[0]?.location || 'Theo đơn đặt hàng';
@@ -57,7 +57,7 @@ export function exportProjectTrackingExcel(
     [`(${STANDARD_NOTE})`],
     [''],
     ['ĐƠN VỊ CUNG CẤP:', COMPANY_NAME, '', 'TRẠM SẢN XUẤT:', stationName],
-    ['ĐỊA CHỈ TRẠM:', stationAddress, '', 'NGÀY XUẤT BẢNG:', `${exportDateStr} (In từ Hệ Thống Tasago)`],
+    ['ĐỊA CHỈ TRẠM:', stationAddress, '', 'NGÀY XUẤT BẢNG:', `${exportDateStr} (In từ Hệ Thống TGN)`],
     ['TÊN KHÁCH HÀNG:', customer, '', 'DỰ ÁN / CÔNG TRÌNH:', projectName],
     ['ĐỊA ĐIỂM CÔNG TRÌNH:', location, '', 'TỔNG SỐ PHIẾU/MẪU:', `${samples.length} mẫu`],
     [''],
@@ -252,7 +252,7 @@ export function exportProjectTrackingExcel(
 
   const cleanProjectFileName = projectName.replace(/[^a-zA-Z0-9_\u00C0-\u1EF9]/g, '_');
   const dateSuffix = `${exportDate.getFullYear()}${String(exportDate.getMonth() + 1).padStart(2, '0')}${String(exportDate.getDate()).padStart(2, '0')}`;
-  const fullFileName = `Tasago_TheoDoiNenMau_${cleanProjectFileName}_${dateSuffix}.xlsx`;
+  const fullFileName = `TGN_TheoDoiNenMau_${cleanProjectFileName}_${dateSuffix}.xlsx`;
 
   XLSX.writeFile(wb, fullFileName);
 }
@@ -263,7 +263,7 @@ export function exportProjectTrackingExcel(
 export function exportSamplesToExcel(
   samples: ConcreteSample[],
   stations: Station[],
-  fileNamePrefix: string = 'BaoCao_TienDo_NenMau_Tasago'
+  fileNamePrefix: string = 'BaoCao_TienDo_NenMau_TGN'
 ): void {
   const stationMap = new Map<string, Station>();
   stations.forEach(s => stationMap.set(s.id, s));
@@ -280,7 +280,7 @@ export function exportSamplesToExcel(
     [`(${STANDARD_NOTE})`],
     [''],
     ['ĐƠN VỊ CUNG CẤP:', COMPANY_NAME, '', 'NGÀY XUẤT BÁO CÁO:', `${exportDateStr}`],
-    ['HỆ THỐNG QUẢN LÝ:', 'CÁC TRẠM TRỘN BÊ TÔNG TASAGO', '', 'TỔNG SỐ LƯỢNG MẪU:', `${samples.length} mẫu theo dõi`],
+    ['HỆ THỐNG QUẢN LÝ:', 'HỆ THỐNG TRẠM VLXD THẾ GIỚI NHÀ', '', 'TỔNG SỐ LƯỢNG MẪU:', `${samples.length} mẫu theo dõi`],
     [''],
     [
       'STT',
@@ -443,7 +443,7 @@ export function exportSamplesToExcel(
   ];
 
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'TongHop_NenMau_Tasago');
+  XLSX.utils.book_append_sheet(wb, ws, 'TongHop_NenMau_TGN');
 
   const now = new Date();
   const dateSuffix = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;

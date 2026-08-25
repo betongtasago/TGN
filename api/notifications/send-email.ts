@@ -36,7 +36,7 @@ export default async function handler(req: any, res: any) {
 
     const result = await sendViaGmailRelay({
       recipients: validRecipients,
-      subject: subject || '[TASAGO] Báo cáo lịch nén mẫu',
+      subject: subject || '[TGN] Báo cáo lịch nén mẫu',
       html: html || `<p>${String(plainText || '').replace(/\n/g, '<br>')}</p>`,
       text: String(plainText || ''),
     });

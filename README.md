@@ -1,185 +1,123 @@
-# HỆ THỐNG QUẢN LÝ TIẾN ĐỘ & KẾT QUẢ NÉN MẪU BÊ TÔNG
-### CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO
-**Khẩu hiệu:** *BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH*
+# Hệ thống quản lý lịch và kết quả nén mẫu bê tông
 
----
+## CÔNG TY CP VLXD THẾ GIỚI NHÀ
 
-## 📌 Giới Thiệu Dự Án
-Hệ thống phần mềm chuyên dụng hỗ trợ theo dõi, cảnh báo tiến độ và quản lý kết quả nén mẫu bê tông thương phẩm & cấp phối thí nghiệm Trialmix dành cho các trạm trộn bê tông của **Công Ty Cổ Phần Đầu Tư Tasago**.
+**THẾ GIỚI NHÀ – VẬT LIỆU XÂY DỰNG CHO MỌI CÔNG TRÌNH**
 
-Ứng dụng đáp ứng các tiêu chuẩn kỹ thuật xây dựng hiện hành:
-- **TCVN 3118:2022**: Bê tông nặng - Phương pháp xác định cường độ nén.
-- **TCVN 3116:2022**: Bê tông - Phương pháp xác định độ chống thấm nước.
+TGN là ứng dụng quản lý lịch nén mẫu, kết quả thí nghiệm và tiến độ kiểm soát chất lượng bê tông cho **CÔNG TY CP VLXD THẾ GIỚI NHÀ**. Giao diện sử dụng nhận diện vàng–cam theo logo TGN; logo được dùng thống nhất trong website, email nhắc lịch và báo cáo xuất file.
 
----
+## Chức năng chính
 
-## 🌟 Các Tính Năng Nổi Bật
+Ứng dụng hỗ trợ quản lý nhiều trạm trộn, công trình, hạng mục, mác bê tông, lịch nén mẫu và kết quả thử nghiệm. Biểu mẫu lịch nén không bắt buộc nhập mã số mẫu hiện trường; trường **Tên phòng LAS nén mẫu** được hỗ trợ cho các lịch mới, trong khi dữ liệu cũ vẫn được giữ tương thích.
 
-1. **Quản Lý Đa Trạm Trộn Bê Tông:**
-   - Trạm Tasago Hóc Môn (Hóc Môn, TP.HCM)
-   - Trạm Tasago Xuyên Á (Kcn Xuyên Á, Tây Ninh)
-   - Trạm Tasago Hóa An
-   - Trạm Tasago-Tnt1 Tây Ninh (Kcn Thành Thành Công)
-   - Trạm Tasago-Tnt2 Tây Ninh (Kcn Phước Đông)
+Hệ thống có phân quyền đăng nhập cho Ban Giám đốc/Super Admin, Admin hoặc Trưởng phòng QC, kỹ thuật viên thí nghiệm và nhân viên trạm. Thành viên chỉ nhìn thấy các thao tác và dữ liệu phù hợp với quyền được cấp. Người dùng có thể lọc, xem chi tiết, in phiếu kết quả, xuất báo cáo Excel và theo dõi trạng thái đến hạn, quá hạn, đã nén đạt hoặc không đạt.
 
-2. **Quản Lý Mẫu Nén Chi Tiết:**
-   - Hỗ trợ bê tông thương phẩm đã cấp cho công trình và mẫu cấp phối thí nghiệm Trialmix.
-   - Các mác thiết kế: M150 đến M600, Bê tông chống thấm (B6, B8, B10, B12), Bê tông bù co ngót, R3, R7, R14, R28.
-   - Nhập số lượng tổ mẫu, số viên, độ sụt, khối lượng, KTV lấy mẫu, người liên hệ công trình.
+Trung tâm thông báo Email hỗ trợ gửi nhắc lịch thông qua Gmail HTTPS relay. Email có logo TGN, màu nhận diện, thông tin công trình và nút **Mở đúng lịch mẫu này**. Nút này mở đúng lịch nén thông qua tham số `sampleId` sau khi người nhận đăng nhập.
 
-3. **Cảnh Báo & Nhắc Nhở Tự Động:**
-   - Đánh dấu trạng thái tự động theo thời gian thực: *Đến hạn hôm nay*, *Quá hạn chưa nén*, *Chưa đến hạn*, *Đã nén đạt / không đạt*.
-   - Trung tâm cảnh báo gửi thông báo lịch nén mẫu tự động qua **Gmail HTTPS relay** với đầy đủ thông tin: Công trình, trạm trộn, mác bê tông, hạng mục, số điện thoại liên hệ.
+## Kiến trúc triển khai
 
-4. **Xuất Báo Cáo Excel Chuyên Nghiệp (.xlsx):**
-   - Xuất bảng theo dõi tiến độ nén mẫu theo từng công trình của từng trạm với đầy đủ thông tin doanh nghiệp Tasago, tên khách hàng, tên dự án công trình và danh sách chi tiết các hạng mục, mác, khối lượng, số tổ mẫu, cường độ nén (MPa), % đạt và khung chữ ký xác nhận 3 bên.
-   - Xuất báo cáo tổng hợp theo bộ lọc đa tiêu chí.
+| Thành phần | Vai trò | Nơi cấu hình |
+|---|---|---|
+| React 19, TypeScript, Vite | Frontend responsive cho máy tính và điện thoại | Vercel |
+| Express, Node.js | API xác thực, CRUD, đồng bộ trạng thái và gửi thông báo | Render |
+| Supabase PostgreSQL | Nguồn dữ liệu trung tâm cho `app_state` dạng JSONB | Supabase |
+| Vercel Function/Cron | Chạy `/api/cron-notify` để kiểm tra lịch đến hạn | Vercel |
+| Google Apps Script | Gmail HTTPS relay, tránh kết nối SMTP trực tiếp từ Render Free | Gmail/Apps Script |
 
-5. **Phân Quyền & Bảo Mật:**
-   - Đăng nhập bảo mật (Không hiển thị thông tin tài khoản ngoài màn hình đăng nhập).
-   - Phân quyền: Ban Giám Đốc (Super Admin), Trưởng phòng QC / Admin, Kỹ thuật viên thí nghiệm, Nhân viên trạm.
+Supabase là nguồn lưu trữ chính trong production. LocalStorage chỉ giữ cache offline và lựa chọn giao diện; không được xem là cơ sở dữ liệu lâu dài.
 
-6. **In Ấn & Chứng Nhận:**
-   - In phiếu kết quả thử nghiệm nén mẫu (Test Certificate) chuẩn A4.
-   - In bảng báo cáo tiến độ nén mẫu toàn trạm.
+## Chạy local
 
----
+Yêu cầu Node.js 18 trở lên và npm. Cài thư viện rồi khởi động máy chủ phát triển:
 
-## 🛠️ Công Nghệ Sử Dụng
-- **Frontend:** React 19, TypeScript, Vite
-- **Styling:** Tailwind CSS v4, Lucide Icons, Motion
-- **Biểu đồ & Xử lý dữ liệu:** Recharts, XLSX (SheetJS)
-- **Lưu trữ:** Supabase PostgreSQL (bản ghi `app_state` với JSONB) làm nguồn dữ liệu trung tâm; LocalStorage chỉ giữ cache offline và tùy chọn giao diện
-
----
-
-## 🚀 Hướng Dẫn Cài Đặt & Chạy Trên Máy Tính (Local)
-
-### 1. Yêu cầu môi trường
-- [Node.js](https://nodejs.org/) phiên bản 18.0 trở lên.
-- Trình quản lý gói `npm` hoặc `yarn`.
-
-### 2. Cài đặt các thư viện phụ thuộc
 ```bash
 npm install
-```
-
-### 3. Khởi chạy máy chủ phát triển (Development Server)
-```bash
 npm run dev
 ```
-Sau đó mở trình duyệt truy cập: `http://localhost:3000`
 
-### 4. Đóng gói mã nguồn cho Production
+Mở `http://localhost:3000`. Để kiểm tra bản production:
+
 ```bash
+npm run lint
 npm run build
+npm start
 ```
 
----
+Các biến local được khai báo trong `.env`; dùng `.env.example` làm mẫu và không commit khóa bí mật. Khi chạy production, backend yêu cầu `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` và `AUTH_SECRET`.
 
-## Cấu hình Supabase (bắt buộc cho production)
+## Cấu hình Supabase
 
-Tạo một project trên [Supabase](https://supabase.com/dashboard), mở **SQL Editor** và chạy toàn bộ file [`supabase/migrations/202608230001_create_app_state.sql`](./supabase/migrations/202608230001_create_app_state.sql). Migration tạo bảng `public.app_state`, bật RLS, chỉ cấp quyền cho `service_role` và đăng ký bảng với Realtime.
+Tạo hoặc chọn **một project Supabase riêng cho TGN**, không dùng nhầm project của ứng dụng khác nếu không muốn trộn dữ liệu. Trong **SQL Editor**, chạy toàn bộ migration [`supabase/migrations/202608230001_create_app_state.sql`](./supabase/migrations/202608230001_create_app_state.sql). Migration tạo `public.app_state`, bật Row Level Security, chỉ cho phép backend dùng service role truy cập và đăng ký bảng cho Realtime.
 
-Lấy **Project URL** cùng **service-role/secret key** trong phần API của project rồi khai báo `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` trên Render cùng với `AUTH_SECRET`. Không đưa service-role key vào biến `VITE_*`, mã frontend, trình duyệt hoặc GitHub. Khi `NODE_ENV=production`, backend sẽ từ chối khởi động nếu thiếu hai biến Supabase thay vì âm thầm ghi vào filesystem tạm.
+Lấy Project URL và service-role/secret key trong phần API của project. Chỉ đặt chúng ở biến môi trường server của Render và Vercel Function; tuyệt đối không đặt service-role key trong biến `VITE_*`, mã frontend, trình duyệt hoặc GitHub.
 
-Ở lần khởi động đầu tiên, backend tạo bản ghi mặc định từ dữ liệu mẫu hoặc nhập `data/server-state.json` hiện có nếu bản ghi Supabase chưa tồn tại. Sau đó mọi thao tác CRUD, cấu hình và nhật ký thông báo đều được ghi qua Supabase; LocalStorage chỉ là cache offline.
+Ở lần khởi động đầu tiên, backend tạo trạng thái mặc định hoặc nhập dữ liệu mẫu từ `data/server-state.json` nếu `app_state` chưa có bản ghi. Sau đó các thao tác CRUD, cấu hình trung tâm Email và lịch sử thông báo được ghi vào Supabase.
 
-## Lịch nén mẫu và link trong Email
+## Biến môi trường production
 
-Khi thêm hoặc chỉnh sửa lịch nén mẫu, biểu mẫu không còn yêu cầu nhập **Mã Số Mẫu Hiện Trường**. Dữ liệu cũ có trường này vẫn được giữ để tương thích, nhưng lịch mới có thể nhập **Tên Phòng LAS Nén Mẫu**.
+Không ghi giá trị thật của secret vào repository hoặc tin nhắn. Tạo các biến sau trong Render và Vercel theo đúng phạm vi cần dùng:
 
-Email lịch nén mẫu có nút **Mở đúng lịch mẫu này**. Link sử dụng tham số `sampleId`; khi người nhận mở link và đăng nhập, website sẽ chuyển tới tab lịch nén và mở chi tiết đúng mẫu. Để link trong email gửi từ server hoặc Vercel Cron đúng domain production, đặt biến `APP_URL` bằng URL website, ví dụ `https://nenmauv2.vercel.app`. Email gửi từ Trung tâm Email trên trình duyệt sẽ tự dùng domain hiện tại.
+| Biến | Render API | Vercel/Cron | Nội dung |
+|---|---:|---:|---|
+| `NODE_ENV` | Có | Không bắt buộc | `production` |
+| `AUTH_SECRET` | Có | Không bắt buộc | Chuỗi bí mật dùng cho phiên đăng nhập |
+| `SUPABASE_URL` | Có | Có | URL project Supabase TGN |
+| `SUPABASE_SERVICE_ROLE_KEY` | Có | Có | Service-role key của Supabase TGN |
+| `GMAIL_RELAY_URL` | Có | Có | URL Web App Apps Script kết thúc bằng `/exec` |
+| `GMAIL_RELAY_SECRET` | Có | Có | Trùng với `RELAY_SECRET` trong Apps Script |
+| `CRON_SECRET` | Có | Có | Chuỗi bảo vệ endpoint cron, hai nơi phải giống nhau |
+| `FRONTEND_ORIGIN` | Có | Không | URL Vercel production, dùng để kiểm soát CORS |
+| `APP_URL` | Có | Có | URL website production để tạo deep-link và URL logo |
+| `VITE_API_URL` | Không | Có | URL public của backend Render |
 
-## 📦 Hướng Dẫn Đẩy Lên GitHub
+Project Vercel hiện dùng domain production `https://nenmautgn.vercel.app`. Khi đổi domain, cập nhật đồng thời `APP_URL` trên Render/Vercel và `FRONTEND_ORIGIN` trên Render. `VITE_API_URL` phải trỏ tới URL Render public và cần redeploy frontend sau khi thay đổi.
+
+## Deploy frontend lên Vercel
+
+Project Vercel `tgn` liên kết với repository [`betongtasago/TGN`](https://github.com/betongtasago/TGN), nhánh `main`, và tự tạo deployment khi có commit mới. Trong **Project Settings → Environment Variables → Production**, khai báo các biến Supabase, Gmail relay, `CRON_SECRET`, `APP_URL` và `VITE_API_URL` như bảng trên. Sau khi lưu hoặc thay đổi biến, chọn **Redeploy** để build frontend nhận giá trị mới.
+
+File [`vercel.json`](./vercel.json) cấu hình build Vite và cron `0 0 * * *`. Lịch này tương ứng 07:00 theo giờ Việt Nam (UTC+7). Cron chỉ gửi được email khi Vercel có đủ biến môi trường, Supabase đã có migration và Gmail relay đang hoạt động.
+
+## Deploy backend lên Render
+
+File [`render.yaml`](./render.yaml) mô tả service Node.js `tgn-nenmau-api`, health check `/api/health`, lệnh build `npm install --include=dev --legacy-peer-deps && npm run build` và lệnh chạy `npm start`. Tạo Web Service từ repository TGN hoặc dùng Blueprint này, sau đó nhập các biến secret có `sync: false` trong Render Environment.
+
+Sau khi lưu biến, chạy **Manual Deploy → Deploy latest commit**. Kiểm tra `https://<TGN_RENDER_SERVICE>.onrender.com/api/health`; endpoint phải trả trạng thái health trước khi đặt URL đó vào `VITE_API_URL` trên Vercel.
+
+## Gmail HTTPS relay
+
+Render Free không phù hợp với việc mở kết nối SMTP trực tiếp. TGN vì vậy gửi HTTPS tới Google Apps Script, rồi `GmailApp` gửi thư bằng tài khoản Gmail của công ty.
+
+Mở [Google Apps Script](https://script.google.com/) bằng tài khoản Gmail gửi thư, tạo project mới và sao chép [`scripts/gmail-relay/Code.gs`](./scripts/gmail-relay/Code.gs). Đặt một `RELAY_SECRET` dài tối thiểu 32 ký tự, giữ bí mật chuỗi này, rồi chọn **Deploy → New deployment → Web app**. Ứng dụng phải chạy dưới tài khoản gửi thư và quyền truy cập là **Anyone with the link**. Dùng URL `/exec` của deployment trong `GMAIL_RELAY_URL`.
+
+`GMAIL_RELAY_SECRET` trên Render và Vercel phải trùng với `RELAY_SECRET` trong Apps Script. `CRON_SECRET` trên Render và Vercel cũng phải giống nhau nhưng không cần trùng relay secret. Không nhập SMTP host, port hoặc App Password vào website.
+
+Trong website, tài khoản `admin` mở **Trung tâm thông báo Email**, nhập người nhận, tên hiển thị và lịch gửi, sau đó bấm kiểm tra relay rồi lưu cấu hình. Chức năng gửi thử và lịch sử gửi giúp xác nhận email trước khi bật tự động hằng ngày.
+
+## Kiểm tra sự cố
+
+Nếu website báo `Failed to fetch`, kiểm tra backend Render còn hoạt động, `VITE_API_URL` có đúng URL public hay không và `FRONTEND_ORIGIN` có khớp chính xác domain Vercel hay không. Nếu báo thiếu `GMAIL_RELAY_URL`, kiểm tra biến đã có trên cả Vercel và Render rồi redeploy. Nếu nhận `Unauthorized`, secret giữa server và Apps Script không trùng. Nếu Apps Script trả HTTP 403, xác nhận URL dùng `/exec`, deployment là Web app và quyền truy cập cho phép người có đường dẫn.
+
+Nếu backend production từ chối khởi động, kiểm tra tối thiểu `AUTH_SECRET`, `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY`. Không dùng service-role key ở frontend. Khi thay đổi schema, luôn chạy migration trên đúng project Supabase TGN và kiểm tra bản ghi `app_state` trước khi đưa vào vận hành.
+
+## Repository và kiểm thử
+
+Mã nguồn chính nằm tại [`betongtasago/TGN`](https://github.com/betongtasago/TGN). Trước mỗi lần push lên `main`, chạy:
 
 ```bash
-# Khởi tạo kho lưu trữ git cục bộ
-git init
-
-# Thêm toàn bộ mã nguồn
-git add .
-
-# Tạo commit đầu tiên
-git commit -m "Initial commit: He thong quan ly tien do nen mau be tong Tasago"
-
-# Đặt nhánh chính là main
-git branch -M main
-
-# Liên kết với repository trên GitHub của bạn (thay YOUR_USERNAME và REPO_NAME)
-git remote add origin https://github.com/YOUR_USERNAME/tasago-concrete-lab.git
-
-# Đẩy code lên GitHub
-git push -u origin main
+npm run lint
+npm run build
+git diff --check
 ```
 
----
+Không commit `.env`, service-role key, Gmail relay secret, cron secret hoặc dữ liệu vận hành thật.
 
-## 🏢 Bản Quyền & Phát Triển
-**CÔNG TY CỔ PHẦN ĐẦU TƯ TASAGO**  
-*BÊ TÔNG XANH SÀI GÒN - BÊ TÔNG CỦA MỌI CÔNG TRÌNH*  
-Phòng Quản Lý Kỹ Thuật & Kiểm Định Chất Lượng Bê Tông (QA/QC)
+## Bản quyền và vận hành
 
+**CÔNG TY CP VLXD THẾ GIỚI NHÀ**
 
-### Cấu hình gửi Email tự động qua Gmail HTTPS relay
+Phòng Quản lý Kỹ thuật và Kiểm định Chất lượng Bê tông (QA/QC)
 
-Trung tâm thông báo chỉ hiển thị và hoạt động với tài khoản `admin`. Bản production mới **không còn gửi trực tiếp đến Gmail SMTP**, vì Render Free đã chặn outbound TCP đến các cổng SMTP `25`, `465` và `587`.[1] Email được chuyển qua một Google Apps Script HTTPS relay, rồi `GmailApp` gửi bằng chính tài khoản Gmail của công ty.
-
-#### Bước 1: Tạo Gmail HTTPS relay
-
-Mở [script.google.com](https://script.google.com/) bằng tài khoản Gmail dùng để gửi báo cáo, tạo một project mới và sao chép nội dung file `scripts/gmail-relay/Code.gs` trong repository vào trình soạn thảo. Thay:
-
-```javascript
-const RELAY_SECRET = 'THAY_BANG_CHUOI_BI_MAT_DAI';
-```
-
-bằng một chuỗi bí mật dài tối thiểu 32 ký tự. Giữ nguyên chuỗi này để nhập vào Render và Vercel.
-
-Bấm **Deploy → New deployment → Web app**, chọn chạy dưới tài khoản Gmail của bạn và chọn **Anyone with the link**. Bấm **Deploy**, cấp các quyền Gmail được yêu cầu, sau đó sao chép **Web app URL** có dạng `https://script.google.com/macros/s/.../exec`.
-
-#### Bước 2: Cấu hình Render
-
-Trong **Render → Service → Environment**, thêm:
-
-```env
-GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
-GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
-CRON_SECRET=mot-chuoi-bi-mat-dai
-```
-
-Giữ nguyên các biến Supabase và xác thực hiện có: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET` và `FRONTEND_ORIGIN`. Không cần đặt `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` nữa. Sau khi lưu biến, chọn **Manual Deploy → Deploy latest commit**.
-
-#### Bước 3: Cấu hình Vercel Cron
-
-Trong **Vercel → Project Settings → Environment Variables → Production**, thêm:
-
-```env
-SUPABASE_URL=https://mqzampgzppxeppyuqvxm.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=service-role-key-cua-Supabase
-GMAIL_RELAY_URL=https://script.google.com/macros/s/MA_ID_CUA_BAN/exec
-GMAIL_RELAY_SECRET=chuoi-bi-mat-giong-trong-Code.gs
-CRON_SECRET=mot-chuoi-bi-mat-dai
-VITE_API_URL=https://nenmauv2-u9xx.onrender.com
-```
-
-`CRON_SECRET` trên Vercel phải giống hệt `CRON_SECRET` trên Render. `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET` cũng phải giống cấu hình Render. Vercel Cron chạy `/api/cron-notify` lúc `00:00 UTC`, tương ứng khoảng 07:00 giờ Việt Nam, đọc mẫu đến hạn từ Supabase rồi gọi Gmail relay qua HTTPS. Sau khi thêm biến Vercel, chọn **Redeploy**.
-
-#### Bước 4: Cấu hình trong website
-
-Mở `https://nenmauv2.vercel.app`, đăng nhập bằng tài khoản `admin`, mở **Trung tâm thông báo Email** và nhập tên hiển thị người gửi, ví dụ `Bê Tông Tasago`. Không nhập SMTP Host, SMTP Port hoặc App Password vào website nữa. Thêm danh sách người nhận báo cáo, bấm **Kiểm tra Gmail relay**, rồi bấm **Lưu cấu hình**. Website chỉ lưu người nhận, lịch gửi và tên hiển thị vào Supabase; secret relay chỉ nằm trong biến môi trường server.
-
-#### Bước 5: Gửi thử và bật tự động
-
-Trong Trung tâm Email, chuyển sang **Gửi Email**, chọn một mẫu nhỏ và bấm **Gửi email ngay**. Nếu email đến hộp thư, kiểm tra tiếp tab **Lịch sử** và bật **Email tự động hằng ngày**. Nút **Chạy thử cron** giúp kiểm tra luồng đọc dữ liệu Supabase và gửi báo cáo trước khi chờ lịch 07:00.
-
-Nếu báo `Chưa cấu hình GMAIL_RELAY_URL`, kiểm tra Render và Vercel đã có đúng hai biến `GMAIL_RELAY_URL` và `GMAIL_RELAY_SECRET`, rồi redeploy. Nếu báo `Unauthorized`, chuỗi `GMAIL_RELAY_SECRET` không trùng với `RELAY_SECRET` trong Google Apps Script. Nếu báo HTTP `403`, hãy vào **Deploy → Manage deployments**, xác nhận loại là **Web app**, URL đang dùng kết thúc bằng `/exec` (không phải `/dev`), ứng dụng chạy dưới tài khoản Gmail gửi thư và quyền truy cập là **Anyone with the link**; sau khi đổi mã hoặc quyền, hãy tạo deployment/version mới rồi cập nhật lại `GMAIL_RELAY_URL`. Nếu báo `GmailApp lỗi`, mở Apps Script bằng đúng tài khoản Gmail gửi thư và cấp lại quyền gửi email.
-
-Không đưa `SUPABASE_SERVICE_ROLE_KEY`, `GMAIL_RELAY_SECRET` hoặc `CRON_SECRET` vào GitHub/frontend. Kênh nhắn tin khác chưa được bật trong phiên bản hiện tại.
-
-## Tài liệu tham khảo
-
-[1]: https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports "Render: Free web services and SMTP ports"
-
-[2]: https://developers.google.com/apps-script/guides/web "Google: Apps Script Web Apps"
-
-[3]: https://developers.google.com/apps-script/reference/gmail/gmail-app "Google: GmailApp reference"
+[1]: https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports
+[2]: https://developers.google.com/apps-script/guides/web
+[3]: https://developers.google.com/apps-script/reference/gmail/gmail-app

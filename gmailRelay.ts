@@ -75,7 +75,7 @@ export async function sendViaGmailRelay(email: GmailRelayEmail) {
       subject: email.subject,
       htmlBody: email.html,
       textBody: email.text,
-      name: email.senderName || 'Bê Tông Tasago',
+      name: email.senderName || 'CÔNG TY CP VLXD THẾ GIỚI NHÀ',
     }),
   });
 }

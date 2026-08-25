@@ -41,8 +41,8 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({
   if (!isOpen) return null;
 
   const fullDataPackage = {
-    appName: 'Tasago Concrete Testing Management System',
-    company: 'Công Ty Cổ Phần Đầu Tư Tasago',
+    appName: 'TGN Concrete Testing Management System',
+    company: 'CÔNG TY CP VLXD THẾ GIỚI NHÀ',
     exportDate: new Date().toISOString(),
     version: '1.0.0',
     stations,
@@ -58,7 +58,7 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Tasago_Concrete_Backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `TGN_Concrete_Backup_${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -74,9 +74,9 @@ export const GitHubExportModal: React.FC<GitHubExportModalProps> = ({
   const gitCommands = `# Các bước đưa toàn bộ mã nguồn lên GitHub:
 git init
 git add .
-git commit -m "Initial commit: He thong quan ly tien do nen mau be tong Tasago"
+git commit -m "Deploy TGN concrete schedule portal"
 git branch -M main
-git remote add origin https://github.com/YOUR_GITHUB_USERNAME/tasago-concrete-lab.git
+git remote add origin https://github.com/betongtasago/TGN.git
 git push -u origin main`;
 
   const handleCopyGitCommands = () => {
@@ -99,7 +99,7 @@ git push -u origin main`;
           setImportStatus('✅ Đã nạp thành công toàn bộ dữ liệu mẫu và trạm trộn!');
           setTimeout(() => setImportStatus(''), 4000);
         } else {
-          alert('File JSON không đúng định dạng sao lưu Tasago!');
+          alert('File JSON không đúng định dạng sao lưu TGN!');
         }
       } catch (err: any) {
         alert('Lỗi đọc file: ' + err.message);
@@ -118,14 +118,14 @@ git push -u origin main`;
         <div className="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
             <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center text-white">
-              <Github className="w-5 h-5 text-emerald-400" />
+              <Github className="w-5 h-5 text-orange-400" />
             </div>
             <div>
               <h3 className="font-black text-base sm:text-lg text-white">
                 Xuất Dữ Liệu & Hướng Dẫn Tải Lên GitHub
               </h3>
               <p className="text-xs text-slate-400">
-                Lưu trữ toàn bộ mã nguồn và cơ sở dữ liệu mẫu nén bê tông Tasago
+                Lưu trữ toàn bộ mã nguồn và cơ sở dữ liệu mẫu nén bê tông TGN
               </p>
             </div>
           </div>
@@ -141,13 +141,13 @@ git push -u origin main`;
         <div className="p-5 sm:p-6 space-y-5 max-h-[78vh] overflow-y-auto text-xs text-slate-700">
           
           {/* Section 1: Backup & Restore Data */}
-          <div className="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 space-y-3">
+          <div className="bg-orange-50/70 p-4 rounded-xl border border-orange-200 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-extrabold text-emerald-950 uppercase flex items-center space-x-1.5">
-                <HardDrive className="w-4 h-4 text-emerald-700" />
+              <h4 className="font-extrabold text-orange-950 uppercase flex items-center space-x-1.5">
+                <HardDrive className="w-4 h-4 text-orange-700" />
                 <span>1. Sao Lưu & Đồng Bộ Dữ Liệu (JSON Backup)</span>
               </h4>
-              <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-orange-800 bg-orange-100 px-2 py-0.5 rounded">
                 {samples.length} mẫu • {stations.length} trạm
               </span>
             </div>
@@ -156,7 +156,7 @@ git push -u origin main`;
             </p>
 
             {importStatus && (
-              <div className="bg-emerald-600 text-white font-bold p-2.5 rounded-lg text-xs animate-in fade-in">
+              <div className="bg-orange-600 text-white font-bold p-2.5 rounded-lg text-xs animate-in fade-in">
                 {importStatus}
               </div>
             )}
@@ -165,7 +165,7 @@ git push -u origin main`;
               <button
                 type="button"
                 onClick={handleDownloadJsonBackup}
-                className="bg-emerald-700 hover:bg-emerald-600 text-white font-bold px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
+                className="bg-orange-700 hover:bg-orange-600 text-white font-bold px-3.5 py-2 rounded-xl flex items-center space-x-1.5 shadow-sm transition-all cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Tải File Sao Lưu (.JSON)</span>
@@ -176,12 +176,12 @@ git push -u origin main`;
                 onClick={handleCopyJson}
                 className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl border border-slate-300 flex items-center space-x-1.5 cursor-pointer"
               >
-                {copiedJson ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedJson ? <Check className="w-3.5 h-3.5 text-orange-600" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedJson ? 'Đã Copy JSON!' : 'Copy Mã JSON'}</span>
               </button>
 
               <label className="bg-white hover:bg-slate-100 text-slate-700 font-bold px-3 py-2 rounded-xl border border-slate-300 flex items-center space-x-1.5 cursor-pointer">
-                <Upload className="w-3.5 h-3.5 text-emerald-700" />
+                <Upload className="w-3.5 h-3.5 text-orange-700" />
                 <span>Nạp Dữ Liệu Từ File JSON</span>
                 <input
                   type="file"
@@ -203,9 +203,9 @@ git push -u origin main`;
               <button
                 type="button"
                 onClick={handleCopyGitCommands}
-                className="text-emerald-700 hover:text-emerald-900 font-bold flex items-center space-x-1 text-[11px] bg-emerald-50 px-2 py-1 rounded cursor-pointer"
+                className="text-orange-700 hover:text-orange-900 font-bold flex items-center space-x-1 text-[11px] bg-orange-50 px-2 py-1 rounded cursor-pointer"
               >
-                {copiedScript ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                {copiedScript ? <Check className="w-3 h-3 text-orange-600" /> : <Copy className="w-3 h-3" />}
                 <span>{copiedScript ? 'Đã Copy Lệnh!' : 'Copy Lệnh Git Chuẩn'}</span>
               </button>
             </div>
@@ -214,7 +214,7 @@ git push -u origin main`;
               Chạy các lệnh Git chuẩn bên dưới trong thư mục dự án trên máy tính:
             </p>
 
-            <div className="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800 select-all">
+            <div className="bg-slate-900 text-orange-400 p-3 rounded-xl font-mono text-[11px] overflow-x-auto border border-slate-800 select-all">
               <pre>{gitCommands}</pre>
             </div>
 

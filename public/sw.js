@@ -1,5 +1,5 @@
-// Tasago Concrete Service Worker - PWA Offline Caching
-const CACHE_NAME = 'tasago-concrete-v1';
+// TGN Concrete Schedule Service Worker - PWA Offline Caching
+const CACHE_NAME = 'tgn-concrete-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
