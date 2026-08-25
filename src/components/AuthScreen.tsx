@@ -82,8 +82,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
         
         {/* Brand Header */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-400 via-orange-500 to-orange-700 shadow-xl ring-4 ring-orange-500/20 mb-3">
-            <span className="font-black text-2xl text-white tracking-widest">TSG</span>
+          <div className="inline-flex items-center justify-center w-32 h-20 sm:w-40 sm:h-24 rounded-2xl bg-white/95 shadow-xl ring-4 ring-orange-500/20 mb-3 p-2">
+            <img
+              src="/brand-logo.png"
+              alt="CÔNG TY CP VLXD THẾ GIỚI NHÀ"
+              className="max-w-full max-h-full object-contain"
+            />
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">
             CÔNG TY CP VLXD THẾ GIỚI NHÀ
