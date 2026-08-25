@@ -1,5 +1,5 @@
 // TGN Concrete Schedule Service Worker - PWA Offline Caching
-const CACHE_NAME = 'tgn-concrete-v2';
+const CACHE_NAME = 'tgn-concrete-v3';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
